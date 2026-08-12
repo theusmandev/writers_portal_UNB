@@ -55,7 +55,7 @@ export default function ContactPage() {
           ))}
         </div>
 
-        <div className="mt-10 rounded-xl border border-border bg-secondary/50 p-6">
+        <div className="mt-10 rounded-xl border border-border bg-primary/5 p-6">
           <p className="urdu text-lg leading-loose">
             کسی بھی سوال کے لیے ای میل کریں۔ اگر آپ نے ناول بھیج دیا ہے تو براہِ کرم اپنا سبمیشن
             آئی ڈی ضرور لکھیں تاکہ ہم جلد جواب دے سکیں۔

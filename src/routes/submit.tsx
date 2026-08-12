@@ -154,7 +154,7 @@ export default function SubmitPage() {
             Thank you for submitting <span className="font-medium text-foreground">{result.novelTitle}</span>.
             Please save your Submission ID — you will need it to track your novel.
           </p>
-          <div className="mt-6 rounded-xl border border-dashed border-primary/40 bg-secondary/60 p-5">
+          <div className="mt-6 rounded-xl border border-dashed border-primary/40 bg-primary/5 p-5">
             <p className="text-xs tracking-[0.2em] text-muted-foreground uppercase">Submission ID</p>
             <p className="mt-1 font-display text-3xl font-semibold text-primary">
               {result.submissionId}
@@ -186,7 +186,7 @@ export default function SubmitPage() {
       />
       <div className="mx-auto max-w-3xl px-5 py-12">
         {isDemoMode && (
-          <div className="mb-6 flex gap-3 rounded-lg border border-border bg-secondary/60 p-4 text-sm">
+          <div className="mb-6 flex gap-3 rounded-lg border border-border bg-primary/5 p-4 text-sm">
             <Info className="mt-0.5 size-4 shrink-0 text-primary" />
             <p className="text-muted-foreground">
               Preview mode: the form is fully working, but submissions are stored only in this

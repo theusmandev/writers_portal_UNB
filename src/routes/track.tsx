@@ -144,7 +144,7 @@ export default function TrackPage() {
             </div>
 
             {record.note && (
-              <p className="mt-5 rounded-lg bg-secondary/60 p-4 text-sm text-muted-foreground">
+              <p className="mt-5 rounded-lg bg-primary/5 p-4 text-sm text-muted-foreground">
                 {record.note}
               </p>
             )}

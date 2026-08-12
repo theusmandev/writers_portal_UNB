@@ -23,7 +23,7 @@ export default function ProcessPage() {
               </span>
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <h2 className="font-display text-xl font-semibold">{stage.title}</h2>
-                <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs text-muted-foreground">
+                <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs text-primary font-medium">
                   {stage.duration}
                 </span>
               </div>

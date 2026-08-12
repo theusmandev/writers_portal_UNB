@@ -94,7 +94,7 @@ export default function Index() {
         </div>
       </section>
 
-      <section className="border-y border-border bg-secondary/40">
+      <section>
         <div className="mx-auto max-w-6xl px-5 py-20">
           <h2 className="text-2xl font-semibold sm:text-3xl">How it works</h2>
           <p className="mt-2 text-muted-foreground">Four steps, start to finish.</p>
@@ -140,7 +140,7 @@ export default function Index() {
         </div>
       </section>
 
-      <section className="border-y border-border bg-secondary/40">
+      <section>
         <div className="mx-auto grid max-w-6xl gap-10 px-5 py-20 lg:grid-cols-3">
           <div>
             <ShieldCheck className="size-6 text-primary" />

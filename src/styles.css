@@ -10,20 +10,6 @@
   --font-urdu: "Noto Nastaliq Urdu", "Jameel Noori Nastaleeq", serif;
 }
 
-/*
- * Design system definition.
- *
- * The @theme inline block maps CSS custom properties to Tailwind utility
- * classes (e.g. --color-primary -> bg-primary, text-primary).
- *
- * The :root and .dark blocks define the actual color values using oklch.
- * All colors MUST use oklch format.
- *
- * To add a new semantic color:
- * 1. Add the variable to :root (light value) and .dark (dark value)
- * 2. Register it in @theme inline as --color-<name>: var(--<name>)
- */
-
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -52,101 +38,56 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-ring-offset-background: var(--background);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
 }
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(0.977 0.011 88);
-  --foreground: oklch(0.24 0.028 190);
-  --card: oklch(0.995 0.005 90);
-  --card-foreground: oklch(0.24 0.028 190);
-  --popover: oklch(0.995 0.005 90);
-  --popover-foreground: oklch(0.24 0.028 190);
-  --primary: oklch(0.36 0.055 182);
-  --primary-foreground: oklch(0.98 0.012 88);
-  --primary-glow: oklch(0.5 0.07 178);
-  --secondary: oklch(0.945 0.018 86);
-  --secondary-foreground: oklch(0.3 0.04 186);
-  --muted: oklch(0.948 0.013 86);
-  --muted-foreground: oklch(0.5 0.022 190);
-  --accent: oklch(0.74 0.12 76);
-  --accent-foreground: oklch(0.24 0.04 60);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.9 0.017 86);
-  --input: oklch(0.9 0.017 86);
-  --ring: oklch(0.5 0.07 178);
-  --gradient-hero: linear-gradient(
-    155deg,
-    oklch(0.3 0.05 186) 0%,
-    oklch(0.38 0.06 178) 55%,
-    oklch(0.45 0.07 168) 100%
-  );
-  --gradient-accent: linear-gradient(90deg, var(--accent), oklch(0.82 0.1 84));
-  --shadow-soft: 0 1px 2px oklch(0.24 0.028 190 / 0.05), 0 12px 28px -18px oklch(0.24 0.028 190 / 0.35);
-  --shadow-elegant: 0 24px 60px -28px oklch(0.3 0.05 186 / 0.45);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.984 0.003 247.858);
-  --sidebar-foreground: oklch(0.129 0.042 264.695);
-  --sidebar-primary: oklch(0.208 0.042 265.755);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.968 0.007 247.896);
-  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
-  --sidebar-border: oklch(0.929 0.013 255.508);
-  --sidebar-ring: oklch(0.704 0.04 256.788);
+  --background: #FDF6E9;
+  --foreground: #2E1F0F;
+  --card: #FFFCF5;
+  --card-foreground: #2E1F0F;
+  --popover: #FFFCF5;
+  --popover-foreground: #2E1F0F;
+  --primary: #9F5405;
+  --primary-foreground: #FFFFFF;
+  --primary-glow: #D4A24C;
+  --secondary: #5C3A1E;
+  --secondary-foreground: #FDF6E9;
+  --muted: #E8D9BE;
+  --muted-foreground: #6B5842;
+  --accent: #D4A24C;
+  --accent-foreground: #2E1F0F;
+  --destructive: #DC2626;
+  --destructive-foreground: #FFFFFF;
+  --border: #E8D9BE;
+  --input: #E8D9BE;
+  --ring: #9F5405;
+  --gradient-hero: linear-gradient(155deg, #9F5405 0%, #D4A24C 100%);
+  --gradient-accent: linear-gradient(90deg, #D4A24C, #E8D9BE);
+  --shadow-soft: 0 1px 2px rgba(46, 31, 15, 0.05), 0 12px 28px -18px rgba(46, 31, 15, 0.35);
+  --shadow-elegant: 0 24px 60px -28px rgba(159, 84, 5, 0.45);
 }
 
 .dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.208 0.042 265.755);
-  --sidebar-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.279 0.041 260.031);
-  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.551 0.027 264.364);
+  --background: #2E1F0F;
+  --foreground: #FDF6E9;
+  --card: #5C3A1E;
+  --card-foreground: #FFFCF5;
+  --popover: #5C3A1E;
+  --popover-foreground: #FFFCF5;
+  --primary: #D4A24C;
+  --primary-foreground: #2E1F0F;
+  --secondary: #1F1206;
+  --secondary-foreground: #FDF6E9;
+  --muted: #4A3A2C;
+  --muted-foreground: #E8D9BE;
+  --accent: #9F5405;
+  --accent-foreground: #FDF6E9;
+  --destructive: #DC2626;
+  --destructive-foreground: #FFFFFF;
+  --border: rgba(232, 217, 190, 0.15);
+  --input: rgba(232, 217, 190, 0.2);
+  --ring: #D4A24C;
 }
 
 @layer base {

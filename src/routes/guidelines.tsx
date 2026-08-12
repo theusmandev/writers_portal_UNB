@@ -40,7 +40,7 @@ export default function GuidelinesPage() {
           ))}
         </div>
 
-        <div className="mt-10 rounded-xl border border-border bg-secondary/60 p-6">
+        <div className="mt-10 rounded-xl border border-border bg-primary/5 p-6">
           <p className="urdu text-lg leading-loose">
             براہِ کرم اپنا مسودہ یونیکوڈ اردو فونٹ میں بھیجیں۔ مکمل ناول کو ترجیح دی جاتی ہے، اور
             ہر مسودے کا جائزہ ادارتی ٹیم خود لیتی ہے۔

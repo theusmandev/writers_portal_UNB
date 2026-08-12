@@ -26,7 +26,7 @@ export default function PolicyPage() {
             </section>
           ))}
         </div>
-        <p className="mt-12 rounded-lg border border-border bg-secondary/60 p-5 text-sm text-muted-foreground">
+        <p className="mt-12 rounded-lg border border-border bg-primary/5 p-5 text-sm text-muted-foreground">
           Urdu Novel Bank never charges writers a fee for review, formatting or publication. If
           anyone asks you for payment on our behalf, please report it to us immediately.
         </p>

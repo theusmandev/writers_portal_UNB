@@ -17,7 +17,7 @@ export default function TimelinePage() {
       <div className="mx-auto max-w-3xl px-5 py-16">
         <div className="overflow-hidden rounded-xl border border-border bg-card shadow-soft">
           <table className="w-full text-left text-sm">
-            <thead className="bg-secondary/70 text-xs tracking-wide text-muted-foreground uppercase">
+            <thead className="bg-primary/10 text-xs tracking-wide text-primary uppercase">
               <tr>
                 <th className="px-5 py-3 font-semibold">Stage</th>
                 <th className="px-5 py-3 font-semibold">Expected duration</th>
@@ -39,7 +39,7 @@ export default function TimelinePage() {
           </table>
         </div>
 
-        <div className="mt-10 rounded-xl border border-border bg-secondary/50 p-6">
+        <div className="mt-10 rounded-xl border border-border bg-primary/5 p-6">
           <div className="flex items-center gap-2">
             <AlertCircle className="size-4 text-primary" />
             <h2 className="font-display text-lg font-semibold">What can change these timings</h2>
