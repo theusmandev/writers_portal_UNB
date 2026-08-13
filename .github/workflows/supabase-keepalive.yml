@@ -1,0 +1,44 @@
+name: Supabase Keep-Alive
+
+# ─── Why this exists ──────────────────────────────────────────────────────────
+# Supabase free-tier projects pause automatically after 7 days with no API
+# activity. This workflow makes a lightweight, authenticated REST request
+# every 3 days to prevent the project from being paused.
+#
+# SETUP (one-time, per repo):
+#   GitHub → Repository → Settings → Secrets and variables → Actions → New secret
+#   Add two secrets:
+#     SUPABASE_URL       = https://your-project-id.supabase.co
+#     SUPABASE_ANON_KEY  = your-anon-key
+#
+# This workflow runs on GitHub's free Actions minutes (public repo = unlimited).
+# ─────────────────────────────────────────────────────────────────────────────
+
+on:
+  schedule:
+    # Every 3 days at 09:00 UTC (~2pm Pakistan Standard Time)
+    - cron: "0 9 */3 * *"
+  workflow_dispatch: # Allow manual trigger from GitHub UI
+
+jobs:
+  ping:
+    name: Ping Supabase
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send keep-alive request
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          echo "Pinging Supabase project at $SUPABASE_URL …"
+          STATUS=$(curl --silent --output /dev/null --write-out "%{http_code}" \
+            "${SUPABASE_URL}/rest/v1/faqs?select=id&limit=1" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}")
+          echo "HTTP status: $STATUS"
+          if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 300 ]; then
+            echo "✓ Keep-alive ping successful"
+          else
+            echo "⚠ Unexpected status $STATUS — check secrets and project URL"
+            exit 1
+          fi

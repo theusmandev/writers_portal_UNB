@@ -7,7 +7,7 @@
 @theme {
   --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Fraunces", ui-serif, Georgia, serif;
-  --font-urdu: "Noto Nastaliq Urdu", "Jameel Noori Nastaleeq", serif;
+  --font-urdu: "Gulzar", "Noto Nastaliq Urdu", "Jameel Noori Nastaleeq", serif;
 }
 
 @theme inline {
@@ -132,3 +132,34 @@
 @utility rule-accent {
   background-image: var(--gradient-accent);
 }
+
+/* ── Status-specific tracking page animations ─────────────────────────────── */
+
+/* Entrance animation for the Published celebration card */
+@keyframes fadeScaleIn {
+  from { opacity: 0; transform: scale(0.95) translateY(6px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);   }
+}
+
+/* Each confetti dot bursts outward using CSS custom props --cx --cy --cr */
+@keyframes confettiBurst {
+  0%   { transform: translate(0, 0) rotate(0deg) scale(1);               opacity: 1; }
+  70%  { opacity: 0.9; }
+  100% { transform: translate(var(--cx), var(--cy)) rotate(var(--cr)) scale(0.15); opacity: 0; }
+}
+
+.published-card-anim {
+  animation: fadeScaleIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.confetti-dot {
+  position: absolute;
+  border-radius: 50%;
+  animation: confettiBurst 1s ease-out forwards;
+  pointer-events: none;
+}
+
+.confetti-dot-square {
+  border-radius: 2px;
+}
+

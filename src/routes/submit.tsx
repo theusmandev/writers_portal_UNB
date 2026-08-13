@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PageHero } from "@/components/portal/PageHero";
 import { genres, site } from "@/data/content";
-import { isDemoMode, submitNovel, type SubmissionRecord } from "@/services/portalApi";
+import { isDemoMode, submitNovel, uploadFileToScript, updateSubmissionFiles, sendNotificationEmail, type SubmissionRecord } from "@/services/portalApi";
 
 
 
@@ -29,11 +29,13 @@ const schema = z.object({
     .regex(/^[+0-9\s-]+$/, "Only digits, spaces, + and - are allowed"),
   location: z.string().trim().max(100).optional(),
   bio: z.string().trim().max(600).optional(),
+  socialMediaLink: z.string().trim().optional().transform(val => {
+    if (!val) return val;
+    return val.includes('://') ? val : `https://${val}`;
+  }).pipe(z.string().url("Please enter a valid URL").optional().or(z.literal(""))),
   novelTitle: z.string().trim().min(2, "Please enter the novel title").max(150),
   genre: z.string().min(1, "Please choose a genre"),
   novelStatus: z.enum(["Complete", "Ongoing"]),
-  wordCount: z.string().trim().max(20).optional(),
-  pages: z.string().trim().max(20).optional(),
   language: z.string().min(1),
   synopsis: z
     .string()
@@ -51,11 +53,10 @@ const empty = {
   whatsapp: "",
   location: "",
   bio: "",
+  socialMediaLink: "",
   novelTitle: "",
   genre: "",
   novelStatus: "Complete" as "Complete" | "Ongoing",
-  wordCount: "",
-  pages: "",
   language: "Urdu",
   synopsis: "",
 };
@@ -90,6 +91,7 @@ export default function SubmitPage() {
   const [cover, setCover] = useState<File | null>(null);
   const [agree, setAgree] = useState({ guidelines: false, policy: false, rights: false });
   const [submitting, setSubmitting] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [result, setResult] = useState<SubmissionRecord | null>(null);
 
@@ -128,18 +130,74 @@ export default function SubmitPage() {
     }
 
     setSubmitting(true);
+    setFormError(null);
+    setUploadStatus("Creating submission record...");
+
     const res = await submitNovel({
       ...form,
       manuscriptName: manuscript?.name,
       coverName: cover?.name,
     });
-    setSubmitting(false);
+
     if (!res.success) {
+      setUploadStatus(null);
+      setSubmitting(false);
       setFormError(res.error);
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
-    setResult(res.data);
+
+    const record = res.data;
+    const code = record.submissionId;
+    const scriptUrl = import.meta.env["VITE_PORTAL_API_URL"] as string | undefined;
+    let fileUploadError = "";
+
+    if (scriptUrl) {
+      if (manuscript) {
+        setUploadStatus("Uploading manuscript to Google Drive...");
+        const mRes = await uploadFileToScript(code, "manuscript", manuscript);
+        if (mRes.success) {
+          await updateSubmissionFiles(code, {
+            manuscriptUrl: mRes.fileUrl,
+            manuscriptId: mRes.fileId,
+          });
+        } else {
+          fileUploadError = "Manuscript upload failed: " + (mRes.error || "unknown error") + ". ";
+        }
+      }
+
+      if (cover) {
+        setUploadStatus("Uploading cover image to Google Drive...");
+        const cRes = await uploadFileToScript(code, "cover", cover);
+        if (cRes.success) {
+          await updateSubmissionFiles(code, {
+            coverUrl: cRes.fileUrl,
+            coverId: cRes.fileId,
+          });
+        } else {
+          fileUploadError += "Cover image upload failed: " + (cRes.error || "unknown error") + ". ";
+        }
+      }
+
+      setUploadStatus("Sending confirmation email...");
+      const emailPayload = {
+        writerEmail: form.email,
+        writerName: form.penName || form.fullName,
+        novelTitle: form.novelTitle,
+        submissionCode: code,
+      };
+      await sendNotificationEmail("received", emailPayload);
+    }
+
+    setUploadStatus(null);
+    setSubmitting(false);
+
+    setResult({
+      ...record,
+      note: fileUploadError
+        ? `⚠️ File upload failed: ${fileUploadError}Your submission details were saved, but your files could not be uploaded. Please email your manuscript and cover directly to support@urdunovelbanks.com referencing ID ${code}.`
+        : undefined,
+    });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -224,6 +282,11 @@ export default function SubmitPage() {
                   <Textarea id="bio" rows={3} value={form.bio} onChange={(e) => set("bio", e.target.value)} />
                 </Field>
               </div>
+              <div className="sm:col-span-2">
+                <Field id="socialMediaLink" label="Social Media Link (optional)" error={errors["socialMediaLink"]}>
+                  <Input id="socialMediaLink" placeholder="e.g. facebook.com/yourprofile or instagram.com/yourprofile" value={form.socialMediaLink} onChange={(e) => set("socialMediaLink", e.target.value)} />
+                </Field>
+              </div>
             </div>
           </section>
 
@@ -269,12 +332,6 @@ export default function SubmitPage() {
                   <option value="Urdu">Urdu</option>
                   <option value="Urdu + English">Urdu + English</option>
                 </select>
-              </Field>
-              <Field id="wordCount" label="Approx. word count (optional)" error={errors["wordCount"]}>
-                <Input id="wordCount" inputMode="numeric" value={form.wordCount} onChange={(e) => set("wordCount", e.target.value)} />
-              </Field>
-              <Field id="pages" label="Number of pages (optional)" error={errors["pages"]}>
-                <Input id="pages" inputMode="numeric" value={form.pages} onChange={(e) => set("pages", e.target.value)} />
               </Field>
               <div className="sm:col-span-2">
                 <Field
@@ -346,7 +403,7 @@ export default function SubmitPage() {
 
             <Button type="submit" size="lg" className="mt-6 w-full sm:w-auto" disabled={submitting}>
               {submitting && <Loader2 className="size-4 animate-spin" />}
-              {submitting ? "Submitting…" : "Submit Novel"}
+              {submitting ? (uploadStatus || "Submitting…") : "Submit Novel"}
             </Button>
             <p className="mt-3 text-xs text-muted-foreground">
               Submission and publication at {site.name} are completely free.

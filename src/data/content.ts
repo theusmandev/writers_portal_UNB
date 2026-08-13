@@ -127,7 +127,7 @@ export const guidelines: GuidelineSection[] = [
   {
     title: "Manuscript formatting",
     items: [
-      "Use a standard Urdu Unicode font (Jameel Noori Nastaleeq or Noto Nastaliq Urdu).",
+      "Use a standard Urdu Unicode font (Gulzar, Jameel Noori Nastaleeq, or Noto Nastaliq Urdu).",
       "Font size 14–16, line spacing 1.5, single column.",
       "Clear chapter or episode headings (قسط نمبر / باب).",
       "Remove page decorations, watermarks and unrelated graphics.",
