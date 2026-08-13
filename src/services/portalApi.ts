@@ -166,6 +166,8 @@ export async function uploadFileToScript(
   }
 }
 
+
+
 // ── Public: updateSubmissionFiles ────────────────────────────────────────────
 // Updates the manuscript/cover Drive file references on a submission in Supabase.
 
