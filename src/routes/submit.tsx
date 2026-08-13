@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { z } from "zod";
-import { CheckCircle2, Info, Loader2 } from "lucide-react";
+import { CheckCircle2, Info, Loader2, FileText, Image } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -84,6 +84,36 @@ function Field({
   );
 }
 
+const WAITING_MESSAGES = [
+  "Almost done...",
+  "Finishing up...",
+  "Just a moment more...",
+  "Wrapping things up...",
+  "Hang tight, nearly there...",
+];
+
+function RotatingWaitText() {
+  const [index, setIndex] = useState(0);
+  const [fade, setFade] = useState(true);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFade(false);
+      setTimeout(() => {
+        setIndex((i) => (i + 1) % WAITING_MESSAGES.length);
+        setFade(true);
+      }, 300);
+    }, 2500);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <span className={`transition-opacity duration-300 ease-in-out ${fade ? "opacity-100" : "opacity-0"}`}>
+      {WAITING_MESSAGES[index]}
+    </span>
+  );
+}
+
 export default function SubmitPage() {
   const [form, setForm] = useState(empty);
   const [errors, setErrors] = useState<Errors>({});
@@ -95,6 +125,12 @@ export default function SubmitPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [result, setResult] = useState<SubmissionRecord | null>(null);
 
+  type UploadStepState = "pending" | "uploading" | "done" | "error";
+  const [manuscriptStatus, setManuscriptStatus] = useState<UploadStepState>("pending");
+  const [manuscriptProgress, setManuscriptProgress] = useState(0);
+  const [coverStatus, setCoverStatus] = useState<UploadStepState>("pending");
+  const [coverProgress, setCoverProgress] = useState(0);
+
   const set = (key: keyof typeof empty, value: string) =>
     setForm((f) => ({ ...f, [key]: value }));
 
@@ -105,6 +141,24 @@ export default function SubmitPage() {
     if (file.size > MAX_FILE_MB * 1024 * 1024) return `File must be smaller than ${MAX_FILE_MB} MB`;
     void key;
     return undefined;
+  }
+
+  function simulateProgress(fileSize: number, setProgress: (p: number) => void): () => void {
+    let current = 0;
+    const maxFake = 85;
+    const expectedSeconds = Math.max(2, Math.min(25, fileSize / (0.5 * 1024 * 1024)));
+    const msPerStep = (expectedSeconds * 1000) / maxFake;
+
+    const timer = setInterval(() => {
+      current += 1;
+      if (current >= maxFake) {
+        current = maxFake;
+        clearInterval(timer);
+      }
+      setProgress(current);
+    }, msPerStep);
+
+    return () => clearInterval(timer);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -154,27 +208,43 @@ export default function SubmitPage() {
 
     if (scriptUrl) {
       if (manuscript) {
-        setUploadStatus("Uploading manuscript to Google Drive...");
+        setUploadStatus("Uploading manuscript...");
+        setManuscriptStatus("uploading");
+        
+        const stopSim = simulateProgress(manuscript.size, setManuscriptProgress);
         const mRes = await uploadFileToScript(code, "manuscript", manuscript);
+        stopSim();
+
         if (mRes.success) {
           await updateSubmissionFiles(code, {
             manuscriptUrl: mRes.fileUrl,
             manuscriptId: mRes.fileId,
           });
+          setManuscriptStatus("done");
+          setManuscriptProgress(100);
         } else {
+          setManuscriptStatus("error");
           fileUploadError = "Manuscript upload failed: " + (mRes.error || "unknown error") + ". ";
         }
       }
 
       if (cover) {
-        setUploadStatus("Uploading cover image to Google Drive...");
+        setUploadStatus("Uploading cover image...");
+        setCoverStatus("uploading");
+
+        const stopSim = simulateProgress(cover.size, setCoverProgress);
         const cRes = await uploadFileToScript(code, "cover", cover);
+        stopSim();
+
         if (cRes.success) {
           await updateSubmissionFiles(code, {
             coverUrl: cRes.fileUrl,
             coverId: cRes.fileId,
           });
+          setCoverStatus("done");
+          setCoverProgress(100);
         } else {
+          setCoverStatus("error");
           fileUploadError += "Cover image upload failed: " + (cRes.error || "unknown error") + ". ";
         }
       }
@@ -409,6 +479,74 @@ export default function SubmitPage() {
               Submission and publication at {site.name} are completely free.
             </p>
           </section>
+          
+          {submitting && (manuscriptStatus !== "pending" || coverStatus !== "pending") && (
+            <section className="mt-8 rounded-xl border border-primary/20 bg-primary/5 p-6 shadow-sm">
+              <h3 className="mb-4 text-sm font-semibold text-primary">Uploading Files</h3>
+              <div className="space-y-5">
+                {manuscript && (
+                  <div className="space-y-2.5">
+                    <div className="flex justify-between text-xs">
+                      <span className="flex items-center gap-1.5 text-muted-foreground">
+                        <FileText className="h-3.5 w-3.5" />
+                        {manuscriptStatus === "done" ? (
+                          "Manuscript uploaded"
+                        ) : manuscriptStatus === "error" ? (
+                          "Upload failed"
+                        ) : manuscriptStatus === "uploading" && manuscriptProgress >= 85 ? (
+                          <RotatingWaitText />
+                        ) : (
+                          "Uploading manuscript..."
+                        )}
+                      </span>
+                      <span className={`font-medium ${manuscriptStatus === "error" ? "text-destructive" : "text-foreground"}`}>
+                        {manuscriptStatus === "error" ? "Error" : `${manuscriptProgress}%`}
+                      </span>
+                    </div>
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-primary/20">
+                      <div
+                        className={`h-full transition-all duration-300 ease-out ${
+                          manuscriptStatus === "error" ? "bg-destructive" : "bg-primary"
+                        } ${manuscriptStatus === "uploading" && manuscriptProgress >= 85 ? "progress-waiting" : ""}`}
+                        style={{ width: `${manuscriptProgress}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+                {cover && (
+                  <div className="space-y-2.5">
+                    <div className="flex justify-between text-xs">
+                      <span className="flex items-center gap-1.5 text-muted-foreground">
+                        <Image className="h-3.5 w-3.5" />
+                        {coverStatus === "done" ? (
+                          "Cover uploaded"
+                        ) : coverStatus === "error" ? (
+                          "Upload failed"
+                        ) : coverStatus === "pending" ? (
+                          "Waiting to upload cover..."
+                        ) : coverStatus === "uploading" && coverProgress >= 85 ? (
+                          <RotatingWaitText />
+                        ) : (
+                          "Uploading cover..."
+                        )}
+                      </span>
+                      <span className={`font-medium ${coverStatus === "error" ? "text-destructive" : "text-foreground"}`}>
+                        {coverStatus === "error" ? "Error" : `${coverProgress}%`}
+                      </span>
+                    </div>
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-primary/20">
+                      <div
+                        className={`h-full transition-all duration-300 ease-out ${
+                          coverStatus === "error" ? "bg-destructive" : "bg-primary"
+                        } ${coverStatus === "uploading" && coverProgress >= 85 ? "progress-waiting" : ""}`}
+                        style={{ width: `${coverProgress}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
         </form>
       </div>
     </div>
