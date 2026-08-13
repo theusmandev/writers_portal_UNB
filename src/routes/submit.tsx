@@ -256,9 +256,13 @@ export default function SubmitPage() {
             setProgress(100);
             return true;
           } else {
-            setStatus("error");
+            setStatus("timeout");
             fileUploadError += `${type === "manuscript" ? "Manuscript" : "Cover image"} upload failed: ` + (res.error || "unknown error") + ". ";
-            return false;
+            // Treat as timeout to allow retry
+            await new Promise<void>((resolve) => {
+              setRetryTrigger({ type, resolve: () => { controller.abort(); resolve(); } });
+            });
+            continue;
           }
         } catch (err: any) {
           clearTimeout(timeoutId);
@@ -268,9 +272,12 @@ export default function SubmitPage() {
           if (err.message === "MANUAL_RETRY") {
             continue;
           } else {
-            setStatus("error");
+            setStatus("timeout");
             fileUploadError += `${type === "manuscript" ? "Manuscript" : "Cover image"} upload error: ` + (err.message || "unknown error") + ". ";
-            return false;
+            await new Promise<void>((resolve) => {
+              setRetryTrigger({ type, resolve: () => { controller.abort(); resolve(); } });
+            });
+            continue;
           }
         }
       }
@@ -323,6 +330,11 @@ export default function SubmitPage() {
               {result.submissionId}
             </p>
           </div>
+          {result.note && (
+            <div className="mt-5 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive text-left">
+              {result.note}
+            </div>
+          )}
           <p className="mt-5 text-xs text-muted-foreground">
             A confirmation email will be sent to {result.email}. Next stage: initial screening.
           </p>

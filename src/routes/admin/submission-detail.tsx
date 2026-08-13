@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, ExternalLink, Loader2, Save, AlertCircle, CheckCircle2, Clock, MessageSquare } from "lucide-react";
+import { ArrowLeft, ExternalLink, Loader2, Save, AlertCircle, CheckCircle2, Clock, MessageSquare, FileText, Image } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -307,33 +307,41 @@ export default function AdminSubmissionDetail() {
           </section>
 
           {/* Drive files */}
-          {(detail.manuscript_drive_url || detail.cover_drive_url) && (
-            <section className="rounded-xl border border-border bg-card p-5 space-y-3">
-              <h2 className="text-sm font-semibold">Files on Google Drive</h2>
-              <div className="flex flex-wrap gap-2">
-                {detail.manuscript_drive_url && (
-                  <a
-                    href={detail.manuscript_drive_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted px-3 py-2 text-xs font-medium hover:bg-muted/80 transition-colors"
-                  >
-                    Manuscript <ExternalLink className="h-3 w-3" />
-                  </a>
-                )}
-                {detail.cover_drive_url && (
-                  <a
-                    href={detail.cover_drive_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted px-3 py-2 text-xs font-medium hover:bg-muted/80 transition-colors"
-                  >
-                    Cover <ExternalLink className="h-3 w-3" />
-                  </a>
-                )}
-              </div>
-            </section>
-          )}
+          <section className="rounded-xl border border-border bg-card p-5 space-y-3">
+            <h2 className="text-sm font-semibold">Files on Google Drive</h2>
+            <div className="flex flex-col items-start gap-2">
+              {!detail.manuscript_drive_url ? (
+                <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span><strong>Missing Manuscript:</strong> The writer's manuscript file failed to upload.</span>
+                </div>
+              ) : (
+                <a
+                  href={detail.manuscript_drive_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted px-3 py-2 text-xs font-medium hover:bg-muted/80 transition-colors"
+                >
+                  <FileText className="h-3.5 w-3.5" /> Manuscript
+                </a>
+              )}
+              
+              {detail.cover_drive_url ? (
+                <a
+                  href={detail.cover_drive_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted px-3 py-2 text-xs font-medium hover:bg-muted/80 transition-colors"
+                >
+                  <Image className="h-3.5 w-3.5" /> Cover Image
+                </a>
+              ) : (
+                <span className="text-xs text-muted-foreground flex items-center gap-1.5 px-3 py-1">
+                  <Image className="h-3.5 w-3.5" /> No cover image attached
+                </span>
+              )}
+            </div>
+          </section>
 
           {/* Published URL display (read-only info; editable via right panel) */}
           {detail.published_url && (
