@@ -256,23 +256,24 @@ export default function AdminSubmissionDetail() {
               {w?.social_media_link && (
                 <div className="col-span-2">
                   <dt className="text-xs text-muted-foreground uppercase tracking-wide">Social Media</dt>
-                  <dd className="mt-0.5 text-sm">
+                  <dd className="mt-1 text-sm">
                     <a
-                      href={w.social_media_link}
+                      href={w.social_media_link.includes('://') ? w.social_media_link : `https://${w.social_media_link}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-primary hover:underline"
+                      className="inline-flex items-center gap-1.5 font-medium text-primary hover:underline underline-offset-2"
                     >
                       {w.social_media_link}
+                      <ExternalLink className="h-3 w-3" />
                     </a>
                   </dd>
                 </div>
               )}
             </dl>
             {w?.bio && (
-              <div>
-                <dt className="text-xs text-muted-foreground uppercase tracking-wide">Bio</dt>
-                <dd className="mt-0.5 text-sm text-muted-foreground">{w.bio}</dd>
+              <div className="mt-4 rounded-lg border border-border/60 bg-muted/30 p-3.5">
+                <dt className="text-xs text-muted-foreground uppercase tracking-wide mb-1.5">Bio</dt>
+                <dd className="text-sm text-muted-foreground break-words">{w.bio}</dd>
               </div>
             )}
             {w && (
@@ -298,9 +299,9 @@ export default function AdminSubmissionDetail() {
               <InfoRow label="Last updated" value={fmt(detail.last_updated)} />
             </dl>
             {detail.description && (
-              <div>
-                <dt className="text-xs text-muted-foreground uppercase tracking-wide">Description</dt>
-                <dd className="mt-0.5 text-sm text-muted-foreground">{detail.description}</dd>
+              <div className="mt-4">
+                <dt className="text-xs text-muted-foreground uppercase tracking-wide mb-1.5">Description</dt>
+                <dd className="text-sm text-muted-foreground break-words">{detail.description}</dd>
               </div>
             )}
           </section>
