@@ -92,7 +92,7 @@ function WriterCard({ writer }: { writer: PublicWriterRow }) {
       {/* Bio */}
       <div className="flex-1 px-5 py-4 flex flex-col">
         {writer.bio ? (
-          <p className="text-sm text-muted-foreground line-clamp-4 leading-relaxed">{writer.bio}</p>
+          <p className="text-sm text-muted-foreground line-clamp-4 leading-relaxed break-words">{writer.bio}</p>
         ) : (
           <p className="text-sm text-muted-foreground/50 italic">No bio available.</p>
         )}
@@ -100,7 +100,7 @@ function WriterCard({ writer }: { writer: PublicWriterRow }) {
         {writer.social_media_link && (
           <div className="mt-auto pt-4">
             <a
-              href={writer.social_media_link}
+              href={writer.social_media_link.includes('://') ? writer.social_media_link : `https://${writer.social_media_link}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
