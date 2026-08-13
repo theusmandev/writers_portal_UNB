@@ -125,11 +125,12 @@ export default function SubmitPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [result, setResult] = useState<SubmissionRecord | null>(null);
 
-  type UploadStepState = "pending" | "uploading" | "done" | "error";
+  type UploadStepState = "pending" | "uploading" | "done" | "error" | "timeout";
   const [manuscriptStatus, setManuscriptStatus] = useState<UploadStepState>("pending");
   const [manuscriptProgress, setManuscriptProgress] = useState(0);
   const [coverStatus, setCoverStatus] = useState<UploadStepState>("pending");
   const [coverProgress, setCoverProgress] = useState(0);
+  const [retryTrigger, setRetryTrigger] = useState<{ resolve: () => void, type: "manuscript" | "cover" } | null>(null);
 
   const set = (key: keyof typeof empty, value: string) =>
     setForm((f) => ({ ...f, [key]: value }));
@@ -206,47 +207,81 @@ export default function SubmitPage() {
     const scriptUrl = import.meta.env["VITE_PORTAL_API_URL"] as string | undefined;
     let fileUploadError = "";
 
-    if (scriptUrl) {
-      if (manuscript) {
-        setUploadStatus("Uploading manuscript...");
-        setManuscriptStatus("uploading");
+    async function performUpload(file: File, type: "manuscript" | "cover") {
+      const setStatus = type === "manuscript" ? setManuscriptStatus : setCoverStatus;
+      const setProgress = type === "manuscript" ? setManuscriptProgress : setCoverProgress;
+      
+      while (true) {
+        setStatus("uploading");
+        setProgress(0);
+        setUploadStatus(`Uploading ${type === "manuscript" ? "manuscript" : "cover image"}...`);
         
-        const stopSim = simulateProgress(manuscript.size, setManuscriptProgress);
-        const mRes = await uploadFileToScript(code, "manuscript", manuscript);
-        stopSim();
+        const controller = new AbortController();
+        const timeoutMs = 90000 + (file.size / (1024 * 1024)) * 30000;
+        
+        let retryResolve: (() => void) | null = null;
+        const retryPromise = new Promise<void>((resolve) => {
+          retryResolve = resolve;
+        });
 
-        if (mRes.success) {
-          await updateSubmissionFiles(code, {
-            manuscriptUrl: mRes.fileUrl,
-            manuscriptId: mRes.fileId,
+        const timeoutId = setTimeout(() => {
+          setStatus("timeout");
+          setRetryTrigger({
+            type,
+            resolve: () => {
+              controller.abort();
+              retryResolve!();
+            }
           });
-          setManuscriptStatus("done");
-          setManuscriptProgress(100);
-        } else {
-          setManuscriptStatus("error");
-          fileUploadError = "Manuscript upload failed: " + (mRes.error || "unknown error") + ". ";
+        }, timeoutMs);
+
+        const stopSim = simulateProgress(file.size, setProgress);
+        
+        try {
+          const res = await Promise.race([
+            uploadFileToScript(code, type, file, controller.signal),
+            retryPromise.then(() => { throw new Error("MANUAL_RETRY"); })
+          ]);
+          
+          clearTimeout(timeoutId);
+          stopSim();
+          setRetryTrigger(null);
+
+          if (res.success) {
+            await updateSubmissionFiles(code, {
+              [type === "manuscript" ? "manuscriptUrl" : "coverUrl"]: res.fileUrl,
+              [type === "manuscript" ? "manuscriptId" : "coverId"]: res.fileId,
+            });
+            setStatus("done");
+            setProgress(100);
+            return true;
+          } else {
+            setStatus("error");
+            fileUploadError += `${type === "manuscript" ? "Manuscript" : "Cover image"} upload failed: ` + (res.error || "unknown error") + ". ";
+            return false;
+          }
+        } catch (err: any) {
+          clearTimeout(timeoutId);
+          stopSim();
+          setRetryTrigger(null);
+          
+          if (err.message === "MANUAL_RETRY") {
+            continue;
+          } else {
+            setStatus("error");
+            fileUploadError += `${type === "manuscript" ? "Manuscript" : "Cover image"} upload error: ` + (err.message || "unknown error") + ". ";
+            return false;
+          }
         }
       }
+    }
 
+    if (scriptUrl) {
+      if (manuscript) {
+        await performUpload(manuscript, "manuscript");
+      }
       if (cover) {
-        setUploadStatus("Uploading cover image...");
-        setCoverStatus("uploading");
-
-        const stopSim = simulateProgress(cover.size, setCoverProgress);
-        const cRes = await uploadFileToScript(code, "cover", cover);
-        stopSim();
-
-        if (cRes.success) {
-          await updateSubmissionFiles(code, {
-            coverUrl: cRes.fileUrl,
-            coverId: cRes.fileId,
-          });
-          setCoverStatus("done");
-          setCoverProgress(100);
-        } else {
-          setCoverStatus("error");
-          fileUploadError += "Cover image upload failed: " + (cRes.error || "unknown error") + ". ";
-        }
+        await performUpload(cover, "cover");
       }
 
       setUploadStatus("Sending confirmation email...");
@@ -493,24 +528,34 @@ export default function SubmitPage() {
                           "Manuscript uploaded"
                         ) : manuscriptStatus === "error" ? (
                           "Upload failed"
+                        ) : manuscriptStatus === "timeout" ? (
+                          "Upload stalled"
                         ) : manuscriptStatus === "uploading" && manuscriptProgress >= 85 ? (
                           <RotatingWaitText />
                         ) : (
                           "Uploading manuscript..."
                         )}
                       </span>
-                      <span className={`font-medium ${manuscriptStatus === "error" ? "text-destructive" : "text-foreground"}`}>
-                        {manuscriptStatus === "error" ? "Error" : `${manuscriptProgress}%`}
+                      <span className={`font-medium ${manuscriptStatus === "error" || manuscriptStatus === "timeout" ? "text-destructive" : "text-foreground"}`}>
+                        {manuscriptStatus === "error" || manuscriptStatus === "timeout" ? "Error" : `${manuscriptProgress}%`}
                       </span>
                     </div>
                     <div className="h-1.5 w-full overflow-hidden rounded-full bg-primary/20">
                       <div
                         className={`h-full transition-all duration-300 ease-out ${
-                          manuscriptStatus === "error" ? "bg-destructive" : "bg-primary"
+                          manuscriptStatus === "error" || manuscriptStatus === "timeout" ? "bg-destructive" : "bg-primary"
                         } ${manuscriptStatus === "uploading" && manuscriptProgress >= 85 ? "progress-waiting" : ""}`}
                         style={{ width: `${manuscriptProgress}%` }}
                       />
                     </div>
+                    {manuscriptStatus === "timeout" && retryTrigger?.type === "manuscript" && (
+                      <div className="mt-2 flex items-center justify-between gap-4 rounded-md bg-muted/50 px-3 py-2 text-xs">
+                        <span className="text-muted-foreground">This is taking longer than expected — your connection may be slow.</span>
+                        <Button type="button" size="sm" variant="outline" onClick={retryTrigger.resolve} className="h-7 text-xs">
+                          Try Again
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 )}
                 {cover && (
@@ -522,6 +567,8 @@ export default function SubmitPage() {
                           "Cover uploaded"
                         ) : coverStatus === "error" ? (
                           "Upload failed"
+                        ) : coverStatus === "timeout" ? (
+                          "Upload stalled"
                         ) : coverStatus === "pending" ? (
                           "Waiting to upload cover..."
                         ) : coverStatus === "uploading" && coverProgress >= 85 ? (
@@ -530,18 +577,26 @@ export default function SubmitPage() {
                           "Uploading cover..."
                         )}
                       </span>
-                      <span className={`font-medium ${coverStatus === "error" ? "text-destructive" : "text-foreground"}`}>
-                        {coverStatus === "error" ? "Error" : `${coverProgress}%`}
+                      <span className={`font-medium ${coverStatus === "error" || coverStatus === "timeout" ? "text-destructive" : "text-foreground"}`}>
+                        {coverStatus === "error" || coverStatus === "timeout" ? "Error" : `${coverProgress}%`}
                       </span>
                     </div>
                     <div className="h-1.5 w-full overflow-hidden rounded-full bg-primary/20">
                       <div
                         className={`h-full transition-all duration-300 ease-out ${
-                          coverStatus === "error" ? "bg-destructive" : "bg-primary"
+                          coverStatus === "error" || coverStatus === "timeout" ? "bg-destructive" : "bg-primary"
                         } ${coverStatus === "uploading" && coverProgress >= 85 ? "progress-waiting" : ""}`}
                         style={{ width: `${coverProgress}%` }}
                       />
                     </div>
+                    {coverStatus === "timeout" && retryTrigger?.type === "cover" && (
+                      <div className="mt-2 flex items-center justify-between gap-4 rounded-md bg-muted/50 px-3 py-2 text-xs">
+                        <span className="text-muted-foreground">This is taking longer than expected — your connection may be slow.</span>
+                        <Button type="button" size="sm" variant="outline" onClick={retryTrigger.resolve} className="h-7 text-xs">
+                          Try Again
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

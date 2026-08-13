@@ -113,7 +113,8 @@ export interface UploadFileResponse {
 export async function uploadFileToScript(
   submissionCode: string,
   fileType: "manuscript" | "cover",
-  file: File
+  file: File,
+  signal?: AbortSignal
 ): Promise<UploadFileResponse> {
   const scriptUrl = import.meta.env["VITE_PORTAL_API_URL"] as string | undefined;
   if (!scriptUrl) {
@@ -144,6 +145,7 @@ export async function uploadFileToScript(
         mimeType: file.type,
         base64Data,
       }),
+      signal,
     });
 
     if (!res.ok) {
@@ -162,6 +164,9 @@ export async function uploadFileToScript(
       downloadUrl: data.downloadUrl,
     };
   } catch (err: any) {
+    if (err.name === "AbortError") {
+      return { success: false, error: "Upload timed out" };
+    }
     return { success: false, error: err?.message || "Failed to communicate with upload service." };
   }
 }
