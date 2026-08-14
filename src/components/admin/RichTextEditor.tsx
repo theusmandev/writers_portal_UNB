@@ -24,9 +24,10 @@ import { uploadFileToScript } from '@/services/portalApi';
 interface RichTextEditorProps {
   content: string;
   onChange: (content: string) => void;
+  postFolderToken?: string;
 }
 
-export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
+export function RichTextEditor({ content, onChange, postFolderToken }: RichTextEditorProps) {
   const [viewMode, setViewMode] = useState<'visual' | 'html'>('visual');
   const [htmlContent, setHtmlContent] = useState(content);
 
@@ -109,9 +110,9 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
     setUploadError(null);
 
     try {
-      // Create a unique submission code pseudo-id for the upload
-      const dummyCode = "POST_IMAGE_" + Date.now();
-      const res = await uploadFileToScript(dummyCode, "image", file);
+      // Use the stable postFolderToken if available, otherwise fallback to pseudo-id
+      const token = postFolderToken || ("POST_IMAGE_" + Date.now());
+      const res = await uploadFileToScript(token, "image", file);
       
       if (res.success && res.fileId) {
         const embedUrl = `https://lh3.googleusercontent.com/d/${res.fileId}=w1000`;

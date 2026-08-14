@@ -180,6 +180,40 @@ export async function uploadFileToScript(
   }
 }
 
+// ── Public: renamePostFolder ─────────────────────────────────────────────────
+// Sends a request to the Apps Script to rename a post's Google Drive folder.
+
+export async function renamePostFolder(token: string, title: string): Promise<ApiResult<null>> {
+  const scriptUrl = import.meta.env["VITE_PORTAL_API_URL"] as string | undefined;
+  if (!scriptUrl) {
+    return { success: false, error: "API URL not configured." };
+  }
+
+  try {
+    const res = await fetch(scriptUrl, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        action: "renamePostFolder",
+        token,
+        title,
+      }),
+    });
+
+    if (!res.ok) {
+      return { success: false, error: `Server responded with status ${res.status}` };
+    }
+
+    const data = await res.json();
+    if (!data.success) {
+      return { success: false, error: data.error || "Rename failed." };
+    }
+
+    return { success: true, data: null };
+  } catch (err: any) {
+    return { success: false, error: err?.message || "Failed to communicate with API." };
+  }
+}
 
 
 // ── Public: updateSubmissionFiles ────────────────────────────────────────────
