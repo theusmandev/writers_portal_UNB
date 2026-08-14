@@ -30,7 +30,7 @@ export default function PostDetailPage() {
         });
         
         setSanitizedContent(DOMPurify.sanitize(res.data.content, { 
-          ADD_ATTR: ['target'] 
+          ADD_ATTR: ['target', 'style', 'data-align'] 
         }));
       } else {
         setError(res.error || "Post not found.");
