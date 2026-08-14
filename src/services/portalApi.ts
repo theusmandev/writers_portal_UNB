@@ -121,7 +121,7 @@ export interface UploadFileResponse {
 
 export async function uploadFileToScript(
   submissionCode: string,
-  fileType: "manuscript" | "cover",
+  fileType: "manuscript" | "cover" | "image",
   file: File,
   signal?: AbortSignal
 ): Promise<UploadFileResponse> {

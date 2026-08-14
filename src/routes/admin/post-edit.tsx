@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { Loader2, ArrowLeft, Save } from "lucide-react";
 import type { PostRow } from "@/lib/supabase.types";
 
@@ -148,14 +149,9 @@ export default function AdminPostEdit() {
 
           <div className="space-y-2">
             <Label htmlFor="content">Content (supports Urdu text) <span className="text-destructive">*</span></Label>
-            <Textarea 
-              id="content"
-              value={content} 
-              onChange={(e) => setContent(e.target.value)} 
-              placeholder="Write your post content here..."
-              className="urdu min-h-[300px] font-sans"
-              dir="auto"
-              required
+            <RichTextEditor
+              content={content}
+              onChange={setContent}
             />
           </div>
 
