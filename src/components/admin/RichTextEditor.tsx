@@ -3,7 +3,7 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import Link from '@tiptap/extension-link';
-import Image from '@tiptap/extension-image';
+import { ResizableImage } from './ResizableImage';
 import TextAlign from '@tiptap/extension-text-align';
 import { 
   Bold, Italic, Underline as UnderlineIcon, Strikethrough, 
@@ -11,9 +11,10 @@ import {
   List, ListOrdered, Quote, 
   Link as LinkIcon, Image as ImageIcon, 
   AlignLeft, AlignCenter, AlignRight,
-  Undo, Redo, Loader2
+  Undo, Redo, Loader2, Code2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,6 +27,19 @@ interface RichTextEditorProps {
 }
 
 export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
+  const [viewMode, setViewMode] = useState<'visual' | 'html'>('visual');
+  const [htmlContent, setHtmlContent] = useState(content);
+
+  const toggleViewMode = () => {
+    if (viewMode === 'visual') {
+      setHtmlContent(editor?.getHTML() || '');
+      setViewMode('html');
+    } else {
+      editor?.commands.setContent(htmlContent);
+      setViewMode('visual');
+    }
+  };
+
   const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
   
@@ -45,7 +59,7 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
           rel: 'noopener noreferrer',
         },
       }),
-      Image,
+      ResizableImage,
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
@@ -140,9 +154,12 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
 
   return (
     <div className="border border-border rounded-xl overflow-hidden bg-card flex flex-col shadow-sm focus-within:border-primary/50 transition-colors">
-      <div className="flex flex-wrap items-center gap-1 p-2 border-b border-border bg-muted/40">
+      <div className="flex flex-wrap items-center justify-between gap-2 p-2 border-b border-border bg-muted/40">
         
-        {/* Text Styles */}
+        <div className="flex flex-wrap items-center gap-1">
+          {viewMode === 'visual' && (
+            <>
+              {/* Text Styles */}
         <div className="flex items-center gap-1 pr-2 border-r border-border">
           <ToolbarButton onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive('bold')} title="Bold">
             <Bold className="w-4 h-4" />
@@ -216,11 +233,47 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
             <Redo className="w-4 h-4" />
           </ToolbarButton>
         </div>
+            </>
+          )}
+          {viewMode === 'html' && (
+            <div className="flex items-center h-8 px-2 text-sm font-medium text-muted-foreground">
+              HTML Source View
+            </div>
+          )}
+        </div>
 
+        {/* View Mode Toggle */}
+        <div className="flex items-center pr-2">
+          <Button 
+            type="button"
+            variant={viewMode === 'html' ? "default" : "outline"}
+            size="sm"
+            onClick={toggleViewMode}
+            className="h-8 gap-2"
+          >
+            <Code2 className="w-4 h-4" />
+            {viewMode === 'visual' ? 'View HTML' : 'View Visual'}
+          </Button>
+        </div>
       </div>
 
       <div className="bg-card">
-        <EditorContent editor={editor} />
+        <div style={{ display: viewMode === 'visual' ? 'block' : 'none' }}>
+          <EditorContent editor={editor} />
+        </div>
+        {viewMode === 'html' && (
+          <Textarea 
+            value={htmlContent}
+            onChange={(e) => {
+              setHtmlContent(e.target.value);
+              onChange(e.target.value);
+            }}
+            className="min-h-[400px] w-full resize-y rounded-none border-0 font-mono text-sm leading-relaxed p-6 focus-visible:ring-0 bg-zinc-950 text-zinc-50 dark:bg-zinc-950 dark:text-zinc-50"
+            placeholder="<p>Enter HTML here...</p>"
+            dir="ltr"
+            spellCheck={false}
+          />
+        )}
       </div>
 
       {/* Link Dialog */}

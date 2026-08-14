@@ -27,10 +27,10 @@ export default function PostsPage() {
   return (
     <div className="pb-24">
       <PageHero
-        eyebrow="News & Updates"
+        eyebrow="Posts & Updates"
         title="Portal Updates"
-        titleUrdu="تازہ ترین خبریں"
-        description="Stay updated with the latest announcements, guidelines, and community news from Umera Ahmed Novel Bank."
+        titleUrdu="تازہ ترین اپ ڈیٹس"
+        description="Stay updated with the latest announcements, guidelines, and community news from Urdu Novel Bank."
       />
 
       <div className="mx-auto max-w-4xl px-6 py-16">

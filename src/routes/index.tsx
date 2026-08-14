@@ -48,7 +48,7 @@ export default function Index() {
             {[
               { label: "Cost to writers", value: "Free" },
               { label: "Typical review", value: site.reviewWindow },
-              { label: "Rights", value: "Stay with you" },
+              { label: "Stay with you", value: "Rights" },
             ].map((stat) => (
               <div key={stat.label}>
                 <p className="font-display text-2xl font-semibold">{stat.value}</p>

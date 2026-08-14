@@ -14,7 +14,7 @@ export const site = {
   tagline: "A structured, transparent home for Urdu novels and the writers behind them.",
   taglineUrdu: "اردو ناولوں اور ان کے لکھنے والوں کے لیے ایک منظم اور شفاف پلیٹ فارم۔",
   mainSite: "https://www.urdunovelbanks.com",
-  email: "submissions@urdunovelbanks.com",
+  email: "urdunovelbankofficial@gmail.com",
   reviewWindow: "7–21 days",
 };
 
