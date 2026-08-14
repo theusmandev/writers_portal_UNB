@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PageHero } from "@/components/portal/PageHero";
 import { genres, site, getMissingFileMessage } from "@/data/content";
-import { isDemoMode, submitNovel, uploadFileToScript, updateSubmissionFiles, sendNotificationEmail, type SubmissionRecord } from "@/services/portalApi";
+import { isDemoMode, submitNovel, uploadFileToScript, updateSubmissionFiles, sendNotificationEmail, getWriterInfoByEmail, type SubmissionRecord } from "@/services/portalApi";
 
 
 
@@ -134,6 +134,42 @@ export default function SubmitPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [result, setResult] = useState<SubmissionRecord | null>(null);
   const [copied, setCopied] = useState(false);
+
+  // Auto-fill state
+  const [autoFillEmail, setAutoFillEmail] = useState("");
+  const [autoFillLoading, setAutoFillLoading] = useState(false);
+  const [autoFillMessage, setAutoFillMessage] = useState<{ text: string; type: "success" | "info" | "error" } | null>(null);
+
+  async function handleAutoFill() {
+    if (!autoFillEmail || !/^\S+@\S+\.\S+$/.test(autoFillEmail)) {
+      setAutoFillMessage({ text: "Please enter a valid email address.", type: "error" });
+      return;
+    }
+    
+    setAutoFillLoading(true);
+    setAutoFillMessage(null);
+    
+    const res = await getWriterInfoByEmail(autoFillEmail);
+    if (res.success && res.data) {
+      setForm((prev) => ({
+        ...prev,
+        email: autoFillEmail,
+        fullName: res.data.full_name || prev.fullName,
+        penName: res.data.pen_name || prev.penName,
+        whatsapp: res.data.whatsapp || prev.whatsapp,
+        bio: res.data.bio || prev.bio,
+        socialMediaLink: res.data.social_media_link || prev.socialMediaLink,
+      }));
+      setAutoFillMessage({ text: "Your info has been auto-filled! You can still edit it below if needed.", type: "success" });
+    } else {
+      setAutoFillMessage({ 
+        text: "We couldn't find a previous submission with this email — no problem, just fill in your details below.", 
+        type: "info" 
+      });
+    }
+    setAutoFillLoading(false);
+  }
+
 
   const copyToClipboard = () => {
     if (result?.submissionId) {
@@ -430,6 +466,44 @@ export default function SubmitPage() {
         <form onSubmit={handleSubmit} className="space-y-8" noValidate>
           <section className="rounded-xl border border-border bg-card p-6 shadow-soft">
             <h2 className="font-display text-lg font-semibold">Writer Information</h2>
+            
+            {/* Auto-fill Prompt */}
+            <div className="mt-4 mb-6 rounded-lg border border-primary/20 bg-primary/5 p-4 sm:p-5">
+              <Label htmlFor="autoFillEmail" className="text-sm font-medium text-foreground">
+                Submitted before? Enter your email to auto-fill your info
+              </Label>
+              <div className="mt-2 flex flex-col sm:flex-row gap-3">
+                <Input
+                  id="autoFillEmail"
+                  type="email"
+                  placeholder="writer@example.com"
+                  value={autoFillEmail}
+                  onChange={(e) => setAutoFillEmail(e.target.value)}
+                  className="bg-background max-w-sm"
+                  onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAutoFill())}
+                />
+                <Button 
+                  type="button" 
+                  variant="secondary" 
+                  onClick={handleAutoFill}
+                  disabled={autoFillLoading}
+                  className="sm:w-auto"
+                >
+                  {autoFillLoading && <Loader2 className="mr-2 size-4 animate-spin" />}
+                  Auto-fill My Info
+                </Button>
+              </div>
+              {autoFillMessage && (
+                <p className={`mt-3 text-sm ${
+                  autoFillMessage.type === 'success' ? 'text-primary font-medium' :
+                  autoFillMessage.type === 'error' ? 'text-destructive' :
+                  'text-muted-foreground'
+                }`}>
+                  {autoFillMessage.text}
+                </p>
+              )}
+            </div>
+
             <div className="mt-5 grid gap-5 sm:grid-cols-2">
               <Field id="fullName" label="Full name" error={errors["fullName"]}>
                 <Input id="fullName" value={form.fullName} onChange={(e) => set("fullName", e.target.value)} />
