@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { Loader2, Search, ExternalLink, AlertCircle, Send, CheckCircle2, BookOpen, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -285,11 +285,12 @@ function ProgressTimeline({ activeIndex }: { activeIndex: number }) {
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function TrackPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<"by-id" | "by-email">("by-id");
 
   // Tab 1: Track by ID State
-  const [submissionId, setSubmissionId] = useState("");
-  const [email, setEmail] = useState("");
+  const [submissionId, setSubmissionId] = useState(searchParams.get("code") || "");
+  const [email, setEmail] = useState(searchParams.get("email") || "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [record, setRecord] = useState<SubmissionRecord | null>(null);
@@ -311,6 +312,17 @@ export default function TrackPage() {
     }
     setRecord(res.data);
   }
+
+  useEffect(() => {
+    const initialCode = searchParams.get("code");
+    const initialEmail = searchParams.get("email");
+    if (initialCode && initialEmail) {
+      setSearchParams({}, { replace: true });
+      void loadDetail(initialCode, initialEmail);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
