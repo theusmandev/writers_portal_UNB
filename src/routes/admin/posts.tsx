@@ -4,7 +4,7 @@ import { getAllPosts, deletePost } from "@/services/portalApi";
 import type { PostRow } from "@/lib/supabase.types";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils";
-import { Pencil, Trash2, Plus, Loader2 } from "lucide-react";
+import { Pencil, Trash2, Plus, Loader2, Eye } from "lucide-react";
 
 export default function AdminPosts() {
   const [posts, setPosts] = useState<PostRow[]>([]);
@@ -37,7 +37,7 @@ export default function AdminPosts() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="p-6 space-y-6 max-w-5xl">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Posts & Updates</h1>
         <Button asChild>
@@ -60,9 +60,9 @@ export default function AdminPosts() {
           <p className="text-muted-foreground">No posts found. Create one to get started.</p>
         </div>
       ) : (
-        <div className="rounded-xl border border-border bg-card overflow-hidden">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-muted text-muted-foreground border-b border-border">
+        <div className="rounded-xl border border-border bg-card overflow-hidden max-h-[600px] overflow-y-auto">
+          <table className="w-full text-left text-sm relative">
+            <thead className="bg-muted text-muted-foreground border-b border-border sticky top-0 z-10 shadow-sm">
               <tr>
                 <th className="px-4 py-3 font-medium">Title</th>
                 <th className="px-4 py-3 font-medium">Date</th>
@@ -88,7 +88,18 @@ export default function AdminPosts() {
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
+                      {post.published ? (
+                        <Button variant="ghost" size="icon" className="h-8 w-8" asChild title="View live post">
+                          <a href={`/updates/${post.slug}`} target="_blank" rel="noopener noreferrer">
+                            <Eye className="h-4 w-4" />
+                          </a>
+                        </Button>
+                      ) : (
+                        <Button variant="ghost" size="icon" className="h-8 w-8 opacity-50" title="Cannot view draft post" disabled>
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      )}
+                      <Button variant="ghost" size="icon" className="h-8 w-8" asChild title="Edit post">
                         <Link to={`/admin/posts/${post.id}/edit`}>
                           <Pencil className="h-4 w-4" />
                         </Link>
