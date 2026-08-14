@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/lib/supabase";
 import { submissionStatuses, getMissingFileMessage } from "@/data/content";
 import type { SubmissionRow, StatusHistoryRow, WriterRow, SubmissionResponseRow } from "@/lib/supabase.types";
-import { sendNotificationEmail } from "@/services/portalApi";
+import { sendNotificationEmail, updateSubmissionFiles } from "@/services/portalApi";
 
 /**
  * Canonical stage name for each status value.
@@ -85,6 +85,28 @@ export default function AdminSubmissionDetail() {
   const [publishedUrl, setPublishedUrl] = useState(""); // published_url (visible on Published card)
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
+  
+  const [manuscriptResolveUrl, setManuscriptResolveUrl] = useState("");
+  const [coverResolveUrl, setCoverResolveUrl] = useState("");
+
+  const isTerminalStatus = ["Published", "Rejected", "Withdrawn"].includes(detail?.current_status || "");
+
+  async function handleResolveFile(type: "manuscript" | "cover", url?: string) {
+    if (!detail) return;
+    const finalUrl = url || "resolved";
+    
+    // Optimistic update
+    setDetail(prev => prev ? {
+      ...prev,
+      [type === "manuscript" ? "manuscript_upload_failed" : "cover_upload_failed"]: false,
+      [type === "manuscript" ? "manuscript_drive_url" : "cover_drive_url"]: finalUrl
+    } : prev);
+
+    await updateSubmissionFiles(detail.submission_code, {
+      [type === "manuscript" ? "manuscriptUploadFailed" : "coverUploadFailed"]: false,
+      [type === "manuscript" ? "manuscriptUrl" : "coverUrl"]: finalUrl
+    });
+  }
 
   useEffect(() => {
     if (!id) return;
@@ -312,12 +334,30 @@ export default function AdminSubmissionDetail() {
           <section className="rounded-xl border border-border bg-card p-5 space-y-3">
             <h2 className="text-sm font-semibold">Files on Google Drive</h2>
             <div className="flex flex-col items-start gap-2">
-              {detail.manuscript_upload_failed || !detail.manuscript_drive_url ? (
-                <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4 shrink-0" />
-                  <span><strong>Missing File:</strong> {getMissingFileMessage(["manuscript"], detail.submission_code)}</span>
+              {!isTerminalStatus && (detail.manuscript_upload_failed || !detail.manuscript_drive_url) ? (
+                <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs flex flex-col gap-2">
+                  <div className="flex items-center gap-2 text-destructive">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    <span><strong>Missing File:</strong> {getMissingFileMessage(["manuscript"], detail.submission_code)}</span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Input 
+                      placeholder="Paste Drive URL (optional)" 
+                      className="h-7 text-xs bg-background w-48 px-2"
+                      value={manuscriptResolveUrl}
+                      onChange={(e) => setManuscriptResolveUrl(e.target.value)}
+                    />
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-7 text-xs border-destructive/50 hover:bg-destructive/10"
+                      onClick={() => void handleResolveFile("manuscript", manuscriptResolveUrl.trim())}
+                    >
+                      Mark as Resolved
+                    </Button>
+                  </div>
                 </div>
-              ) : (
+              ) : detail.manuscript_drive_url && detail.manuscript_drive_url !== "resolved" ? (
                 <a
                   href={detail.manuscript_drive_url}
                   target="_blank"
@@ -326,14 +366,36 @@ export default function AdminSubmissionDetail() {
                 >
                   <FileText className="h-3.5 w-3.5" /> Manuscript
                 </a>
-              )}
+              ) : detail.manuscript_drive_url === "resolved" ? (
+                <span className="text-xs text-muted-foreground flex items-center gap-1.5 px-3 py-1">
+                  <FileText className="h-3.5 w-3.5" /> Manuscript resolved (no URL)
+                </span>
+              ) : null}
               
-              {detail.cover_upload_failed ? (
-                <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4 shrink-0" />
-                  <span><strong>Missing File:</strong> {getMissingFileMessage(["cover"], detail.submission_code)}</span>
+              {!isTerminalStatus && (detail.cover_upload_failed || (!detail.cover_drive_url && detail.current_status !== "Received")) ? (
+                <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs flex flex-col gap-2">
+                  <div className="flex items-center gap-2 text-destructive">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    <span><strong>Missing File:</strong> {getMissingFileMessage(["cover"], detail.submission_code)}</span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Input 
+                      placeholder="Paste Drive URL (optional)" 
+                      className="h-7 text-xs bg-background w-48 px-2"
+                      value={coverResolveUrl}
+                      onChange={(e) => setCoverResolveUrl(e.target.value)}
+                    />
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-7 text-xs border-destructive/50 hover:bg-destructive/10"
+                      onClick={() => void handleResolveFile("cover", coverResolveUrl.trim())}
+                    >
+                      Mark as Resolved
+                    </Button>
+                  </div>
                 </div>
-              ) : detail.cover_drive_url ? (
+              ) : detail.cover_drive_url && detail.cover_drive_url !== "resolved" ? (
                 <a
                   href={detail.cover_drive_url}
                   target="_blank"
@@ -342,6 +404,10 @@ export default function AdminSubmissionDetail() {
                 >
                   <Image className="h-3.5 w-3.5" /> Cover Image
                 </a>
+              ) : detail.cover_drive_url === "resolved" ? (
+                <span className="text-xs text-muted-foreground flex items-center gap-1.5 px-3 py-1">
+                  <Image className="h-3.5 w-3.5" /> Cover resolved (no URL)
+                </span>
               ) : (
                 <span className="text-xs text-muted-foreground flex items-center gap-1.5 px-3 py-1">
                   <Image className="h-3.5 w-3.5" /> No cover image attached

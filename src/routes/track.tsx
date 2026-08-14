@@ -318,7 +318,6 @@ export default function TrackPage() {
     const initialEmail = searchParams.get("email");
     if (initialCode && initialEmail) {
       setSearchParams({}, { replace: true });
-      void loadDetail(initialCode, initialEmail);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -381,14 +380,17 @@ export default function TrackPage() {
 
   let missingFiles: string[] = [];
   if (record) {
+    const isTerminalStatus = ["Published", "Rejected", "Withdrawn"].includes(record.status);
     const timeElapsed = new Date().getTime() - new Date(record.submittedAt).getTime();
     const beyondGracePeriod = record.status !== "Received" || timeElapsed > 15 * 60 * 1000;
     
-    if (record.manuscriptUploadFailed || (!record.manuscriptUrl && beyondGracePeriod)) {
-      missingFiles.push("manuscript");
-    }
-    if (record.coverUploadFailed || (!record.coverUrl && beyondGracePeriod)) {
-      missingFiles.push("cover");
+    if (!isTerminalStatus) {
+      if (record.manuscriptUploadFailed || (!record.manuscriptUrl && beyondGracePeriod)) {
+        missingFiles.push("manuscript");
+      }
+      if (record.coverUploadFailed || (!record.coverUrl && beyondGracePeriod)) {
+        missingFiles.push("cover");
+      }
     }
   }
 
