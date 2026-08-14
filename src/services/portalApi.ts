@@ -71,6 +71,7 @@ export type WriterSubmissionSummary = {
   cover_drive_url: string | null;
   manuscript_upload_failed: boolean;
   cover_upload_failed: boolean;
+  full_name?: string;
 };
 
 export type WriterDetailWithSubmissions = WriterRow & {
