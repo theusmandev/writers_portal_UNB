@@ -53,7 +53,7 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
     content,
     editorProps: {
       attributes: {
-        class: 'prose prose-stone dark:prose-invert max-w-none min-h-[400px] p-6 focus:outline-none urdu',
+        class: 'prose prose-stone dark:prose-invert max-w-none min-h-[400px] p-6 focus:outline-none urdu prose-headings:font-urdu prose-p:leading-loose prose-headings:leading-[1.8] leading-loose',
         dir: 'auto',
       },
     },

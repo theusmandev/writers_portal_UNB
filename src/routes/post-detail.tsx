@@ -106,7 +106,7 @@ export default function PostDetailPage() {
       </header>
 
       <div 
-        className="urdu prose prose-lg prose-stone dark:prose-invert max-w-none prose-headings:font-display prose-a:text-primary hover:prose-a:text-primary/80 prose-p:leading-relaxed"
+        className="urdu prose prose-lg prose-stone dark:prose-invert max-w-none prose-headings:font-urdu prose-a:text-primary hover:prose-a:text-primary/80 prose-p:leading-loose prose-headings:leading-[1.8] leading-loose"
         dir="auto"
         dangerouslySetInnerHTML={{ __html: sanitizedContent }}
       />
