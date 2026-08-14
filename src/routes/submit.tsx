@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PageHero } from "@/components/portal/PageHero";
-import { genres, site } from "@/data/content";
+import { genres, site, getMissingFileMessage } from "@/data/content";
 import { isDemoMode, submitNovel, uploadFileToScript, updateSubmissionFiles, sendNotificationEmail, type SubmissionRecord } from "@/services/portalApi";
 
 
@@ -130,7 +130,7 @@ export default function SubmitPage() {
   const [manuscriptProgress, setManuscriptProgress] = useState(0);
   const [coverStatus, setCoverStatus] = useState<UploadStepState>("pending");
   const [coverProgress, setCoverProgress] = useState(0);
-  const [retryTrigger, setRetryTrigger] = useState<{ resolve: () => void, type: "manuscript" | "cover" } | null>(null);
+  const [retryTrigger, setRetryTrigger] = useState<{ resolve: (action: "retry" | "skip") => void, type: "manuscript" | "cover" } | null>(null);
 
   const set = (key: keyof typeof empty, value: string) =>
     setForm((f) => ({ ...f, [key]: value }));
@@ -205,7 +205,7 @@ export default function SubmitPage() {
     const record = res.data;
     const code = record.submissionId;
     const scriptUrl = import.meta.env["VITE_PORTAL_API_URL"] as string | undefined;
-    let fileUploadError = "";
+    const failedFiles: string[] = [];
 
     async function performUpload(file: File, type: "manuscript" | "cover") {
       const setStatus = type === "manuscript" ? setManuscriptStatus : setCoverStatus;
@@ -219,8 +219,8 @@ export default function SubmitPage() {
         const controller = new AbortController();
         const timeoutMs = 90000 + (file.size / (1024 * 1024)) * 30000;
         
-        let retryResolve: (() => void) | null = null;
-        const retryPromise = new Promise<void>((resolve) => {
+        let retryResolve: ((action: "retry" | "skip") => void) | null = null;
+        const retryPromise = new Promise<"retry" | "skip">((resolve) => {
           retryResolve = resolve;
         });
 
@@ -228,9 +228,9 @@ export default function SubmitPage() {
           setStatus("timeout");
           setRetryTrigger({
             type,
-            resolve: () => {
+            resolve: (action) => {
               controller.abort();
-              retryResolve!();
+              retryResolve!(action);
             }
           });
         }, timeoutMs);
@@ -240,7 +240,7 @@ export default function SubmitPage() {
         try {
           const res = await Promise.race([
             uploadFileToScript(code, type, file, controller.signal),
-            retryPromise.then(() => { throw new Error("MANUAL_RETRY"); })
+            retryPromise.then((action) => { throw new Error(action === "skip" ? "SKIP_UPLOAD" : "MANUAL_RETRY"); })
           ]);
           
           clearTimeout(timeoutId);
@@ -257,11 +257,14 @@ export default function SubmitPage() {
             return true;
           } else {
             setStatus("timeout");
-            fileUploadError += `${type === "manuscript" ? "Manuscript" : "Cover image"} upload failed: ` + (res.error || "unknown error") + ". ";
             // Treat as timeout to allow retry
-            await new Promise<void>((resolve) => {
-              setRetryTrigger({ type, resolve: () => { controller.abort(); resolve(); } });
+            const action = await new Promise<"retry" | "skip">((resolve) => {
+              setRetryTrigger({ type, resolve: (a) => { controller.abort(); resolve(a); } });
             });
+            if (action === "skip") {
+              setStatus("error");
+              return false;
+            }
             continue;
           }
         } catch (err: any) {
@@ -271,12 +274,19 @@ export default function SubmitPage() {
           
           if (err.message === "MANUAL_RETRY") {
             continue;
+          } else if (err.message === "SKIP_UPLOAD") {
+            setStatus("error");
+            return false;
           } else {
             setStatus("timeout");
-            fileUploadError += `${type === "manuscript" ? "Manuscript" : "Cover image"} upload error: ` + (err.message || "unknown error") + ". ";
-            await new Promise<void>((resolve) => {
-              setRetryTrigger({ type, resolve: () => { controller.abort(); resolve(); } });
+            // Treat as timeout to allow retry
+            const action = await new Promise<"retry" | "skip">((resolve) => {
+              setRetryTrigger({ type, resolve: (a) => { controller.abort(); resolve(a); } });
             });
+            if (action === "skip") {
+              setStatus("error");
+              return false;
+            }
             continue;
           }
         }
@@ -285,10 +295,12 @@ export default function SubmitPage() {
 
     if (scriptUrl) {
       if (manuscript) {
-        await performUpload(manuscript, "manuscript");
+        const ok = await performUpload(manuscript, "manuscript");
+        if (!ok) failedFiles.push("manuscript");
       }
       if (cover) {
-        await performUpload(cover, "cover");
+        const ok = await performUpload(cover, "cover");
+        if (!ok) failedFiles.push("cover");
       }
 
       setUploadStatus("Sending confirmation email...");
@@ -297,6 +309,7 @@ export default function SubmitPage() {
         writerName: form.penName || form.fullName,
         novelTitle: form.novelTitle,
         submissionCode: code,
+        ...(failedFiles.length > 0 && { missingFiles: failedFiles.length === 2 ? "manuscript and cover" : failedFiles[0] }),
       };
       await sendNotificationEmail("received", emailPayload);
     }
@@ -306,8 +319,8 @@ export default function SubmitPage() {
 
     setResult({
       ...record,
-      note: fileUploadError
-        ? `⚠️ File upload failed: ${fileUploadError}Your submission details were saved, but your files could not be uploaded. Please email your manuscript and cover directly to support@urdunovelbanks.com referencing ID ${code}.`
+      note: failedFiles.length > 0
+        ? `⚠️ File upload failed. ${getMissingFileMessage(failedFiles, code)}`
         : undefined,
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -563,9 +576,14 @@ export default function SubmitPage() {
                     {manuscriptStatus === "timeout" && retryTrigger?.type === "manuscript" && (
                       <div className="mt-2 flex items-center justify-between gap-4 rounded-md bg-muted/50 px-3 py-2 text-xs">
                         <span className="text-muted-foreground">This is taking longer than expected — your connection may be slow.</span>
-                        <Button type="button" size="sm" variant="outline" onClick={retryTrigger.resolve} className="h-7 text-xs">
-                          Try Again
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button type="button" size="sm" variant="ghost" onClick={() => retryTrigger.resolve("skip")} className="h-7 text-xs text-muted-foreground hover:text-foreground">
+                            Skip and submit without this file
+                          </Button>
+                          <Button type="button" size="sm" variant="outline" onClick={() => retryTrigger.resolve("retry")} className="h-7 text-xs">
+                            Try Again
+                          </Button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -604,9 +622,14 @@ export default function SubmitPage() {
                     {coverStatus === "timeout" && retryTrigger?.type === "cover" && (
                       <div className="mt-2 flex items-center justify-between gap-4 rounded-md bg-muted/50 px-3 py-2 text-xs">
                         <span className="text-muted-foreground">This is taking longer than expected — your connection may be slow.</span>
-                        <Button type="button" size="sm" variant="outline" onClick={retryTrigger.resolve} className="h-7 text-xs">
-                          Try Again
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button type="button" size="sm" variant="ghost" onClick={() => retryTrigger.resolve("skip")} className="h-7 text-xs text-muted-foreground hover:text-foreground">
+                            Skip and submit without this file
+                          </Button>
+                          <Button type="button" size="sm" variant="outline" onClick={() => retryTrigger.resolve("retry")} className="h-7 text-xs">
+                            Try Again
+                          </Button>
+                        </div>
                       </div>
                     )}
                   </div>

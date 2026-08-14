@@ -321,3 +321,10 @@ export const submissionStatuses = [
 ] as const;
 
 export type SubmissionStatus = (typeof submissionStatuses)[number];
+
+export function getMissingFileMessage(failedFiles: string[], code: string): string {
+  const fileStr = failedFiles.length === 2 
+    ? "manuscript and cover" 
+    : failedFiles[0] || "file";
+  return `We couldn't upload your ${fileStr}. Please email it directly to support@urdunovelbanks.com along with your Submission ID: ${code}.`;
+}
