@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getAdminPostById, createPost, updatePost } from "@/services/portalApi";
+import { getAdminPostById, createPost, updatePost, renamePostFolder } from "@/services/portalApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,6 +26,12 @@ export default function AdminPostEdit() {
   const [metaTitle, setMetaTitle] = useState("");
   const [metaDesc, setMetaDesc] = useState("");
   const [published, setPublished] = useState(true);
+
+  // Stable token for Google Drive folder linking
+  const [postFolderToken] = useState(() => {
+    if (!isNew && id) return id;
+    return crypto.randomUUID();
+  });
 
   useEffect(() => {
     if (isNew) return;
@@ -79,8 +85,10 @@ export default function AdminPostEdit() {
     };
 
     if (isNew) {
+      postData.id = postFolderToken; // ensure PK matches the Drive folder token
       const res = await createPost(postData);
       if (res.success) {
+        renamePostFolder(postFolderToken, title).catch(console.warn);
         navigate("/admin/posts");
       } else {
         setError(res.error);
@@ -89,6 +97,7 @@ export default function AdminPostEdit() {
     } else {
       const res = await updatePost(id!, postData);
       if (res.success) {
+        renamePostFolder(postFolderToken, title).catch(console.warn);
         navigate("/admin/posts");
       } else {
         setError(res.error);
@@ -152,6 +161,7 @@ export default function AdminPostEdit() {
             <RichTextEditor
               content={content}
               onChange={setContent}
+              postFolderToken={postFolderToken}
             />
           </div>
 

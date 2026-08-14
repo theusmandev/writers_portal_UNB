@@ -1,242 +1,378 @@
 /**
- * Urdu Novel Bank — Writer Portal backend (Google Apps Script)
- * ------------------------------------------------------------
- * Deploy: Extensions > Apps Script from your portal spreadsheet, paste this
- * file, then Deploy > New deployment > Web app
- *   Execute as:  Me
- *   Access:      Anyone
- * Copy the /exec URL into the frontend env var VITE_PORTAL_API_URL.
- *
- * Sheets required (tab names must match): Writers, Submissions, StatusHistory,
- * Policies, Timelines, FAQs.  Column order is documented in docs/DATA-MODEL.md.
+ * ============================================================
+ *  Urdu Novel Bank — Writer Portal Backend (Apps Script)
+ *  Handles: Drive file uploads + Gmail email notifications
+ * ============================================================
  */
 
-var CONFIG = {
-  SHEET_ID: 'PUT_YOUR_SPREADSHEET_ID_HERE',
-  DRIVE_ROOT_ID: 'PUT_YOUR_WRITER_PORTAL_FOLDER_ID_HERE',
-  ADMIN_TOKEN: 'PUT_A_LONG_RANDOM_STRING_HERE', // required for admin actions
-  NOTIFY_FROM_NAME: 'Urdu Novel Bank',
+// ── CONFIG ────────────────────────────────────────────────────
+const CONFIG = {
+  ROOT_FOLDER_NAME: 'Urdu Novel Bank - Writer Portal',
+  POSTS_ROOT_FOLDER: 'Portal Post Images',
+  SITE_URL: 'https://portal.urdunovelbanks.com',
+  MAIN_SITE_URL: 'https://www.urdunovelbanks.com',
+  SUPPORT_EMAIL: 'urdunovelbankofficial@gmail.com',
+  SENDER_NAME: 'Urdu Novel Bank',
+  BRAND_PRIMARY: '#9F5405',
+  BRAND_SECONDARY: '#5C3A1E',
+  BRAND_ACCENT: '#D4A24C',
+  BG_CREAM: '#FDF6E9',
+  TEXT_PRIMARY: '#2E1F0F'
 };
 
-function json_(obj) {
-  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(
-    ContentService.MimeType.JSON
-  );
-}
-
-function ss_() {
-  return SpreadsheetApp.openById(CONFIG.SHEET_ID);
-}
-
-function sheet_(name) {
-  var sh = ss_().getSheetByName(name);
-  if (!sh) throw new Error('Missing sheet: ' + name);
-  return sh;
-}
-
-function rows_(name) {
-  var values = sheet_(name).getDataRange().getValues();
-  var header = values.shift();
-  return values.map(function (row) {
-    var obj = {};
-    header.forEach(function (key, i) {
-      obj[String(key)] = row[i];
-    });
-    return obj;
-  });
-}
-
-/** ---------------------------- GET endpoints ---------------------------- */
+// ── ENTRY POINTS ──────────────────────────────────────────────
 function doGet(e) {
-  try {
-    var action = (e.parameter.action || '').toLowerCase();
-    if (action === 'policies') return json_({ success: true, data: rows_('Policies') });
-    if (action === 'timeline') return json_({ success: true, data: rows_('Timelines') });
-    if (action === 'faqs') return json_({ success: true, data: rows_('FAQs') });
-    if (action === 'track')
-      return json_(track_(e.parameter.submissionId, e.parameter.email));
-    return json_({ success: false, message: 'Unknown action.' });
-  } catch (err) {
-    return json_({ success: false, message: 'Server error: ' + err.message });
-  }
+  return jsonResponse({ success: true, message: 'UNB Portal Backend is running.' });
 }
 
-/** --------------------------- POST endpoints ---------------------------- */
 function doPost(e) {
   try {
-    var action = (e.parameter.action || '').toLowerCase();
-    var body = JSON.parse(e.postData.contents || '{}');
-    if (action === 'submit') return json_(submit_(body));
-    if (action === 'track') return json_(track_(body.submissionId, body.email));
-    if (action === 'admin/status') return json_(adminStatus_(body));
-    return json_({ success: false, message: 'Unknown action.' });
+    const body = JSON.parse(e.postData.contents);
+    const action = body.action;
+
+    switch (action) {
+      case 'uploadFile':
+        return jsonResponse(handleFileUpload(body));
+      case 'sendEmail':
+        return jsonResponse(handleSendEmail(body));
+      case 'renamePostFolder':
+        return jsonResponse(handleRenamePostFolder(body));
+      default:
+        return jsonResponse({ success: false, error: 'Unknown action: ' + action });
+    }
   } catch (err) {
-    return json_({ success: false, message: 'Server error: ' + err.message });
+    return jsonResponse({ success: false, error: err.message });
   }
 }
 
-/** ------------------------------ Submission ----------------------------- */
-function nextSubmissionId_() {
-  var year = new Date().getFullYear();
-  var ids = sheet_('Submissions').getDataRange().getValues().slice(1);
-  var count = 0;
-  ids.forEach(function (r) {
-    if (String(r[0]).indexOf('UNB-' + year + '-') === 0) count++;
-  });
-  return 'UNB-' + year + '-' + ('0000' + (count + 1)).slice(-4);
+function jsonResponse(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
-function folderFor_(year, submissionId) {
-  var root = DriveApp.getFolderById(CONFIG.DRIVE_ROOT_ID);
-  var subs = getOrCreate_(root, 'Submissions');
-  var yearFolder = getOrCreate_(subs, String(year));
-  return getOrCreate_(yearFolder, submissionId);
-}
+// ── PART 1: FILE UPLOAD TO DRIVE ─────────────────────────────
+/**
+ * Expected body:
+ * {
+ *   action: 'uploadFile',
+ *   submissionCode: 'UNB-2026-0001' | 'uuid-token-for-posts',
+ *   fileType: 'manuscript' | 'cover' | 'image',
+ *   fileName: 'my-novel.pdf',
+ *   mimeType: 'application/pdf',
+ *   base64Data: '...'
+ * }
+ */
+function handleFileUpload(body) {
+  const { submissionCode, fileType, fileName, mimeType, base64Data } = body;
 
-function getOrCreate_(parent, name) {
-  var it = parent.getFoldersByName(name);
-  return it.hasNext() ? it.next() : parent.createFolder(name);
-}
-
-function saveFile_(folder, file) {
-  if (!file || !file.data) return { id: '', url: '' };
-  var blob = Utilities.newBlob(
-    Utilities.base64Decode(file.data),
-    file.mimeType || 'application/octet-stream',
-    file.name
-  );
-  var saved = folder.createFile(blob);
-  return { id: saved.getId(), url: saved.getUrl() };
-}
-
-function submit_(b) {
-  var required = ['fullName', 'penName', 'email', 'whatsapp', 'novelTitle', 'genre', 'synopsis'];
-  for (var i = 0; i < required.length; i++) {
-    if (!b[required[i]]) return { success: false, message: 'Missing field: ' + required[i] };
+  if (!submissionCode || !fileType || !fileName || !base64Data) {
+    return { success: false, error: 'Missing required file upload fields.' };
   }
-  if (!/^\S+@\S+\.\S+$/.test(b.email)) return { success: false, message: 'Invalid email address.' };
 
-  var existing = rows_('Submissions');
-  var duplicate = existing.some(function (r) {
-    return (
-      String(r['Email']).toLowerCase() === String(b.email).toLowerCase() &&
-      String(r['Novel Title']).trim().toLowerCase() === String(b.novelTitle).trim().toLowerCase()
-    );
-  });
-  if (duplicate) return { success: false, message: 'This novel has already been submitted from this email.' };
+  const rootFolder = getOrCreateFolder(CONFIG.ROOT_FOLDER_NAME, DriveApp.getRootFolder());
+  let targetFolder;
 
-  var now = new Date();
-  var id = nextSubmissionId_();
-  var folder = folderFor_(now.getFullYear(), id);
-  var manuscript = saveFile_(folder, b.manuscript);
-  var cover = saveFile_(folder, b.cover);
-
-  var writerId = upsertWriter_(b, now);
-
-  sheet_('Submissions').appendRow([
-    id, writerId, b.fullName, b.email, b.novelTitle, b.genre, b.novelStatus || '',
-    b.synopsis, b.wordCount || '', manuscript.id, manuscript.url, cover.id,
-    now, 'Received', 'Submission Confirmation', now, '',
-  ]);
-  sheet_('StatusHistory').appendRow([id, '', 'Received', 'system', now, 'Submission received']);
-
-  sendMail_(
-    b.email,
-    'Submission received — ' + id,
-    'Assalam-o-Alaikum ' + b.penName + ',\n\n' +
-      'Your novel "' + b.novelTitle + '" has been received.\n\n' +
-      'Submission ID: ' + id + '\n\n' +
-      'Please save this ID. You can track your submission any time on the writer portal.\n\n' +
-      CONFIG.NOTIFY_FROM_NAME
-  );
-
-  return {
-    success: true,
-    data: {
-      submissionId: id,
-      email: b.email,
-      novelTitle: b.novelTitle,
-      penName: b.penName,
-      genre: b.genre,
-      submittedAt: now.toISOString(),
-      lastUpdated: now.toISOString(),
-      status: 'Received',
-      stage: 'Submission Confirmation',
-    },
-  };
-}
-
-function upsertWriter_(b, now) {
-  var sh = sheet_('Writers');
-  var data = sh.getDataRange().getValues();
-  for (var i = 1; i < data.length; i++) {
-    if (String(data[i][3]).toLowerCase() === String(b.email).toLowerCase()) return data[i][0];
-  }
-  var writerId = 'W-' + ('0000' + data.length).slice(-4);
-  sh.appendRow([writerId, b.fullName, b.penName, b.email, b.whatsapp, b.bio || '', now, 'Active']);
-  return writerId;
-}
-
-/** ------------------------------- Tracking ------------------------------ */
-function track_(submissionId, email) {
-  if (!submissionId || !email) return { success: false, message: 'Submission ID and email are required.' };
-  var match = rows_('Submissions').filter(function (r) {
-    return (
-      String(r['Submission ID']).trim().toUpperCase() === String(submissionId).trim().toUpperCase() &&
-      String(r['Email']).trim().toLowerCase() === String(email).trim().toLowerCase()
-    );
-  })[0];
-  if (!match) return { success: false, message: 'No submission matches that ID and email address.' };
-  return {
-    success: true,
-    data: {
-      submissionId: match['Submission ID'],
-      email: match['Email'],
-      novelTitle: match['Novel Title'],
-      penName: match['Writer Name'],
-      genre: match['Genre'],
-      submittedAt: new Date(match['Submission Date']).toISOString(),
-      lastUpdated: new Date(match['Last Updated'] || match['Submission Date']).toISOString(),
-      status: match['Current Status'],
-      stage: match['Current Stage'],
-    },
-  };
-}
-
-/** -------------------------------- Admin -------------------------------- */
-function adminStatus_(b) {
-  if (b.token !== CONFIG.ADMIN_TOKEN) return { success: false, message: 'Unauthorized.' };
-  var sh = sheet_('Submissions');
-  var data = sh.getDataRange().getValues();
-  for (var i = 1; i < data.length; i++) {
-    if (String(data[i][0]) === String(b.submissionId)) {
-      var oldStatus = data[i][13];
-      sh.getRange(i + 1, 14).setValue(b.status);
-      sh.getRange(i + 1, 15).setValue(b.stage || data[i][14]);
-      sh.getRange(i + 1, 16).setValue(new Date());
-      if (b.adminNote) sh.getRange(i + 1, 17).setValue(b.adminNote);
-      sheet_('StatusHistory').appendRow([
-        b.submissionId, oldStatus, b.status, b.changedBy || 'admin', new Date(), b.comment || '',
-      ]);
-      if (b.notify) {
-        sendMail_(
-          data[i][3],
-          'Submission update — ' + b.submissionId,
-          'Your submission status has been updated.\n\nPrevious status: ' + oldStatus +
-            '\nNew status: ' + b.status + '\n\n' + (b.comment || '') + '\n\n' + CONFIG.NOTIFY_FROM_NAME
-        );
+  // Handle post image uploads specifically
+  if (fileType === 'image') {
+    const postsRoot = getOrCreateFolder(CONFIG.POSTS_ROOT_FOLDER, rootFolder);
+    const shortToken = submissionCode.substring(0, 8);
+    const prefix = 'post-' + shortToken;
+    
+    const existing = postsRoot.getFolders();
+    let found = null;
+    while (existing.hasNext()) {
+      const folder = existing.next();
+      if (folder.getName().startsWith(prefix)) {
+        found = folder;
+        break;
       }
-      return { success: true, data: { submissionId: b.submissionId, status: b.status } };
+    }
+    
+    if (found) {
+      targetFolder = found;
+    } else {
+      targetFolder = postsRoot.createFolder(prefix);
+    }
+  } else {
+    // Manuscript and cover submissions logic
+    const year = submissionCode.match(/UNB-(\d{4})-/)
+      ? submissionCode.match(/UNB-(\d{4})-/)[1]
+      : new Date().getFullYear().toString();
+  
+    const submissionsFolder = getOrCreateFolder('Submissions', rootFolder);
+    const yearFolder = getOrCreateFolder(year, submissionsFolder);
+    targetFolder = getOrCreateFolder(submissionCode, yearFolder);
+  }
+
+  const decoded = Utilities.base64Decode(base64Data);
+  const blob = Utilities.newBlob(decoded, mimeType, fileName);
+
+  if (fileType === 'image') {
+    blob.setName(`${submissionCode.substring(0, 8)}-${Date.now()}-${fileName}`);
+  } else {
+    const prefix = fileType === 'cover' ? 'cover' : 'manuscript';
+    blob.setName(`${submissionCode}-${prefix}-${fileName}`);
+  }
+
+  const file = targetFolder.createFile(blob);
+
+  // Make file viewable via link (not publicly searchable/indexed)
+  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+
+  return {
+    success: true,
+    fileId: file.getId(),
+    fileUrl: file.getUrl(),
+    downloadUrl: `https://drive.google.com/uc?id=${file.getId()}&export=download`
+  };
+}
+
+function getOrCreateFolder(name, parentFolder) {
+  const existing = parentFolder.getFoldersByName(name);
+  if (existing.hasNext()) {
+    return existing.next();
+  }
+  return parentFolder.createFolder(name);
+}
+
+// ── PART 1B: RENAME POST FOLDER ──────────────────────────────
+/**
+ * Expected body:
+ * {
+ *   action: 'renamePostFolder',
+ *   token: 'uuid-token-for-posts',
+ *   title: 'The Post Title'
+ * }
+ */
+function handleRenamePostFolder(body) {
+  const { token, title } = body;
+  
+  if (!token) {
+    return { success: false, error: 'Missing token.' };
+  }
+
+  const shortToken = token.substring(0, 8);
+  const prefix = 'post-' + shortToken;
+  
+  const rootFolder = getOrCreateFolder(CONFIG.ROOT_FOLDER_NAME, DriveApp.getRootFolder());
+  const postsRoot = getOrCreateFolder(CONFIG.POSTS_ROOT_FOLDER, rootFolder);
+  
+  const existing = postsRoot.getFolders();
+  let targetFolder = null;
+  while (existing.hasNext()) {
+    const folder = existing.next();
+    if (folder.getName().startsWith(prefix)) {
+      targetFolder = folder;
+      break;
     }
   }
-  return { success: false, message: 'Submission not found.' };
+
+  if (targetFolder) {
+    const safeTitle = (title || 'Untitled')
+      .replace(/[\\/:*?"<>|]/g, '-')
+      .replace(/\s+/g, ' ')
+      .trim();
+    
+    const newName = `${prefix} - ${safeTitle}`;
+    
+    // Only rename if it's different to save API calls
+    if (targetFolder.getName() !== newName) {
+      targetFolder.setName(newName);
+    }
+  }
+
+  // We return success even if no folder was found, because it's valid for a post
+  // to be saved without ever having uploaded any images.
+  return { success: true };
 }
 
-function sendMail_(to, subject, body) {
-  try {
-    MailApp.sendEmail({ to: to, subject: subject, body: body, name: CONFIG.NOTIFY_FROM_NAME });
-  } catch (err) {
-    // Never fail a submission because email quota was exhausted.
-    Logger.log('Mail failed: ' + err.message);
+
+// ── PART 2: EMAIL NOTIFICATIONS ──────────────────────────────
+/**
+ * Expected body:
+ * {
+ *   action: 'sendEmail',
+ *   emailType: 'received' | 'action_required' | 'rejected' | 'published',
+ *   writerEmail: 'writer@example.com',
+ *   writerName: 'Ahmad Ali',
+ *   novelTitle: 'Mera Safar',
+ *   submissionCode: 'UNB-2026-0001',
+ *   statusNote: '...' (optional, for action_required / rejected),
+ *   publishedUrl: '...' (optional, for published),
+ *   missingFiles: '...' (optional, for received — e.g. 'manuscript', 'cover', 
+ *                 or 'manuscript and cover' — only set when a file upload 
+ *                 permanently failed)
+ * }
+ */
+function handleSendEmail(body) {
+  const {
+    emailType, writerEmail, writerName, novelTitle, submissionCode,
+    statusNote, publishedUrl, missingFiles
+  } = body;
+
+  if (!emailType || !writerEmail || !submissionCode) {
+    return { success: false, error: 'Missing required email fields.' };
   }
+
+  const trackLink = `${CONFIG.SITE_URL}/track?code=${encodeURIComponent(submissionCode)}&email=${encodeURIComponent(writerEmail)}`;
+
+  let subject, html;
+
+  switch (emailType) {
+    case 'received': {
+      subject = `Submission Received — ${submissionCode}`;
+
+      const missingFilesNote = missingFiles
+        ? `
+          <div style="background:#FDEDEC; border-left:4px solid #DC2626; padding:14px 16px; margin:16px 0; border-radius:4px;">
+            <strong>Please note:</strong> We couldn't upload your ${escapeHtml(missingFiles)}. 
+            Please email it directly to ${CONFIG.SUPPORT_EMAIL} along with your Submission ID: 
+            <strong>${escapeHtml(submissionCode)}</strong>.
+          </div>
+        `
+        : '';
+
+      html = buildEmailTemplate({
+        heading: 'Submission Received',
+        headingUrdu: 'آپ کی تحریر موصول ہو گئی',
+        body: `
+          <p>Dear ${escapeHtml(writerName || 'Writer')},</p>
+          <p>Thank you for submitting <strong>${escapeHtml(novelTitle || 'your novel')}</strong> to Urdu Novel Bank. 
+          We have received your manuscript and it will now go through our review process.</p>
+          <p><strong>Your Submission ID:</strong></p>
+          <div style="font-size:20px; font-weight:bold; color:${CONFIG.BRAND_PRIMARY}; margin:12px 0;">
+            ${escapeHtml(submissionCode)}
+          </div>
+          ${missingFilesNote}
+          <p>Please save this ID — you'll need it to track your submission's progress.</p>
+        `,
+        bodyUrdu: 'براہِ کرم اپنی سب کچھ محفوظ کریں، آپ اپنی تحریر کی صورتحال ٹریک کرنے کے لیے اسے استعمال کر سکتے ہیں۔',
+        ctaText: 'Track Your Submission',
+        ctaLink: trackLink
+      });
+      break;
+    }
+
+    case 'action_required':
+      subject = `Action Required — ${submissionCode}`;
+      html = buildEmailTemplate({
+        heading: 'Action Required on Your Submission',
+        headingUrdu: 'آپ کی تحریر پر کارروائی درکار ہے',
+        body: `
+          <p>Dear ${escapeHtml(writerName || 'Writer')},</p>
+          <p>We need some additional information or corrections regarding your submission 
+          <strong>${escapeHtml(novelTitle || '')}</strong> (${escapeHtml(submissionCode)}).</p>
+          ${statusNote ? `
+            <div style="background:${CONFIG.BG_CREAM}; border-left:4px solid ${CONFIG.BRAND_ACCENT}; padding:14px 16px; margin:16px 0; border-radius:4px;">
+              ${escapeHtml(statusNote)}
+            </div>
+          ` : ''}
+          <p>Please visit your tracking page to respond.</p>
+        `,
+        bodyUrdu: 'براہِ کرم اپنی تحریر کی صورتحال دیکھنے کے لیے ٹریکنگ صفحہ ملاحظہ کریں۔',
+        ctaText: 'Respond Now',
+        ctaLink: trackLink
+      });
+      break;
+
+    case 'rejected':
+      subject = `Update on Your Submission — ${submissionCode}`;
+      html = buildEmailTemplate({
+        heading: 'Submission Update',
+        headingUrdu: 'آپ کی تحریر سے متعلق اپڈیٹ',
+        body: `
+          <p>Dear ${escapeHtml(writerName || 'Writer')},</p>
+          <p>After careful review, we're unable to move forward with 
+          <strong>${escapeHtml(novelTitle || 'your submission')}</strong> (${escapeHtml(submissionCode)}) at this time.</p>
+          ${statusNote ? `
+            <div style="background:${CONFIG.BG_CREAM}; border-left:4px solid #999; padding:14px 16px; margin:16px 0; border-radius:4px;">
+              ${escapeHtml(statusNote)}
+            </div>
+          ` : ''}
+          <p>You're welcome to revise and submit again in the future. Thank you for considering Urdu Novel Bank.</p>
+        `,
+        bodyUrdu: 'آپ مستقبل میں نظرثانی کے بعد دوبارہ جمع کروا سکتے ہیں۔',
+        ctaText: 'View Details',
+        ctaLink: trackLink
+      });
+      break;
+
+    case 'published':
+      subject = `🎉 Your Novel is Published! — ${submissionCode}`;
+      html = buildEmailTemplate({
+        heading: '🎉 Congratulations! Your Novel is Published',
+        headingUrdu: 'مبارک ہو! آپ کا ناول شائع ہو گیا',
+        body: `
+          <p>Dear ${escapeHtml(writerName || 'Writer')},</p>
+          <p>We're excited to let you know that <strong>${escapeHtml(novelTitle || 'your novel')}</strong> 
+          is now published on Urdu Novel Bank!</p>
+        `,
+        bodyUrdu: 'ہمیں خوشی ہے کہ آپ کا ناول اردو ناول بینک پر شائع ہو گیا ہے۔',
+        ctaText: publishedUrl ? 'View Your Novel' : 'Track Submission',
+        ctaLink: publishedUrl || trackLink
+      });
+      break;
+
+    default:
+      return { success: false, error: 'Unknown emailType: ' + emailType };
+  }
+
+  MailApp.sendEmail({
+    to: writerEmail,
+    subject: subject,
+    htmlBody: html,
+    name: CONFIG.SENDER_NAME
+  });
+
+  return { success: true, message: 'Email sent to ' + writerEmail };
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// ── EMAIL TEMPLATE BUILDER ────────────────────────────────────
+function buildEmailTemplate({ heading, headingUrdu, body, bodyUrdu, ctaText, ctaLink }) {
+  return `
+  <div style="font-family: Georgia, 'Times New Roman', serif; background:${CONFIG.BG_CREAM}; padding:32px 16px;">
+    <div style="max-width:560px; margin:0 auto; background:#FFFCF5; border-radius:8px; overflow:hidden; border:1px solid #E8D9BE;">
+      
+      <div style="background:${CONFIG.BRAND_PRIMARY}; padding:24px 32px;">
+        <div style="color:#fff; font-size:20px; font-weight:bold;">Urdu Novel Bank</div>
+        <div style="color:${CONFIG.BRAND_ACCENT}; font-size:13px; margin-top:2px;">Writer &amp; Publication Portal</div>
+      </div>
+
+      <div style="padding:32px;">
+        <h1 style="font-size:22px; color:${CONFIG.TEXT_PRIMARY}; margin:0 0 4px 0;">${heading}</h1>
+        <div dir="rtl" style="font-size:16px; color:${CONFIG.BRAND_PRIMARY}; margin:0 0 20px 0; font-family: 'Noto Nastaliq Urdu', serif;">
+          ${headingUrdu}
+        </div>
+
+        <div style="font-size:15px; line-height:1.7; color:${CONFIG.TEXT_PRIMARY};">
+          ${body}
+        </div>
+
+        <div dir="rtl" style="font-size:14px; color:#6B5842; margin-top:16px; font-family: 'Noto Nastaliq Urdu', serif;">
+          ${bodyUrdu}
+        </div>
+
+        <div style="text-align:center; margin-top:28px;">
+          <a href="${ctaLink}" style="background:${CONFIG.BRAND_PRIMARY}; color:#fff; text-decoration:none; padding:12px 28px; border-radius:6px; font-size:15px; display:inline-block;">
+            ${ctaText}
+          </a>
+        </div>
+      </div>
+
+      <div style="background:${CONFIG.BRAND_SECONDARY}; padding:16px 32px; text-align:center;">
+        <div style="color:#D9C6AC; font-size:12px;">
+          © ${new Date().getFullYear()} Urdu Novel Bank &nbsp;•&nbsp; 
+          <a href="${CONFIG.MAIN_SITE_URL}" style="color:${CONFIG.BRAND_ACCENT};">urdunovelbanks.com</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  `;
 }
