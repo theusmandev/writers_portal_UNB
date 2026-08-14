@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, AlertCircle, Globe, EyeOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { AdminPagination } from "@/components/admin/AdminPagination";
 import { supabase } from "@/lib/supabase";
 import type { WriterRow } from "@/lib/supabase.types";
 
@@ -22,6 +23,12 @@ export default function AdminWriters() {
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [toggling, setToggling] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
 
   useEffect(() => {
     void load();
@@ -87,12 +94,32 @@ export default function AdminWriters() {
     );
   });
 
+  const itemsPerPage = 20;
+  const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
+  const safePage = Math.min(currentPage, totalPages) || 1;
+
+  const paginatedWriters = filtered.slice(
+    (safePage - 1) * itemsPerPage,
+    safePage * itemsPerPage
+  );
+
+  const startItem = filtered.length === 0 ? 0 : (safePage - 1) * itemsPerPage + 1;
+  const endItem = Math.min(safePage * itemsPerPage, filtered.length);
+
+  const hasFilters = search.trim() !== "";
+  const countText = hasFilters 
+    ? `Showing ${startItem}–${endItem} of ${filtered.length} writers (filtered from ${writers.length} total)`
+    : `Showing ${startItem}–${endItem} of ${writers.length} writers`;
+
   return (
     <div className="p-6 space-y-6 max-w-5xl">
       <div>
         <h1 className="text-xl font-semibold">Writers</h1>
         <p className="text-sm text-muted-foreground mt-1">
           Toggle <strong>Public</strong> to show a writer on the public /writers page.
+        </p>
+        <p className="text-sm text-muted-foreground mt-2">
+          {countText}
         </p>
       </div>
 
@@ -139,7 +166,7 @@ export default function AdminWriters() {
                   </td>
                 </tr>
               ) : (
-                filtered.map((w) => (
+                paginatedWriters.map((w) => (
                   <tr
                     key={w.id}
                     className="border-b border-border/50 last:border-0 hover:bg-muted/20 transition-colors cursor-pointer"
@@ -180,6 +207,15 @@ export default function AdminWriters() {
           </table>
         )}
       </div>
+
+      <AdminPagination 
+        currentPage={safePage} 
+        totalPages={totalPages} 
+        onPageChange={(page) => {
+          setCurrentPage(page);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }} 
+      />
     </div>
   );
 }

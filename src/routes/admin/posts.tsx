@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { getAllPosts, deletePost } from "@/services/portalApi";
 import type { PostRow } from "@/lib/supabase.types";
 import { Button } from "@/components/ui/button";
+import { AdminPagination } from "@/components/admin/AdminPagination";
 import { formatDate } from "@/lib/utils";
 import { Pencil, Trash2, Plus, Loader2, Eye } from "lucide-react";
 
@@ -10,6 +11,7 @@ export default function AdminPosts() {
   const [posts, setPosts] = useState<PostRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   async function loadPosts() {
     setLoading(true);
@@ -60,9 +62,10 @@ export default function AdminPosts() {
           <p className="text-muted-foreground">No posts found. Create one to get started.</p>
         </div>
       ) : (
-        <div className="rounded-xl border border-border bg-card overflow-hidden max-h-[600px] overflow-y-auto">
-          <table className="w-full text-left text-sm relative">
-            <thead className="bg-muted text-muted-foreground border-b border-border sticky top-0 z-10 shadow-sm">
+        <>
+          <div className="rounded-xl border border-border bg-card overflow-hidden">
+            <table className="w-full text-left text-sm relative">
+              <thead className="bg-muted text-muted-foreground border-b border-border shadow-sm">
               <tr>
                 <th className="px-4 py-3 font-medium">Title</th>
                 <th className="px-4 py-3 font-medium">Date</th>
@@ -71,7 +74,9 @@ export default function AdminPosts() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {posts.map((post) => (
+              {posts
+                .slice((currentPage - 1) * 20, currentPage * 20)
+                .map((post) => (
                 <tr key={post.id} className="hover:bg-muted/30 transition-colors">
                   <td className="px-4 py-3 font-medium">{post.title}</td>
                   <td className="px-4 py-3 text-muted-foreground">{formatDate(post.created_at)}</td>
@@ -119,6 +124,16 @@ export default function AdminPosts() {
             </tbody>
           </table>
         </div>
+        
+        <AdminPagination 
+          currentPage={currentPage} 
+          totalPages={Math.max(1, Math.ceil(posts.length / 20))} 
+          onPageChange={(page) => {
+            setCurrentPage(page);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }} 
+        />
+      </>
       )}
     </div>
   );

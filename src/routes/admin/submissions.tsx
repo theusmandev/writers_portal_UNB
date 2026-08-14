@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Search, SlidersHorizontal, ExternalLink, AlertCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { AdminPagination } from "@/components/admin/AdminPagination";
 import { supabase } from "@/lib/supabase";
 import { submissionStatuses, genres } from "@/data/content";
 import type { SubmissionRow } from "@/lib/supabase.types";
@@ -39,7 +40,14 @@ export default function AdminSubmissions() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [genreFilter, setGenreFilter] = useState("");
+  const [dateFilter, setDateFilter] = useState("All time");
   const [sortDesc, setSortDesc] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Reset to page 1 when any filter or sort changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, statusFilter, genreFilter, dateFilter, sortDesc]);
 
   useEffect(() => {
     async function load() {
@@ -51,10 +59,6 @@ export default function AdminSubmissions() {
           .select("*, writers(full_name, pen_name)")
           .order("submission_date", { ascending: !sortDesc });
 
-        if (statusFilter) {
-          q = q.eq("current_status", statusFilter);
-        }
-
         const { data, error: err } = await q;
         if (err) throw err;
         setRows((data ?? []) as SubmissionWithWriter[]);
@@ -65,30 +69,79 @@ export default function AdminSubmissions() {
       }
     }
     void load();
-  }, [statusFilter, sortDesc]);
+  }, [sortDesc]);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+    const thisMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    const lastMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0, 23, 59, 59, 999);
+
     return rows.filter((r) => {
       const matchesSearch =
         !q ||
         r.novel_title.toLowerCase().includes(q) ||
         (r.writers?.full_name ?? "").toLowerCase().includes(q) ||
         r.submission_code.toLowerCase().includes(q);
+      const matchesStatus = !statusFilter || r.current_status === statusFilter;
       const matchesGenre = !genreFilter || r.genre === genreFilter;
-      return matchesSearch && matchesGenre;
+      
+      let matchesDate = true;
+      if (dateFilter !== "All time") {
+        const subDate = new Date(r.submission_date);
+        if (dateFilter === "Today") {
+          matchesDate = subDate >= today;
+        } else if (dateFilter === "Yesterday") {
+          matchesDate = subDate >= yesterday && subDate < today;
+        } else if (dateFilter === "Last 7 Days") {
+          matchesDate = subDate >= sevenDaysAgo;
+        } else if (dateFilter === "This Month") {
+          matchesDate = subDate >= thisMonthStart;
+        } else if (dateFilter === "Last Month") {
+          matchesDate = subDate >= lastMonthStart && subDate <= lastMonthEnd;
+        }
+      }
+
+      return matchesSearch && matchesStatus && matchesGenre && matchesDate;
     });
-  }, [rows, search, genreFilter]);
+  }, [rows, search, statusFilter, genreFilter, dateFilter]);
+
+  const hasFilters = search || statusFilter || genreFilter || dateFilter !== "All time";
+
+  const itemsPerPage = 20;
+  const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
+  const safePage = Math.min(currentPage, totalPages) || 1;
+
+  const paginatedRows = filtered.slice(
+    (safePage - 1) * itemsPerPage,
+    safePage * itemsPerPage
+  );
+
+  const startItem = filtered.length === 0 ? 0 : (safePage - 1) * itemsPerPage + 1;
+  const endItem = Math.min(safePage * itemsPerPage, filtered.length);
+
+  const countText = hasFilters 
+    ? `Showing ${startItem}–${endItem} of ${filtered.length} entries (filtered from ${rows.length} total)`
+    : `Showing ${startItem}–${endItem} of ${rows.length} entries`;
 
   return (
     <div className="p-6 space-y-6 max-w-6xl">
       <div>
         <h1 className="text-xl font-semibold">Submissions</h1>
-        <p className="text-sm text-muted-foreground mt-1">{filtered.length} entries</p>
+        <p className="text-sm text-muted-foreground mt-1">
+          {countText}
+        </p>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[200px] max-w-xs">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
           <Input
@@ -121,15 +174,46 @@ export default function AdminSubmissions() {
             <option key={g} value={g}>{g}</option>
           ))}
         </select>
+        <select
+          id="date-filter"
+          value={dateFilter}
+          onChange={(e) => setDateFilter(e.target.value)}
+          className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
+        >
+          <option value="All time">All time</option>
+          <option value="Today">Today</option>
+          <option value="Yesterday">Yesterday</option>
+          <option value="Last 7 Days">Last 7 Days</option>
+          <option value="This Month">This Month</option>
+          <option value="Last Month">Last Month</option>
+        </select>
         <Button
           variant="outline"
           size="sm"
           onClick={() => setSortDesc((v) => !v)}
-          className="gap-1.5"
+          className="h-9 gap-1.5"
         >
           <SlidersHorizontal className="h-4 w-4" />
           {sortDesc ? "Newest first" : "Oldest first"}
         </Button>
+
+        {hasFilters && (
+          <div className="w-full flex justify-center mt-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                setSearch("");
+                setStatusFilter("");
+                setGenreFilter("");
+                setDateFilter("All time");
+              }}
+              className="h-9 min-w-[120px]"
+            >
+              Clear Filters
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Error */}
@@ -166,7 +250,7 @@ export default function AdminSubmissions() {
                   </td>
                 </tr>
               ) : (
-                filtered.map((s) => (
+                paginatedRows.map((s) => (
                   <tr
                     key={s.id}
                     className="border-b border-border/50 last:border-0 hover:bg-muted/20 transition-colors"
@@ -196,6 +280,15 @@ export default function AdminSubmissions() {
           </table>
         )}
       </div>
+
+      <AdminPagination 
+        currentPage={safePage} 
+        totalPages={totalPages} 
+        onPageChange={(page) => {
+          setCurrentPage(page);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }} 
+      />
     </div>
   );
 }
