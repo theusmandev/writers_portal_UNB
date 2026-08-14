@@ -660,6 +660,141 @@ export async function toggleWriterPublic(id: string, isPublic: boolean): Promise
   }
 }
 
+// ── Public: Posts ─────────────────────────────────────────────────────────────
+
+import type { PostRow } from "@/lib/supabase.types";
+
+export async function getPublishedPosts(): Promise<ApiResult<PostRow[]>> {
+  if (!isSupabaseConfigured) return { 
+    success: true, 
+    data: [{
+      id: "demo-id",
+      title: 'سوشل میڈیا لنک — کیوں ضروری ہے؟',
+      slug: 'social-media-link-importance',
+      content: 'السلام علیکم پیارے لکھاریو! 🌸\n\nآپ نے دیکھا ہوگا کہ سبمیشن فارم میں ہم نے ایک نیا اختیاری خانہ شامل کیا ہے — سوشل میڈیا لنک۔ سوچا آپ کو بتا دیں کہ یہ کیوں رکھا گیا ہے۔ 🤍',
+      published: true,
+      meta_title: 'سوشل میڈیا لنک — کیوں ضروری ہے؟ | Umera Ahmed Novel Bank',
+      meta_description: 'جانیے کہ عمیرہ احمد ناول بینک (UNB) پر اپنا سوشل میڈیا لنک دینا کیوں ضروری ہے۔ یہ آپ کے قارئین سے جڑنے اور اپنی پہچان بنانے کا ایک بہترین ذریعہ ہے۔',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }] 
+  };
+  try {
+    const { data, error } = await supabase
+      .from("posts")
+      .select("*")
+      .eq("published", true)
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return { success: true, data: (data ?? []) as PostRow[] };
+  } catch (err: any) {
+    return { success: false, error: err?.message || "Could not load posts." };
+  }
+}
+
+export async function getPostBySlug(slug: string): Promise<ApiResult<PostRow | null>> {
+  if (!isSupabaseConfigured) return { 
+    success: true, 
+    data: {
+      id: "demo-id",
+      title: 'سوشل میڈیا لنک — کیوں ضروری ہے؟',
+      slug: 'social-media-link-importance',
+      content: 'السلام علیکم پیارے لکھاریو! 🌸\n\nآپ نے دیکھا ہوگا کہ سبمیشن فارم میں ہم نے ایک نیا اختیاری خانہ شامل کیا ہے — سوشل میڈیا لنک۔ سوچا آپ کو بتا دیں کہ یہ کیوں رکھا گیا ہے۔ 🤍',
+      published: true,
+      meta_title: 'سوشل میڈیا لنک — کیوں ضروری ہے؟ | Umera Ahmed Novel Bank',
+      meta_description: 'جانیے کہ عمیرہ احمد ناول بینک (UNB) پر اپنا سوشل میڈیا لنک دینا کیوں ضروری ہے۔ یہ آپ کے قارئین سے جڑنے اور اپنی پہچان بنانے کا ایک بہترین ذریعہ ہے۔',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    } 
+  };
+  try {
+    const { data, error } = await supabase
+      .from("posts")
+      .select("*")
+      .eq("slug", slug)
+      .eq("published", true)
+      .maybeSingle();
+    if (error) throw error;
+    return { success: true, data: data as PostRow | null };
+  } catch (err: any) {
+    return { success: false, error: err?.message || "Could not load post." };
+  }
+}
+
+// ── Admin: Posts ──────────────────────────────────────────────────────────────
+
+export async function getAllPosts(): Promise<ApiResult<PostRow[]>> {
+  if (!isSupabaseConfigured) return { success: true, data: [] };
+  try {
+    const { data, error } = await supabase
+      .from("posts")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return { success: true, data: (data ?? []) as PostRow[] };
+  } catch (err: any) {
+    return { success: false, error: err?.message || "Could not load posts." };
+  }
+}
+
+export async function getAdminPostById(id: string): Promise<ApiResult<PostRow | null>> {
+  if (!isSupabaseConfigured) return { success: true, data: null };
+  try {
+    const { data, error } = await supabase
+      .from("posts")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+    if (error) throw error;
+    return { success: true, data: data as PostRow | null };
+  } catch (err: any) {
+    return { success: false, error: err?.message || "Could not load post." };
+  }
+}
+
+export async function createPost(post: Partial<PostRow>): Promise<ApiResult<PostRow>> {
+  if (!isSupabaseConfigured) return { success: false, error: "Demo mode" };
+  try {
+    const { data, error } = await supabase
+      .from("posts")
+      .insert(post)
+      .select()
+      .single();
+    if (error) throw error;
+    return { success: true, data: data as PostRow };
+  } catch (err: any) {
+    return { success: false, error: err?.message || "Could not create post." };
+  }
+}
+
+export async function updatePost(id: string, updates: Partial<PostRow>): Promise<ApiResult<null>> {
+  if (!isSupabaseConfigured) return { success: false, error: "Demo mode" };
+  try {
+    const { error } = await supabase
+      .from("posts")
+      .update({ ...updates, updated_at: new Date().toISOString() })
+      .eq("id", id);
+    if (error) throw error;
+    return { success: true, data: null };
+  } catch (err: any) {
+    return { success: false, error: err?.message || "Could not update post." };
+  }
+}
+
+export async function deletePost(id: string): Promise<ApiResult<null>> {
+  if (!isSupabaseConfigured) return { success: false, error: "Demo mode" };
+  try {
+    const { error } = await supabase
+      .from("posts")
+      .delete()
+      .eq("id", id);
+    if (error) throw error;
+    return { success: true, data: null };
+  } catch (err: any) {
+    return { success: false, error: err?.message || "Could not delete post." };
+  }
+}
+
 // ── isDemoMode export (used by submit.tsx banner) ─────────────────────────────
 
 export const isDemoMode = !isSupabaseConfigured;

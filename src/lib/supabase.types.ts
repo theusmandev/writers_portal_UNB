@@ -97,7 +97,26 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["submission_responses"]["Insert"]>;
         Relationships: any[];
       };
-
+      posts: {
+        Row: {
+          id: string;
+          title: string;
+          content: string;
+          slug: string;
+          published: boolean;
+          meta_title: string | null;
+          meta_description: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["posts"]["Row"], "id" | "created_at" | "updated_at"> & {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["posts"]["Insert"]>;
+        Relationships: [];
+      };
       policies: {
         Row: {
           id: string;
@@ -167,4 +186,5 @@ export type WriterRow = Database["public"]["Tables"]["writers"]["Row"];
 export type SubmissionRow = Database["public"]["Tables"]["submissions"]["Row"];
 export type StatusHistoryRow = Database["public"]["Tables"]["status_history"]["Row"];
 export type SubmissionResponseRow = Database["public"]["Tables"]["submission_responses"]["Row"];
+export type PostRow = Database["public"]["Tables"]["posts"]["Row"];
 export type PublicWriterRow = Database["public"]["Views"]["public_writers_view"]["Row"];

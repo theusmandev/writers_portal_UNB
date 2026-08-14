@@ -606,15 +606,21 @@ export default function TrackPage() {
 
             {/* List results */}
             {submissionsList && (
-              <div className="space-y-4 text-left">
-                <div className="mb-2">
-                  {submissionsList.length > 0 && submissionsList[0].full_name && (
-                    <h2 className="font-display text-2xl font-semibold text-foreground mb-1">
+              <div className="space-y-4">
+                {submissionsList.length > 0 && submissionsList[0].full_name && (
+                  <div className="mb-8 text-center">
+                    <h2 className="font-display text-2xl font-semibold text-foreground mb-2">
                       Welcome back, {submissionsList[0].full_name}
                     </h2>
-                  )}
-                  <h3 className={`font-semibold ${submissionsList.length > 0 && submissionsList[0].full_name ? 'text-muted-foreground text-sm' : 'text-lg text-foreground'}`}>
-                    My Submissions ({submissionsList.length})
+                    <p className="text-muted-foreground text-sm">
+                      Here are all your submissions.
+                    </p>
+                  </div>
+                )}
+                
+                <div className="text-left">
+                  <h3 className="font-semibold text-lg text-foreground">
+                    Total Submissions ({submissionsList.length})
                   </h3>
                 </div>
                 {submissionsList.length === 0 ? (
