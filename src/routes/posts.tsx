@@ -67,7 +67,11 @@ export default function PostsPage() {
                   </h2>
                   
                   <p className="urdu line-clamp-2 text-sm text-muted-foreground leading-relaxed" dir="auto">
-                    {post.content}
+                    {(() => {
+                      const tmp = document.createElement("div");
+                      tmp.innerHTML = post.content;
+                      return tmp.textContent || tmp.innerText || "";
+                    })()}
                   </p>
                 </div>
                 

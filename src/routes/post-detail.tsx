@@ -1,3 +1,4 @@
+import DOMPurify from 'dompurify';
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { getPostBySlug } from "@/services/portalApi";
@@ -10,6 +11,7 @@ export default function PostDetailPage() {
   const [post, setPost] = useState<PostRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [sanitizedContent, setSanitizedContent] = useState("");
 
   useEffect(() => {
     async function load() {
@@ -17,6 +19,19 @@ export default function PostDetailPage() {
       const res = await getPostBySlug(slug);
       if (res.success && res.data) {
         setPost(res.data);
+        
+        // Sanitize the HTML content for safe rendering
+        // Need to allow target="_blank" for links to work properly
+        DOMPurify.addHook('afterSanitizeAttributes', function(node) {
+          if ('target' in node && node.nodeName === 'A') {
+            node.setAttribute('target', '_blank');
+            node.setAttribute('rel', 'noopener noreferrer');
+          }
+        });
+        
+        setSanitizedContent(DOMPurify.sanitize(res.data.content, { 
+          ADD_ATTR: ['target'] 
+        }));
       } else {
         setError(res.error || "Post not found.");
       }
@@ -33,7 +48,13 @@ export default function PostDetailPage() {
       document.title = titleText;
 
       // Meta Description
-      const descText = post.meta_description || post.content.substring(0, 150).replace(/\n/g, ' ') + '...';
+      const rawText = (() => {
+        const tmp = document.createElement("div");
+        tmp.innerHTML = post.content;
+        return tmp.textContent || tmp.innerText || "";
+      })();
+      const descText = post.meta_description || rawText.substring(0, 150).replace(/\n/g, ' ') + '...';
+      
       let metaDesc = document.querySelector('meta[name="description"]');
       if (!metaDesc) {
         metaDesc = document.createElement('meta');
@@ -87,14 +108,8 @@ export default function PostDetailPage() {
       <div 
         className="urdu prose prose-lg prose-stone dark:prose-invert max-w-none prose-headings:font-display prose-a:text-primary hover:prose-a:text-primary/80 prose-p:leading-relaxed"
         dir="auto"
-      >
-        {/* Render content with preserved line breaks */}
-        {post.content.split('\n').map((paragraph, idx) => (
-          <p key={idx} className="mb-6 whitespace-pre-wrap">
-            {paragraph}
-          </p>
-        ))}
-      </div>
+        dangerouslySetInnerHTML={{ __html: sanitizedContent }}
+      />
     </article>
   );
 }
