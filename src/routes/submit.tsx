@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { z } from "zod";
-import { CheckCircle2, Info, Loader2, FileText, Image } from "lucide-react";
+import { CheckCircle2, Info, Loader2, FileText, Image, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +16,15 @@ import { isDemoMode, submitNovel, uploadFileToScript, updateSubmissionFiles, sen
 const MAX_FILE_MB = 25;
 const ALLOWED_DOC = [".doc", ".docx", ".pdf", ".txt", ".rtf"];
 const ALLOWED_IMG = [".jpg", ".jpeg", ".png"];
+
+function formatBytes(bytes: number, decimals = 1) {
+  if (!+bytes) return '0 Bytes';
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+}
 
 const schema = z.object({
   fullName: z.string().trim().min(3, "Please enter your full name").max(100),
@@ -124,6 +133,18 @@ export default function SubmitPage() {
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [result, setResult] = useState<SubmissionRecord | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const copyToClipboard = () => {
+    if (result?.submissionId) {
+      navigator.clipboard.writeText(result.submissionId).then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }).catch(() => {
+        // Fallback for browsers without Clipboard API
+      });
+    }
+  };
 
   type UploadStepState = "pending" | "uploading" | "done" | "error" | "timeout";
   const [manuscriptStatus, setManuscriptStatus] = useState<UploadStepState>("pending");
@@ -346,11 +367,20 @@ export default function SubmitPage() {
             Thank you for submitting <span className="font-medium text-foreground">{result.novelTitle}</span>.
             Please save your Submission ID — you will need it to track your novel.
           </p>
-          <div className="mt-6 rounded-xl border border-dashed border-primary/40 bg-primary/5 p-5">
+          <div className="mt-6 flex flex-col items-center justify-center rounded-xl border border-dashed border-primary/40 bg-primary/5 p-5 relative">
             <p className="text-xs tracking-[0.2em] text-muted-foreground uppercase">Submission ID</p>
-            <p className="mt-1 font-display text-3xl font-semibold text-primary">
-              {result.submissionId}
-            </p>
+            <div className="mt-1 flex items-center gap-3">
+              <p className="font-display text-3xl font-semibold text-primary">
+                {result.submissionId}
+              </p>
+              <button
+                onClick={copyToClipboard}
+                className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+                title="Copy Submission ID"
+              >
+                {copied ? <Check className="size-5 text-green-500" /> : <Copy className="size-5" />}
+              </button>
+            </div>
           </div>
           {result.note && (
             <div className="mt-5 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive text-left">
@@ -362,7 +392,7 @@ export default function SubmitPage() {
           </p>
           <div className="mt-7 flex flex-wrap justify-center gap-3">
             <Button asChild>
-              <Link to="/track">Track Submission</Link>
+              <Link to={`/track?code=${result.submissionId}&email=${encodeURIComponent(result.email)}`}>Track Submission</Link>
             </Button>
             <Button asChild variant="outline">
               <Link to="/process">See What Happens Next</Link>
@@ -491,15 +521,24 @@ export default function SubmitPage() {
               <Field
                 id="manuscript"
                 label="Manuscript"
-                hint={`${ALLOWED_DOC.join(", ")} · max ${MAX_FILE_MB} MB`}
+                hint={`Preferred formats: .doc or .docx (editable) — .pdf and .txt also accepted. Max ${MAX_FILE_MB} MB.`}
                 error={errors["manuscript"]}
               >
-                <Input
-                  id="manuscript"
-                  type="file"
-                  accept={ALLOWED_DOC.join(",")}
-                  onChange={(e) => setManuscript(e.target.files?.[0] ?? null)}
-                />
+                <div className="space-y-2">
+                  <Input
+                    id="manuscript"
+                    type="file"
+                    accept={ALLOWED_DOC.join(",")}
+                    onChange={(e) => setManuscript(e.target.files?.[0] ?? null)}
+                  />
+                  {manuscript && (
+                    <div className="flex items-center gap-2 rounded-md bg-muted/50 p-2 text-sm text-muted-foreground">
+                      <CheckCircle2 className="size-4 text-green-500 shrink-0" />
+                      <span className="truncate max-w-[200px]" title={manuscript.name}>{manuscript.name}</span>
+                      <span className="text-xs shrink-0">({formatBytes(manuscript.size)})</span>
+                    </div>
+                  )}
+                </div>
               </Field>
               <Field
                 id="cover"
@@ -507,12 +546,21 @@ export default function SubmitPage() {
                 hint={`${ALLOWED_IMG.join(", ")} · portrait, 1200×1800 px or larger`}
                 error={errors["cover"]}
               >
-                <Input
-                  id="cover"
-                  type="file"
-                  accept={ALLOWED_IMG.join(",")}
-                  onChange={(e) => setCover(e.target.files?.[0] ?? null)}
-                />
+                <div className="space-y-2">
+                  <Input
+                    id="cover"
+                    type="file"
+                    accept={ALLOWED_IMG.join(",")}
+                    onChange={(e) => setCover(e.target.files?.[0] ?? null)}
+                  />
+                  {cover && (
+                    <div className="flex items-center gap-2 rounded-md bg-muted/50 p-2 text-sm text-muted-foreground">
+                      <CheckCircle2 className="size-4 text-green-500 shrink-0" />
+                      <span className="truncate max-w-[200px]" title={cover.name}>{cover.name}</span>
+                      <span className="text-xs shrink-0">({formatBytes(cover.size)})</span>
+                    </div>
+                  )}
+                </div>
               </Field>
             </div>
           </section>
