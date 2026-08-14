@@ -576,6 +576,48 @@ export async function getSubmissionsByEmail(
   }
 }
 
+// ── Public: getWriterInfoByEmail ─────────────────────────────────────────────
+// Looks up an existing writer's information by email for auto-filling the form.
+
+export async function getWriterInfoByEmail(email: string): Promise<ApiResult<Partial<WriterRow>>> {
+  // Demo mode fallback
+  if (!isSupabaseConfigured) {
+    await new Promise((r) => setTimeout(r, 400));
+    const all = readStore();
+    const match = all.find((r) => r.email.trim().toLowerCase() === email.trim().toLowerCase());
+    if (match) {
+      return {
+        success: true,
+        data: {
+          full_name: match.penName, // In demo mode, fullName isn't always distinct in store
+          pen_name: match.penName,
+          whatsapp: "",
+          bio: "",
+          social_media_link: "",
+        },
+      };
+    }
+    return { success: false, error: "Not found" };
+  }
+
+  try {
+    const { data, error } = await supabase.rpc("get_writer_info_by_email", {
+      p_email: email.trim().toLowerCase(),
+    });
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    if (!data || data.length === 0) {
+      return { success: false, error: "Not found" };
+    }
+
+    return { success: true, data: data[0] as Partial<WriterRow> };
+  } catch {
+    return { success: false, error: "Network error. Please try again." };
+  }
+}
 
 // ── Admin: Dashboard stats ────────────────────────────────────────────────────
 
