@@ -99,8 +99,9 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
       const dummyCode = "POST_IMAGE_" + Date.now();
       const res = await uploadFileToScript(dummyCode, "image", file);
       
-      if (res.success && res.downloadUrl) {
-        editor?.chain().focus().setImage({ src: res.downloadUrl }).run();
+      if (res.success && res.fileId) {
+        const embedUrl = `https://lh3.googleusercontent.com/d/${res.fileId}=w1000`;
+        editor?.chain().focus().setImage({ src: embedUrl }).run();
         setIsImageDialogOpen(false);
       } else {
         setUploadError(res.error || "Failed to upload image.");

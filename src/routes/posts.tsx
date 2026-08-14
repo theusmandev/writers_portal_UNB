@@ -33,7 +33,7 @@ export default function PostsPage() {
         description="Stay updated with the latest announcements, guidelines, and community news from Umera Ahmed Novel Bank."
       />
 
-      <div className="mx-auto max-w-4xl px-6">
+      <div className="mx-auto max-w-4xl px-6 py-16">
         {loading ? (
           <div className="flex h-40 items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -47,7 +47,7 @@ export default function PostsPage() {
             <p className="text-muted-foreground text-lg">No updates published yet. Check back soon!</p>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="flex flex-col gap-8">
             {posts.map((post) => (
               <article 
                 key={post.id} 
@@ -59,14 +59,14 @@ export default function PostsPage() {
                     <time dateTime={post.created_at}>{formatDate(post.created_at)}</time>
                   </div>
                   
-                  <h2 className="urdu font-display text-xl font-semibold text-foreground group-hover:text-primary transition-colors sm:text-2xl" dir="auto">
+                  <h2 className="urdu font-display text-xl font-semibold text-foreground group-hover:text-primary transition-colors sm:text-2xl leading-[1.8]" dir="auto">
                     <Link to={`/updates/${post.slug}`}>
                       <span className="absolute inset-0" />
                       {post.title}
                     </Link>
                   </h2>
                   
-                  <p className="urdu line-clamp-2 text-sm text-muted-foreground leading-relaxed" dir="auto">
+                  <p className="urdu line-clamp-2 text-sm text-muted-foreground leading-loose" dir="auto">
                     {(() => {
                       const tmp = document.createElement("div");
                       tmp.innerHTML = post.content;
