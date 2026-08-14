@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/lib/supabase";
-import { submissionStatuses } from "@/data/content";
+import { submissionStatuses, getMissingFileMessage } from "@/data/content";
 import type { SubmissionRow, StatusHistoryRow, WriterRow, SubmissionResponseRow } from "@/lib/supabase.types";
 import { sendNotificationEmail } from "@/services/portalApi";
 
@@ -169,14 +169,16 @@ export default function AdminSubmissionDetail() {
             newStatus === "Action Required" ? "action_required" :
             newStatus === "Rejected" ? "rejected" : "published";
 
-          sendNotificationEmail(emailType as any, {
+          const emailPayload: any = {
             writerEmail: w.email,
             writerName: w.pen_name || w.full_name,
             novelTitle: detail.novel_title,
             submissionCode: detail.submission_code,
             statusNote: statusNote.trim() || undefined,
             publishedUrl: publishedUrl.trim() || undefined,
-          })
+          };
+
+          sendNotificationEmail(emailType as any, emailPayload)
             .then((emailRes) => {
               if (emailRes.success) {
                 setSaveMsg("✓ Saved. Notification email sent.");
@@ -313,7 +315,7 @@ export default function AdminSubmissionDetail() {
               {!detail.manuscript_drive_url ? (
                 <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive flex items-center gap-2">
                   <AlertCircle className="h-4 w-4 shrink-0" />
-                  <span><strong>Missing Manuscript:</strong> The writer's manuscript file failed to upload.</span>
+                  <span><strong>Missing File:</strong> {getMissingFileMessage(["manuscript"], detail.submission_code)}</span>
                 </div>
               ) : (
                 <a

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { PageHero } from "@/components/portal/PageHero";
-import { processStages, submissionStatuses } from "@/data/content";
+import { processStages, submissionStatuses, getMissingFileMessage } from "@/data/content";
 import { trackSubmission, submitResponse, getSubmissionsByEmail, type SubmissionRecord, type WriterSubmissionSummary } from "@/services/portalApi";
 
 /**
@@ -367,6 +367,13 @@ export default function TrackPage() {
     ? (SPECIAL_STATUSES as readonly string[]).includes(record.status)
     : false;
 
+  const isMissingManuscript = record
+    ? !record.manuscriptUrl && (
+        record.status !== "Received" || 
+        (new Date().getTime() - new Date(record.submittedAt).getTime() > 15 * 60 * 1000)
+      )
+    : false;
+
   return (
     <div>
       <PageHero
@@ -481,6 +488,23 @@ export default function TrackPage() {
                 </dl>
 
                 {/* ── Status-specific content ── */}
+
+                {/* Missing Manuscript Warning (shows across all statuses if manuscript failed) */}
+                {isMissingManuscript && (
+                  <div className="mt-6 rounded-xl border border-destructive/30 bg-destructive/5 p-5">
+                    <div className="flex items-start gap-3">
+                      <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-destructive/10">
+                        <AlertCircle className="h-4 w-4 text-destructive" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-foreground">Missing File</h3>
+                        <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
+                          {getMissingFileMessage(["manuscript"], record!.submissionId)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Published — celebration card (replaces progress timeline) */}
                 {record.status === "Published" && <PublishedCard record={record} />}

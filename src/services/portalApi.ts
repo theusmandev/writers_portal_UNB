@@ -50,6 +50,8 @@ export type SubmissionRecord = {
   statusNote?: string | undefined;  // status_note — reason for Rejected / Action Required
   publishedUrl?: string | undefined;
   hasResponse?: boolean;            // whether writer has already submitted a response
+  manuscriptUrl?: string | null;
+  coverUrl?: string | null;
 };
 
 export type ApiResult<T> = { success: true; data: T } | { success: false; error: string };
@@ -63,6 +65,8 @@ export type WriterSubmissionSummary = {
   submission_date: string;
   last_updated: string;
   published_url: string | null;
+  manuscript_drive_url: string | null;
+  cover_drive_url: string | null;
 };
 
 export type WriterDetailWithSubmissions = WriterRow & {
@@ -215,6 +219,7 @@ export interface EmailPayload {
   submissionCode: string;
   statusNote?: string;
   publishedUrl?: string;
+  missingFiles?: string;
 }
 
 export async function sendNotificationEmail(
@@ -389,6 +394,8 @@ export async function trackSubmission(
       pen_name: string | null;
       full_name: string;
       has_response: boolean;
+      manuscript_drive_url: string | null;
+      cover_drive_url: string | null;
     }>;
 
     if (rows.length === 0) {
@@ -416,6 +423,8 @@ export async function trackSubmission(
         statusNote: row.status_note ?? undefined,
         publishedUrl: row.published_url ?? undefined,
         hasResponse: row.has_response,
+        manuscriptUrl: row.manuscript_drive_url,
+        coverUrl: row.cover_drive_url,
       },
     };
   } catch {
@@ -485,6 +494,8 @@ export async function getSubmissionsByEmail(
         submission_date: r.submittedAt,
         last_updated: r.lastUpdated,
         published_url: r.publishedUrl || null,
+        manuscript_drive_url: r.manuscriptUrl || null,
+        cover_drive_url: r.coverUrl || null,
       }));
     return { success: true, data: matches };
   }
@@ -496,7 +507,11 @@ export async function getSubmissionsByEmail(
     if (error) {
       return { success: false, error: error.message };
     }
-    return { success: true, data: (data ?? []) as WriterSubmissionSummary[] };
+    
+    // Explicitly cast the returned array to WriterSubmissionSummary[]
+    // Since get_submissions_by_email doesn't currently return the missing fields from the DB view,
+    // they will just be undefined. The UI will just not show the Drive missing warnings for email lookups.
+    return { success: true, data: (data ?? []) as unknown as WriterSubmissionSummary[] };
   } catch {
     return { success: false, error: "Network error. Please try again." };
   }
