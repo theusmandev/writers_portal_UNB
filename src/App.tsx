@@ -15,6 +15,8 @@ import Contact from "./routes/contact";
 import SubmitPage from "./routes/submit";
 import TrackPage from "./routes/track";
 import WritersPage from "./routes/writers";
+import PostsPage from "./routes/posts";
+import PostDetailPage from "./routes/post-detail";
 
 // ── Admin pages ───────────────────────────────────────────────────────────────
 import AdminLoginPage from "./routes/admin/login";
@@ -23,6 +25,8 @@ import AdminSubmissions from "./routes/admin/submissions";
 import AdminSubmissionDetail from "./routes/admin/submission-detail";
 import AdminWriters from "./routes/admin/writers";
 import AdminWriterDetail from "./routes/admin/writer-detail";
+import AdminPosts from "./routes/admin/posts";
+import AdminPostEdit from "./routes/admin/post-edit";
 import NotFound from "./routes/not-found";
 
 /** Public layout — wraps all public routes with the site header and footer */
@@ -59,6 +63,9 @@ export default function App() {
           <Route path="submissions/:id" element={<AdminSubmissionDetail />} />
           <Route path="writers" element={<AdminWriters />} />
           <Route path="writers/:id" element={<AdminWriterDetail />} />
+          <Route path="posts" element={<AdminPosts />} />
+          <Route path="posts/new" element={<AdminPostEdit />} />
+          <Route path="posts/:id/edit" element={<AdminPostEdit />} />
           <Route path="*" element={<NotFound />} />
         </Route>
 
@@ -74,6 +81,8 @@ export default function App() {
           <Route path="/submit" element={<SubmitPage />} />
           <Route path="/track" element={<TrackPage />} />
           <Route path="/writers" element={<WritersPage />} />
+          <Route path="/updates" element={<PostsPage />} />
+          <Route path="/updates/:slug" element={<PostDetailPage />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
