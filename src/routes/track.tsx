@@ -367,12 +367,18 @@ export default function TrackPage() {
     ? (SPECIAL_STATUSES as readonly string[]).includes(record.status)
     : false;
 
-  const isMissingManuscript = record
-    ? !record.manuscriptUrl && (
-        record.status !== "Received" || 
-        (new Date().getTime() - new Date(record.submittedAt).getTime() > 15 * 60 * 1000)
-      )
-    : false;
+  let missingFiles: string[] = [];
+  if (record) {
+    const timeElapsed = new Date().getTime() - new Date(record.submittedAt).getTime();
+    const beyondGracePeriod = record.status !== "Received" || timeElapsed > 15 * 60 * 1000;
+    
+    if (record.manuscriptUploadFailed || (!record.manuscriptUrl && beyondGracePeriod)) {
+      missingFiles.push("manuscript");
+    }
+    if (record.coverUploadFailed || (!record.coverUrl && beyondGracePeriod)) {
+      missingFiles.push("cover");
+    }
+  }
 
   return (
     <div>
@@ -489,8 +495,8 @@ export default function TrackPage() {
 
                 {/* ── Status-specific content ── */}
 
-                {/* Missing Manuscript Warning (shows across all statuses if manuscript failed) */}
-                {isMissingManuscript && (
+                {/* Missing File Warning (shows across all statuses if files failed) */}
+                {missingFiles.length > 0 && (
                   <div className="mt-6 rounded-xl border border-destructive/30 bg-destructive/5 p-5">
                     <div className="flex items-start gap-3">
                       <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-destructive/10">
@@ -499,7 +505,7 @@ export default function TrackPage() {
                       <div>
                         <h3 className="font-semibold text-foreground">Missing File</h3>
                         <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
-                          {getMissingFileMessage(["manuscript"], record!.submissionId)}
+                          {getMissingFileMessage(missingFiles as any, record!.submissionId)}
                         </p>
                       </div>
                     </div>

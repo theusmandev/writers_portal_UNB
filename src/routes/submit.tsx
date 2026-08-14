@@ -263,6 +263,9 @@ export default function SubmitPage() {
             });
             if (action === "skip") {
               setStatus("error");
+              await updateSubmissionFiles(code, {
+                [type === "manuscript" ? "manuscriptUploadFailed" : "coverUploadFailed"]: true
+              });
               return false;
             }
             continue;
@@ -276,6 +279,9 @@ export default function SubmitPage() {
             continue;
           } else if (err.message === "SKIP_UPLOAD") {
             setStatus("error");
+            await updateSubmissionFiles(code, {
+              [type === "manuscript" ? "manuscriptUploadFailed" : "coverUploadFailed"]: true
+            });
             return false;
           } else {
             setStatus("timeout");
@@ -285,6 +291,9 @@ export default function SubmitPage() {
             });
             if (action === "skip") {
               setStatus("error");
+              await updateSubmissionFiles(code, {
+                [type === "manuscript" ? "manuscriptUploadFailed" : "coverUploadFailed"]: true
+              });
               return false;
             }
             continue;
@@ -577,7 +586,7 @@ export default function SubmitPage() {
                       <div className="mt-2 flex items-center justify-between gap-4 rounded-md bg-muted/50 px-3 py-2 text-xs">
                         <span className="text-muted-foreground">This is taking longer than expected — your connection may be slow.</span>
                         <div className="flex gap-2">
-                          <Button type="button" size="sm" variant="ghost" onClick={() => retryTrigger.resolve("skip")} className="h-7 text-xs text-muted-foreground hover:text-foreground">
+                          <Button type="button" size="sm" variant="outline" onClick={() => retryTrigger.resolve("skip")} className="h-7 text-xs border-muted text-muted-foreground hover:bg-muted/50 hover:text-foreground">
                             Skip and submit without this file
                           </Button>
                           <Button type="button" size="sm" variant="outline" onClick={() => retryTrigger.resolve("retry")} className="h-7 text-xs">
@@ -623,7 +632,7 @@ export default function SubmitPage() {
                       <div className="mt-2 flex items-center justify-between gap-4 rounded-md bg-muted/50 px-3 py-2 text-xs">
                         <span className="text-muted-foreground">This is taking longer than expected — your connection may be slow.</span>
                         <div className="flex gap-2">
-                          <Button type="button" size="sm" variant="ghost" onClick={() => retryTrigger.resolve("skip")} className="h-7 text-xs text-muted-foreground hover:text-foreground">
+                          <Button type="button" size="sm" variant="outline" onClick={() => retryTrigger.resolve("skip")} className="h-7 text-xs border-muted text-muted-foreground hover:bg-muted/50 hover:text-foreground">
                             Skip and submit without this file
                           </Button>
                           <Button type="button" size="sm" variant="outline" onClick={() => retryTrigger.resolve("retry")} className="h-7 text-xs">

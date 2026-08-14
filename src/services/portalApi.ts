@@ -52,6 +52,8 @@ export type SubmissionRecord = {
   hasResponse?: boolean;            // whether writer has already submitted a response
   manuscriptUrl?: string | null;
   coverUrl?: string | null;
+  manuscriptUploadFailed?: boolean;
+  coverUploadFailed?: boolean;
 };
 
 export type ApiResult<T> = { success: true; data: T } | { success: false; error: string };
@@ -67,6 +69,8 @@ export type WriterSubmissionSummary = {
   published_url: string | null;
   manuscript_drive_url: string | null;
   cover_drive_url: string | null;
+  manuscript_upload_failed: boolean;
+  cover_upload_failed: boolean;
 };
 
 export type WriterDetailWithSubmissions = WriterRow & {
@@ -149,7 +153,7 @@ export async function uploadFileToScript(
         mimeType: file.type,
         base64Data,
       }),
-      signal,
+      signal: signal as any,
     });
 
     if (!res.ok) {
@@ -187,20 +191,34 @@ export async function updateSubmissionFiles(
     manuscriptId?: string;
     coverUrl?: string;
     coverId?: string;
+    manuscriptUploadFailed?: boolean;
+    coverUploadFailed?: boolean;
   }
 ): Promise<ApiResult<null>> {
-  if (!isSupabaseConfigured) return { success: true, data: null };
+  if (!isSupabaseConfigured) {
+    // Demo mode: update local store
+    await new Promise((r) => setTimeout(r, 200));
+    const all = readStore();
+    const idx = all.findIndex(r => r.submissionId === submissionCode);
+    if (idx !== -1) {
+      if (files.manuscriptUrl !== undefined) all[idx]!.manuscriptUrl = files.manuscriptUrl;
+      if (files.coverUrl !== undefined) all[idx]!.coverUrl = files.coverUrl;
+      if (files.manuscriptUploadFailed !== undefined) all[idx]!.manuscriptUploadFailed = files.manuscriptUploadFailed;
+      if (files.coverUploadFailed !== undefined) all[idx]!.coverUploadFailed = files.coverUploadFailed;
+      writeStore(all);
+    }
+    return { success: true, data: null };
+  }
   try {
-    const updates: any = {};
-    if (files.manuscriptUrl !== undefined) updates.manuscript_drive_url = files.manuscriptUrl;
-    if (files.manuscriptId !== undefined) updates.manuscript_drive_file_id = files.manuscriptId;
-    if (files.coverUrl !== undefined) updates.cover_drive_url = files.coverUrl;
-    if (files.coverId !== undefined) updates.cover_drive_file_id = files.coverId;
-
-    const { error } = await supabase
-      .from("submissions")
-      .update(updates)
-      .eq("submission_code", submissionCode);
+    const { error } = await supabase.rpc("update_submission_files", {
+      p_submission_code: submissionCode,
+      p_manuscript_url: files.manuscriptUrl,
+      p_manuscript_id: files.manuscriptId,
+      p_cover_url: files.coverUrl,
+      p_cover_id: files.coverId,
+      p_manuscript_upload_failed: files.manuscriptUploadFailed,
+      p_cover_upload_failed: files.coverUploadFailed,
+    });
 
     if (error) return { success: false, error: error.message };
     return { success: true, data: null };
@@ -396,6 +414,8 @@ export async function trackSubmission(
       has_response: boolean;
       manuscript_drive_url: string | null;
       cover_drive_url: string | null;
+      manuscript_upload_failed: boolean;
+      cover_upload_failed: boolean;
     }>;
 
     if (rows.length === 0) {
@@ -425,6 +445,8 @@ export async function trackSubmission(
         hasResponse: row.has_response,
         manuscriptUrl: row.manuscript_drive_url,
         coverUrl: row.cover_drive_url,
+        manuscriptUploadFailed: row.manuscript_upload_failed,
+        coverUploadFailed: row.cover_upload_failed,
       },
     };
   } catch {
@@ -496,6 +518,8 @@ export async function getSubmissionsByEmail(
         published_url: r.publishedUrl || null,
         manuscript_drive_url: r.manuscriptUrl || null,
         cover_drive_url: r.coverUrl || null,
+        manuscript_upload_failed: r.manuscriptUploadFailed || false,
+        cover_upload_failed: r.coverUploadFailed || false,
       }));
     return { success: true, data: matches };
   }

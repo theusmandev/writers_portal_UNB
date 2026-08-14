@@ -60,7 +60,7 @@ function fmt(iso: string) {
   });
 }
 
-function InfoRow({ label, value }: { label: string; value?: string | number | null }) {
+function InfoRow({ label, value }: { label: string; value?: string | number | null | undefined }) {
   if (!value && value !== 0) return null;
   return (
     <div>
@@ -312,7 +312,7 @@ export default function AdminSubmissionDetail() {
           <section className="rounded-xl border border-border bg-card p-5 space-y-3">
             <h2 className="text-sm font-semibold">Files on Google Drive</h2>
             <div className="flex flex-col items-start gap-2">
-              {!detail.manuscript_drive_url ? (
+              {detail.manuscript_upload_failed || !detail.manuscript_drive_url ? (
                 <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive flex items-center gap-2">
                   <AlertCircle className="h-4 w-4 shrink-0" />
                   <span><strong>Missing File:</strong> {getMissingFileMessage(["manuscript"], detail.submission_code)}</span>
@@ -328,7 +328,12 @@ export default function AdminSubmissionDetail() {
                 </a>
               )}
               
-              {detail.cover_drive_url ? (
+              {detail.cover_upload_failed ? (
+                <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span><strong>Missing File:</strong> {getMissingFileMessage(["cover"], detail.submission_code)}</span>
+                </div>
+              ) : detail.cover_drive_url ? (
                 <a
                   href={detail.cover_drive_url}
                   target="_blank"

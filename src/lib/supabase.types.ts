@@ -29,6 +29,7 @@ export interface Database {
           registration_date?: string;
         };
         Update: Partial<Database["public"]["Tables"]["writers"]["Insert"]>;
+        Relationships: any[];
       };
       submissions: {
         Row: {
@@ -43,6 +44,8 @@ export interface Database {
           manuscript_drive_file_id: string | null;
           cover_drive_url: string | null;
           cover_drive_file_id: string | null;
+          manuscript_upload_failed: boolean;
+          cover_upload_failed: boolean;
           submission_date: string;
           current_status: string;
           current_stage: string | null;
@@ -61,6 +64,7 @@ export interface Database {
           last_updated?: string;
         };
         Update: Partial<Database["public"]["Tables"]["submissions"]["Insert"]>;
+        Relationships: any[];
       };
       status_history: {
         Row: {
@@ -77,6 +81,7 @@ export interface Database {
           changed_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["status_history"]["Insert"]>;
+        Relationships: any[];
       };
       submission_responses: {
         Row: {
@@ -90,6 +95,7 @@ export interface Database {
           submitted_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["submission_responses"]["Insert"]>;
+        Relationships: any[];
       };
 
       policies: {
@@ -106,6 +112,7 @@ export interface Database {
           last_updated?: string;
         };
         Update: Partial<Database["public"]["Tables"]["policies"]["Insert"]>;
+        Relationships: any[];
       };
       timelines: {
         Row: {
@@ -118,6 +125,7 @@ export interface Database {
         };
         Insert: Omit<Database["public"]["Tables"]["timelines"]["Row"], "id"> & { id?: string };
         Update: Partial<Database["public"]["Tables"]["timelines"]["Insert"]>;
+        Relationships: any[];
       };
       faqs: {
         Row: {
@@ -130,6 +138,7 @@ export interface Database {
         };
         Insert: Omit<Database["public"]["Tables"]["faqs"]["Row"], "id"> & { id?: string };
         Update: Partial<Database["public"]["Tables"]["faqs"]["Insert"]>;
+        Relationships: any[];
       };
     };
     Views: {
@@ -149,7 +158,7 @@ export interface Database {
         };
       };
     };
-    Functions: Record<string, never>;
+    Functions: Record<string, any>;
     Enums: Record<string, never>;
   };
 }

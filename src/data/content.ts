@@ -326,5 +326,5 @@ export function getMissingFileMessage(failedFiles: string[], code: string): stri
   const fileStr = failedFiles.length === 2 
     ? "manuscript and cover" 
     : failedFiles[0] || "file";
-  return `We couldn't upload your ${fileStr}. Please email it directly to support@urdunovelbanks.com along with your Submission ID: ${code}.`;
+  return `We couldn't upload your ${fileStr}. Please email it directly to urdunovelbankofficial.com along with your Submission ID: ${code}.`;
 }
