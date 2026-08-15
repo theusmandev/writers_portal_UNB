@@ -55,6 +55,7 @@ export type SubmissionRecord = {
   coverUrl?: string | null;
   manuscriptUploadFailed?: boolean;
   coverUploadFailed?: boolean;
+  novelStatus?: string | undefined;
   episodeCount?: number | undefined;
   episodes?: Array<{ episode_number: number; upload_failed: boolean; drive_url?: string | null }> | undefined;
 };
@@ -310,6 +311,46 @@ export async function saveEpisodeRecord(
   }
 }
 
+// ── Public: addEpisodesToSubmission ──────────────────────────────────────────
+
+export async function addEpisodesToSubmission(
+  submissionCode: string,
+  email: string,
+  episodeFiles: Array<{
+    driveUrl: string | null;
+    driveFileId: string | null;
+    fileName: string | null;
+    uploadFailed: boolean;
+  }>
+): Promise<ApiResult<null>> {
+  if (!isSupabaseConfigured) {
+    // Demo mode fallback
+    await new Promise((r) => setTimeout(r, 600));
+    return { success: true, data: null };
+  }
+  
+  try {
+    // Process each file sequentially
+    for (const file of episodeFiles) {
+      const { error } = await supabase.rpc("add_episode_to_submission", {
+        p_submission_code: submissionCode.trim().toUpperCase(),
+        p_email: email.trim().toLowerCase(),
+        p_drive_url: file.driveUrl,
+        p_drive_file_id: file.driveFileId,
+        p_file_name: file.fileName,
+        p_upload_failed: file.uploadFailed,
+      });
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+    }
+    return { success: true, data: null };
+  } catch (err: any) {
+    return { success: false, error: err?.message || "Failed to add episodes." };
+  }
+}
+
 // ── Public: sendNotificationEmail ────────────────────────────────────────────
 // Triggers an email notification via Google Apps Script Web App.
 
@@ -321,10 +362,11 @@ export interface EmailPayload {
   statusNote?: string;
   publishedUrl?: string;
   missingFiles?: string;
+  episodeCount?: number;
 }
 
 export async function sendNotificationEmail(
-  emailType: "received" | "action_required" | "rejected" | "published",
+  emailType: "received" | "action_required" | "rejected" | "published" | "episodes_added",
   payload: EmailPayload
 ): Promise<ApiResult<null>> {
   const scriptUrl = import.meta.env["VITE_PORTAL_API_URL"] as string | undefined;
@@ -533,6 +575,7 @@ export async function trackSubmission(
         coverUrl: row.cover_drive_url,
         manuscriptUploadFailed: row.manuscript_upload_failed,
         coverUploadFailed: row.cover_upload_failed,
+        novelStatus: row.novel_status,
         episodeCount: row.episode_count ?? undefined,
         episodes: Array.isArray(row.episodes) && row.episodes.length > 0 ? row.episodes : undefined,
       },
