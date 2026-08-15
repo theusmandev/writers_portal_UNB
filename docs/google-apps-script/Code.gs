@@ -261,9 +261,13 @@ function handleSendEmail(body) {
         `
         : '';
 
+      const isOngoingReceived = body.episodeCount && body.episodeCount > 0;
+
       html = buildEmailTemplate({
         heading: 'Submission Received',
-        headingUrdu: 'آپ کی تحریر موصول ہو گئی',
+        headingUrdu: isOngoingReceived 
+          ? `آپ کے ناول کی ${body.episodeCount} اقساط موصول ہو گئی ہیں` 
+          : 'آپ کی تحریر موصول ہو گئی',
         body: `
           <p>Dear ${escapeHtml(writerName || 'Writer')},</p>
           <p>Thank you for submitting <strong>${escapeHtml(novelTitle || 'your novel')}</strong> to Urdu Novel Bank. 
@@ -359,21 +363,31 @@ function handleSendEmail(body) {
       });
       break;
 
-    case 'episodes_published':
-      subject = `🎉 New Episodes Published! — ${submissionCode}`;
+    case 'episodes_published': {
+      const epNumsStr = body.episodeNumbers || "";
+      const epCount = epNumsStr.split(',').length;
+      const isSingular = epCount === 1;
+
+      subject = isSingular 
+        ? `🎉 New Episode Published! — ${submissionCode}` 
+        : `🎉 New Episodes Published! — ${submissionCode}`;
+
       html = buildEmailTemplate({
-        heading: '🎉 New Episodes Are Live',
-        headingUrdu: 'نئی اقساط شائع ہو گئیں',
+        heading: isSingular ? '🎉 New Episode Is Live' : '🎉 New Episodes Are Live',
+        headingUrdu: isSingular ? 'نئی قسط شائع ہو گئی' : 'نئی اقساط شائع ہو گئیں',
         body: `
           <p>Dear ${escapeHtml(writerName || 'Writer')},</p>
-          <p>We're excited to let you know that <strong>${escapeHtml(body.episodeNumbers)}</strong> of 
-          <strong>${escapeHtml(novelTitle || 'your novel')}</strong> are now published on Urdu Novel Bank!</p>
+          <p>We're excited to let you know that ${isSingular ? `episode ${escapeHtml(epNumsStr)}` : `episodes ${escapeHtml(epNumsStr)}`} of 
+          <strong>${escapeHtml(novelTitle || 'your novel')}</strong> ${isSingular ? 'is' : 'are'} now published on Urdu Novel Bank!</p>
         `,
-        bodyUrdu: 'ہمیں خوشی ہے کہ آپ کے ناول کی مزید اقساط اردو ناول بینک پر شائع ہو گئی ہیں۔',
+        bodyUrdu: isSingular 
+          ? `ہمیں خوشی ہے کہ آپ کے ناول کی قسط نمبر ${escapeHtml(epNumsStr)} اردو ناول بینک پر شائع ہو گئی ہے۔`
+          : 'ہمیں خوشی ہے کہ آپ کے ناول کی مزید اقساط اردو ناول بینک پر شائع ہو گئی ہیں۔',
         ctaText: publishedUrl ? 'View Your Novel' : 'Track Submission',
         ctaLink: publishedUrl || trackLink
       });
       break;
+    }
 
     default:
       return { success: false, error: 'Unknown emailType: ' + emailType };
