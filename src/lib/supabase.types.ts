@@ -107,6 +107,7 @@ export interface Database {
           drive_file_id: string | null;
           original_filename: string | null;
           upload_failed: boolean;
+          published: boolean;
           created_at: string;
         };
         Insert: Omit<Database["public"]["Tables"]["episodes"]["Row"], "id" | "created_at"> & {
