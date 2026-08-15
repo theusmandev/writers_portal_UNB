@@ -260,9 +260,16 @@ export default function AdminSubmissions() {
                     <td className="px-4 py-3 text-muted-foreground">{s.writers?.full_name ?? "—"}</td>
                     <td className="px-4 py-3 text-muted-foreground text-xs">{s.genre ?? "—"}</td>
                     <td className="px-4 py-3">
-                      <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusColors[s.current_status] ?? "bg-muted text-muted-foreground"}`}>
-                        {s.current_status}
-                      </span>
+                      <div className="flex flex-col gap-1.5 items-start">
+                        <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusColors[s.current_status] ?? "bg-muted text-muted-foreground"}`}>
+                          {s.current_status}
+                        </span>
+                        {s.novel_status === "Ongoing" && (
+                          <span className="rounded bg-muted/60 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground flex items-center gap-1">
+                            Ongoing • {s.episode_count || 0} episodes
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground text-xs">{formatDate(s.submission_date)}</td>
                     <td className="px-4 py-3">

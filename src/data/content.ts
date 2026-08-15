@@ -111,8 +111,17 @@ export const guidelines: GuidelineSection[] = [
     items: [
       "Original Urdu novels, novelettes and long-form serialised fiction.",
       "Popular genres: social, romantic, suspense, historical, thriller, family drama, adventure.",
-      "Complete novels are strongly preferred. Ongoing novels are accepted only when at least 5 episodes are ready and a completion plan is shared.",
+      "Complete novels are strongly preferred. Ongoing novels are accepted only when at least 5 episodes are ready.",
       "Roman Urdu is not accepted. Urdu script only.",
+    ],
+  },
+  {
+    title: "Ongoing novel submissions",
+    items: [
+      "Minimum requirement: At least 5 episodes must be ready and uploaded to submit a new ongoing novel.",
+      "Each episode must be uploaded as a separate file (not one combined document).",
+      "The same file formats (e.g. .docx) and 25 MB size limit apply to each individual episode file.",
+      "Adding more episodes: Once submitted, you can upload new episodes as they become ready by visiting the Track Submission page and using the 'Add New Episodes' option.",
     ],
   },
   {
@@ -256,7 +265,7 @@ export const faqs: Faq[] = [
   {
     category: "Submitting",
     q: "Can I submit an incomplete novel?",
-    a: "Complete novels are preferred. An ongoing novel is accepted only if at least 5 episodes are ready and you share a realistic completion plan.",
+    a: "Complete novels are preferred. An ongoing novel is accepted only if at least 5 episodes are ready. You can upload additional episodes later through the Track Submission page.",
   },
   {
     category: "Submitting",

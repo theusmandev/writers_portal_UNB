@@ -802,7 +802,7 @@ export default function SubmitPage() {
                 <div className="sm:col-span-2 space-y-4">
                   <div className="space-y-1.5">
                     <Label>Episodes (Minimum 5)</Label>
-                    <p className="text-xs text-muted-foreground">Attach your episode files below. Max {MAX_FILE_MB} MB per file.</p>
+                    <p className="text-xs text-muted-foreground">At least 5 episodes are required to submit an ongoing novel. Attach each episode as a separate file below. Max {MAX_FILE_MB} MB per file.</p>
                     {errors["episodes"] && <p className="text-xs text-destructive">{errors["episodes"]}</p>}
                   </div>
                   

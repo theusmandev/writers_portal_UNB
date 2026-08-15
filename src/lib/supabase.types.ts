@@ -54,6 +54,7 @@ export interface Database {
           /** Admin-written note visible to writer on the tracking page */
           status_note: string | null;
           published_url: string | null;
+          episode_count: number | null;
         };
         Insert: Omit<
           Database["public"]["Tables"]["submissions"]["Row"],
@@ -95,6 +96,24 @@ export interface Database {
           submitted_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["submission_responses"]["Insert"]>;
+        Relationships: any[];
+      };
+      episodes: {
+        Row: {
+          id: string;
+          submission_id: string;
+          episode_number: number;
+          drive_url: string | null;
+          drive_file_id: string | null;
+          original_filename: string | null;
+          upload_failed: boolean;
+          created_at: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["episodes"]["Row"], "id" | "created_at"> & {
+          id?: string;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["episodes"]["Insert"]>;
         Relationships: any[];
       };
       posts: {
@@ -186,5 +205,6 @@ export type WriterRow = Database["public"]["Tables"]["writers"]["Row"];
 export type SubmissionRow = Database["public"]["Tables"]["submissions"]["Row"];
 export type StatusHistoryRow = Database["public"]["Tables"]["status_history"]["Row"];
 export type SubmissionResponseRow = Database["public"]["Tables"]["submission_responses"]["Row"];
+export type EpisodeRow = Database["public"]["Tables"]["episodes"]["Row"];
 export type PostRow = Database["public"]["Tables"]["posts"]["Row"];
 export type PublicWriterRow = Database["public"]["Views"]["public_writers_view"]["Row"];

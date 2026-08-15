@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, ExternalLink, Loader2, Save, AlertCircle, CheckCircle2, Clock, MessageSquare, FileText, Image } from "lucide-react";
+import { ArrowLeft, ExternalLink, Loader2, Save, AlertCircle, CheckCircle2, Clock, MessageSquare, FileText, Image, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/lib/supabase";
 import { submissionStatuses, getMissingFileMessage } from "@/data/content";
-import type { SubmissionRow, StatusHistoryRow, WriterRow, SubmissionResponseRow } from "@/lib/supabase.types";
+import type { SubmissionRow, StatusHistoryRow, WriterRow, SubmissionResponseRow, EpisodeRow } from "@/lib/supabase.types";
 import { sendNotificationEmail, updateSubmissionFiles } from "@/services/portalApi";
 
 /**
@@ -70,11 +70,23 @@ function InfoRow({ label, value }: { label: string; value?: string | number | nu
   );
 }
 
+function groupEpisodesByDate(episodes: EpisodeRow[]) {
+  const groups: Record<string, EpisodeRow[]> = {};
+  for (const ep of episodes) {
+    // Extract date part (YYYY-MM-DD)
+    const date = ep.created_at.split('T')[0];
+    if (!groups[date]) groups[date] = [];
+    groups[date].push(ep);
+  }
+  return Object.entries(groups).sort(([dateA], [dateB]) => dateA.localeCompare(dateB));
+}
+
 export default function AdminSubmissionDetail() {
   const { id } = useParams<{ id: string }>();
   const [detail, setDetail] = useState<Detail | null>(null);
   const [history, setHistory] = useState<StatusHistoryRow[]>([]);
   const [writerResponses, setWriterResponses] = useState<SubmissionResponseRow[]>([]);
+  const [episodes, setEpisodes] = useState<EpisodeRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -112,7 +124,7 @@ export default function AdminSubmissionDetail() {
     if (!id) return;
     async function load() {
       setLoading(true);
-      const [detailRes, historyRes, responsesRes] = await Promise.all([
+      const [detailRes, historyRes, responsesRes, episodesRes] = await Promise.all([
         supabase.from("submissions").select("*, writers(*)").eq("id", id!).single(),
         supabase
           .from("status_history")
@@ -124,6 +136,11 @@ export default function AdminSubmissionDetail() {
           .select("*")
           .eq("submission_id", id!)
           .order("submitted_at", { ascending: false }),
+        supabase
+          .from("episodes")
+          .select("*")
+          .eq("submission_id", id!)
+          .order("episode_number", { ascending: true }),
       ]);
 
       if (detailRes.error) {
@@ -138,6 +155,7 @@ export default function AdminSubmissionDetail() {
       }
       setHistory((historyRes.data ?? []) as StatusHistoryRow[]);
       setWriterResponses((responsesRes.data ?? []) as SubmissionResponseRow[]);
+      setEpisodes((episodesRes.data ?? []) as EpisodeRow[]);
       setLoading(false);
     }
     void load();
@@ -415,6 +433,68 @@ export default function AdminSubmissionDetail() {
               )}
             </div>
           </section>
+
+          {/* Episodes (Ongoing only) */}
+          {detail.novel_status === "Ongoing" && (
+            <section className="rounded-xl border border-border bg-card p-5 space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-semibold">Episodes</h2>
+                <span className="text-xs text-muted-foreground font-medium">
+                  {episodes.filter(e => !e.upload_failed && e.drive_url).length} of {detail.episode_count || episodes.length} uploaded
+                </span>
+              </div>
+              
+              {episodes.some(ep => ep.upload_failed) && !isTerminalStatus && (
+                <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs flex flex-col gap-2">
+                  <div className="flex items-center gap-2 text-destructive">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    <span>
+                      <strong>Missing Files:</strong> Episodes {episodes.filter(ep => ep.upload_failed).map(ep => ep.episode_number).join(", ")} failed to upload.
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {episodes.length > 0 ? (
+                <div className="space-y-4">
+                  {groupEpisodesByDate(episodes).map(([date, eps]) => (
+                    <div key={date} className="space-y-2">
+                      <h3 className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                        Added on {new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </h3>
+                      <div className="flex flex-col gap-2">
+                        {eps.map(ep => (
+                          <div key={ep.id} className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/30 px-3 py-2">
+                            <div className={`flex items-center gap-2 text-xs ${ep.upload_failed ? 'text-destructive' : (ep.drive_url ? 'text-green-600' : 'text-muted-foreground')}`}>
+                              {ep.upload_failed ? <XCircle className="size-4 shrink-0" /> : (ep.drive_url ? <CheckCircle2 className="size-4 shrink-0" /> : <Loader2 className="size-4 shrink-0 animate-spin" />)}
+                              <span className={ep.upload_failed ? "line-through opacity-70 font-medium" : "font-medium"}>
+                                Episode {ep.episode_number}
+                              </span>
+                              {ep.upload_failed && <span className="text-[10px] ml-1 no-underline opacity-100">(failed)</span>}
+                              {!ep.upload_failed && !ep.drive_url && <span className="text-[10px] ml-1 no-underline opacity-100">(pending)</span>}
+                            </div>
+                            
+                            {ep.drive_url && (
+                              <a
+                                href={ep.drive_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2 py-1 text-[10px] font-medium hover:bg-muted/80 transition-colors"
+                              >
+                                <FileText className="h-3 w-3" /> View
+                              </a>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-sm text-muted-foreground italic">No episodes submitted yet.</div>
+              )}
+            </section>
+          )}
 
           {/* Published URL display (read-only info; editable via right panel) */}
           {detail.published_url && (
