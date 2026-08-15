@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PageHero } from "@/components/portal/PageHero";
 import { genres, site, getMissingFileMessage } from "@/data/content";
-import { isDemoMode, submitNovel, uploadFileToScript, updateSubmissionFiles, sendNotificationEmail, getWriterInfoByEmail, uploadEpisodeFile, saveEpisodeRecord, type SubmissionRecord } from "@/services/portalApi";
+import { isDemoMode, submitNovel, uploadFileToScript, updateSubmissionFiles, sendNotificationEmail, getWriterInfoByEmail, uploadEpisodeFile, saveEpisodeRecord, getSubmissionSettings, type SubmissionRecord } from "@/services/portalApi";
 
 
 
@@ -165,6 +165,23 @@ export default function SubmitPage() {
   const [autoFillEmail, setAutoFillEmail] = useState("");
   const [autoFillLoading, setAutoFillLoading] = useState(false);
   const [autoFillMessage, setAutoFillMessage] = useState<{ text: string; type: "success" | "info" | "error" } | null>(null);
+
+  // Settings state
+  const [settingsLoading, setSettingsLoading] = useState(true);
+  const [isPaused, setIsPaused] = useState(false);
+  const [pauseMessage, setPauseMessage] = useState("");
+
+  useEffect(() => {
+    async function loadSettings() {
+      const res = await getSubmissionSettings();
+      if (res.success) {
+        setIsPaused(res.data.submissions_paused);
+        setPauseMessage(res.data.pause_message || "");
+      }
+      setSettingsLoading(false);
+    }
+    void loadSettings();
+  }, []);
 
   async function handleAutoFill() {
     if (!autoFillEmail || !/^\S+@\S+\.\S+$/.test(autoFillEmail)) {
@@ -621,6 +638,44 @@ export default function SubmitPage() {
             <Button asChild variant="outline">
               <Link to="/process">See What Happens Next</Link>
             </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (settingsLoading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <Loader2 className="size-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (isPaused) {
+    return (
+      <div>
+        <PageHero
+          eyebrow="Notice"
+          title="Submissions Temporarily Paused"
+          titleUrdu="نئی بھرتیاں فی الحال بند ہیں"
+          description="Please read the message below for more information."
+        />
+        <div className="mx-auto max-w-2xl px-5 py-20">
+          <div className="rounded-2xl border border-border bg-card p-8 text-center shadow-elegant">
+            <Info className="mx-auto size-10 text-primary" />
+            <h2 className="mt-4 text-2xl font-semibold">We are not accepting new submissions at this time</h2>
+            <p className="mt-4 text-muted-foreground whitespace-pre-line">
+              {pauseMessage}
+            </p>
+            <div className="mt-8 flex flex-wrap justify-center gap-3">
+              <Button asChild>
+                <Link to="/">Return to Home</Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link to="/updates">Check Updates</Link>
+              </Button>
+            </div>
           </div>
         </div>
       </div>
