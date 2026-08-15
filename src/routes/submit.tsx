@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { z } from "zod";
-import { CheckCircle2, Info, Loader2, FileText, Image, Copy, Check, Plus, Trash2 } from "lucide-react";
+import { CheckCircle2, Info, Loader2, FileText, Image, Copy, Check, Plus, Trash2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -548,6 +548,10 @@ export default function SubmitPage() {
 
     setResult({
       ...record,
+      episodeCount: form.novelStatus === "Ongoing" ? episodes.length : undefined,
+      episodes: form.novelStatus === "Ongoing" 
+        ? episodes.map(ep => ({ episode_number: ep.number, upload_failed: failedFiles.includes(`episode ${ep.number}`) }))
+        : undefined,
       note: failedFiles.length > 0
         ? `⚠️ File upload failed. ${getMissingFileMessage(failedFiles, code)}`
         : undefined,
@@ -581,6 +585,22 @@ export default function SubmitPage() {
               </button>
             </div>
           </div>
+          {result.episodes && result.episodes.length > 0 && (
+            <div className="mt-5 rounded-xl border border-border bg-muted/30 p-5 text-left">
+              <p className="font-semibold text-sm mb-3">
+                Episodes Submitted: {result.episodes.filter(e => !e.upload_failed).length} of {result.episodeCount}
+              </p>
+              <div className="flex flex-wrap gap-3">
+                {result.episodes.map(ep => (
+                  <div key={ep.episode_number} className={`flex items-center gap-1.5 text-sm ${ep.upload_failed ? 'text-destructive' : 'text-green-600'}`}>
+                    {ep.upload_failed ? <XCircle className="size-4 shrink-0" /> : <CheckCircle2 className="size-4 shrink-0" />}
+                    <span className={ep.upload_failed ? "line-through opacity-70" : ""}>Episode {ep.episode_number}</span>
+                    {ep.upload_failed && <span className="text-xs ml-1 no-underline opacity-100">(failed)</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           {result.note && (
             <div className="mt-5 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive text-left">
               {result.note}

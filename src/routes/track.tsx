@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Loader2, Search, ExternalLink, AlertCircle, Send, CheckCircle2, BookOpen, Calendar } from "lucide-react";
+import { Loader2, Search, ExternalLink, AlertCircle, Send, CheckCircle2, BookOpen, Calendar, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -385,8 +385,15 @@ export default function TrackPage() {
     const beyondGracePeriod = record.status !== "Received" || timeElapsed > 15 * 60 * 1000;
     
     if (!isTerminalStatus) {
-      if (record.manuscriptUploadFailed || (!record.manuscriptUrl && beyondGracePeriod)) {
+      if (!record.episodeCount && (record.manuscriptUploadFailed || (!record.manuscriptUrl && beyondGracePeriod))) {
         missingFiles.push("manuscript");
+      }
+      if (record.episodes) {
+        record.episodes.forEach(ep => {
+          if (ep.upload_failed === true) {
+            missingFiles.push(`Episode ${ep.episode_number}`);
+          }
+        });
       }
       if (record.coverUploadFailed || (!record.coverUrl && beyondGracePeriod)) {
         missingFiles.push("cover");
@@ -508,6 +515,24 @@ export default function TrackPage() {
                 </dl>
 
                 {/* ── Status-specific content ── */}
+
+                {record.episodes && record.episodes.length > 0 && (
+                  <div className="mt-6 rounded-xl border border-border bg-muted/30 p-5 text-left">
+                    <p className="font-semibold text-sm mb-3">
+                      Episodes: {record.episodes.filter((e: any) => e.upload_failed === false && e.drive_url).length} of {record.episodeCount} submitted
+                    </p>
+                    <div className="flex flex-wrap gap-3">
+                      {record.episodes.map((ep: any) => (
+                        <div key={ep.episode_number} className={`flex items-center gap-1.5 text-sm ${ep.upload_failed === true ? 'text-destructive' : (ep.upload_failed === false && ep.drive_url ? 'text-green-600' : 'text-muted-foreground')}`}>
+                          {ep.upload_failed === true ? <XCircle className="size-4 shrink-0" /> : (ep.upload_failed === false && ep.drive_url ? <CheckCircle2 className="size-4 shrink-0" /> : <Loader2 className="size-4 shrink-0 animate-spin" />)}
+                          <span className={ep.upload_failed === true ? "line-through opacity-70" : ""}>Episode {ep.episode_number}</span>
+                          {ep.upload_failed === true && <span className="text-xs ml-1 no-underline opacity-100">(failed)</span>}
+                          {ep.upload_failed === null && <span className="text-xs ml-1 no-underline opacity-100">(pending)</span>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Missing File Warning (shows across all statuses if files failed) */}
                 {missingFiles.length > 0 && (

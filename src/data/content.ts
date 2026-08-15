@@ -323,8 +323,15 @@ export const submissionStatuses = [
 export type SubmissionStatus = (typeof submissionStatuses)[number];
 
 export function getMissingFileMessage(failedFiles: string[], code: string): string {
-  const fileStr = failedFiles.length === 2 
-    ? "manuscript and cover" 
-    : failedFiles[0] || "file";
+  let fileStr = "file";
+  if (failedFiles.length === 1) {
+    fileStr = failedFiles[0];
+  } else if (failedFiles.length === 2) {
+    fileStr = `${failedFiles[0]} and ${failedFiles[1]}`;
+  } else if (failedFiles.length > 2) {
+    const last = failedFiles[failedFiles.length - 1];
+    const initial = failedFiles.slice(0, failedFiles.length - 1).join(", ");
+    fileStr = `${initial}, and ${last}`;
+  }
   return `We couldn't upload your ${fileStr}. Please email it directly to urdunovelbankofficial.com along with your Submission ID: ${code}.`;
 }
