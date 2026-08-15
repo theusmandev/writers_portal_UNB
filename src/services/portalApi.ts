@@ -11,7 +11,7 @@
  */
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import type { SubmissionStatus } from "@/data/content";
-import type { WriterRow, SubmissionRow, PublicWriterRow } from "@/lib/supabase.types";
+import type { WriterRow, SubmissionRow, PublicWriterRow, SiteSettingsRow } from "@/lib/supabase.types";
 
 // ── Public Types ──────────────────────────────────────────────────────────────
 
@@ -85,6 +85,11 @@ export type WriterDetailWithSubmissions = WriterRow & {
 // Admin-facing types
 export type AdminSubmission = SubmissionRow & {
   writers: Pick<WriterRow, "full_name" | "pen_name" | "email" | "whatsapp" | "bio"> | null;
+};
+
+export type SiteSettings = {
+  submissions_paused: boolean;
+  pause_message: string | null;
 };
 
 // ── Internal: demo-mode store ─────────────────────────────────────────────────
@@ -801,8 +806,57 @@ export async function updateSubmissionStatus(
     const { error } = await supabase.from("submissions").update(updates).eq("id", id);
     if (error) return { success: false, error: error.message };
     return { success: true, data: null };
-  } catch {
-    return { success: false, error: "Could not update submission." };
+  } catch (err: any) {
+    return { success: false, error: err?.message || "Failed to update submission status." };
+  }
+}
+
+// ── Site Settings ─────────────────────────────────────────────────────────────
+
+export async function getSubmissionSettings(): Promise<ApiResult<SiteSettings>> {
+  if (!isSupabaseConfigured) {
+    return { success: true, data: { submissions_paused: false, pause_message: null } };
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("site_settings")
+      .select("submissions_paused, pause_message")
+      .eq("id", 1)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        // No row found, default to false
+        return { success: true, data: { submissions_paused: false, pause_message: null } };
+      }
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data };
+  } catch (err: any) {
+    return { success: false, error: err?.message || "Failed to load settings." };
+  }
+}
+
+export async function updateSubmissionSettings(
+  paused: boolean,
+  message: string
+): Promise<ApiResult<null>> {
+  if (!isSupabaseConfigured) {
+    await new Promise((r) => setTimeout(r, 400));
+    return { success: true, data: null };
+  }
+
+  try {
+    const { error } = await supabase
+      .from("site_settings")
+      .upsert({ id: 1, submissions_paused: paused, pause_message: message || null });
+
+    if (error) return { success: false, error: error.message };
+    return { success: true, data: null };
+  } catch (err: any) {
+    return { success: false, error: err?.message || "Failed to save settings." };
   }
 }
 

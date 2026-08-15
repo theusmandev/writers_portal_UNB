@@ -179,6 +179,16 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["faqs"]["Insert"]>;
         Relationships: any[];
       };
+      site_settings: {
+        Row: {
+          id: number;
+          submissions_paused: boolean;
+          pause_message: string | null;
+        };
+        Insert: Omit<Database["public"]["Tables"]["site_settings"]["Row"], "id"> & { id?: number };
+        Update: Partial<Database["public"]["Tables"]["site_settings"]["Insert"]>;
+        Relationships: any[];
+      };
     };
     Views: {
       public_writers_view: {
@@ -209,3 +219,4 @@ export type SubmissionResponseRow = Database["public"]["Tables"]["submission_res
 export type EpisodeRow = Database["public"]["Tables"]["episodes"]["Row"];
 export type PostRow = Database["public"]["Tables"]["posts"]["Row"];
 export type PublicWriterRow = Database["public"]["Views"]["public_writers_view"]["Row"];
+export type SiteSettingsRow = Database["public"]["Tables"]["site_settings"]["Row"];

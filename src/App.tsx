@@ -27,6 +27,7 @@ import AdminWriters from "./routes/admin/writers";
 import AdminWriterDetail from "./routes/admin/writer-detail";
 import AdminPosts from "./routes/admin/posts";
 import AdminPostEdit from "./routes/admin/post-edit";
+import AdminSettings from "./routes/admin/settings";
 import NotFound from "./routes/not-found";
 
 /** Public layout — wraps all public routes with the site header and footer */
@@ -66,6 +67,7 @@ export default function App() {
           <Route path="posts" element={<AdminPosts />} />
           <Route path="posts/new" element={<AdminPostEdit />} />
           <Route path="posts/:id/edit" element={<AdminPostEdit />} />
+          <Route path="settings" element={<AdminSettings />} />
           <Route path="*" element={<NotFound />} />
         </Route>
 
