@@ -221,7 +221,7 @@ function handleRenamePostFolder(body) {
  * Expected body:
  * {
  *   action: 'sendEmail',
- *   emailType: 'received' | 'action_required' | 'rejected' | 'published' | 'episodes_added',
+ *   emailType: 'received' | 'action_required' | 'rejected' | 'published' | 'episodes_added' | 'episodes_published',
  *   writerEmail: 'writer@example.com',
  *   writerName: 'Ahmad Ali',
  *   novelTitle: 'Mera Safar',
@@ -356,6 +356,22 @@ function handleSendEmail(body) {
         bodyUrdu: 'آپ کی نئی اقساط ہمیں موصول ہو گئی ہیں، شکریہ۔',
         ctaText: 'Track Your Submission',
         ctaLink: trackLink
+      });
+      break;
+
+    case 'episodes_published':
+      subject = `🎉 New Episodes Published! — ${submissionCode}`;
+      html = buildEmailTemplate({
+        heading: '🎉 New Episodes Are Live',
+        headingUrdu: 'نئی اقساط شائع ہو گئیں',
+        body: `
+          <p>Dear ${escapeHtml(writerName || 'Writer')},</p>
+          <p>We're excited to let you know that <strong>${escapeHtml(body.episodeNumbers)}</strong> of 
+          <strong>${escapeHtml(novelTitle || 'your novel')}</strong> are now published on Urdu Novel Bank!</p>
+        `,
+        bodyUrdu: 'ہمیں خوشی ہے کہ آپ کے ناول کی مزید اقساط اردو ناول بینک پر شائع ہو گئی ہیں۔',
+        ctaText: publishedUrl ? 'View Your Novel' : 'Track Submission',
+        ctaLink: publishedUrl || trackLink
       });
       break;
 

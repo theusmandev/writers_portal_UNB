@@ -57,7 +57,7 @@ export type SubmissionRecord = {
   coverUploadFailed?: boolean;
   novelStatus?: string | undefined;
   episodeCount?: number | undefined;
-  episodes?: Array<{ episode_number: number; upload_failed: boolean; drive_url?: string | null }> | undefined;
+  episodes?: Array<{ episode_number: number; upload_failed: boolean; drive_url?: string | null; published?: boolean }> | undefined;
 };
 
 export type ApiResult<T> = { success: true; data: T } | { success: false; error: string };
@@ -351,6 +351,34 @@ export async function addEpisodesToSubmission(
   }
 }
 
+// ── Public: publishEpisodes ───────────────────────────────────────────────────
+
+export async function publishEpisodes(
+  submissionId: string,
+  episodeNumbers: number[]
+): Promise<ApiResult<null>> {
+  if (!isSupabaseConfigured) {
+    // Demo mode fallback
+    await new Promise((r) => setTimeout(r, 600));
+    return { success: true, data: null };
+  }
+
+  try {
+    const { error } = await supabase
+      .from("episodes")
+      .update({ published: true })
+      .in("episode_number", episodeNumbers)
+      .eq("submission_id", submissionId);
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    return { success: true, data: null };
+  } catch (err: any) {
+    return { success: false, error: err?.message || "Failed to publish episodes." };
+  }
+}
+
 // ── Public: sendNotificationEmail ────────────────────────────────────────────
 // Triggers an email notification via Google Apps Script Web App.
 
@@ -363,10 +391,11 @@ export interface EmailPayload {
   publishedUrl?: string;
   missingFiles?: string;
   episodeCount?: number;
+  episodeNumbers?: string;
 }
 
 export async function sendNotificationEmail(
-  emailType: "received" | "action_required" | "rejected" | "published" | "episodes_added",
+  emailType: "received" | "action_required" | "rejected" | "published" | "episodes_added" | "episodes_published",
   payload: EmailPayload
 ): Promise<ApiResult<null>> {
   const scriptUrl = import.meta.env["VITE_PORTAL_API_URL"] as string | undefined;

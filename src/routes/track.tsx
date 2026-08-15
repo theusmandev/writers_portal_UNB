@@ -499,8 +499,30 @@ function AddNewEpisodesSection({
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
-/** Celebratory card shown when current_status = "Published" */
+/** Celebratory card shown when current_status = "Published" or episodes are published */
 function PublishedCard({ record }: { record: SubmissionRecord }) {
+  const publishedEpisodes = record.episodes?.filter(e => e.published) || [];
+  const isEpisodeAware = record.novelStatus === "Ongoing" && publishedEpisodes.length > 0;
+  
+  let epText = "";
+  if (isEpisodeAware) {
+    const nums = publishedEpisodes.map(e => e.episode_number).sort((a, b) => a - b);
+    let ranges = [];
+    let start = nums[0];
+    let end = nums[0];
+    for(let i=1; i<nums.length; i++) {
+      if(nums[i] === end + 1) {
+        end = nums[i];
+      } else {
+        ranges.push(start === end ? `${start}` : `${start}-${end}`);
+        start = nums[i];
+        end = nums[i];
+      }
+    }
+    ranges.push(start === end ? `${start}` : `${start}-${end}`);
+    epText = `Episodes ${ranges.join(", ")}`;
+  }
+
   return (
     <div className="published-card-anim mt-6 relative overflow-visible">
       {/* Confetti dots — absolute, burst outward from card centre */}
@@ -528,11 +550,16 @@ function PublishedCard({ record }: { record: SubmissionRecord }) {
       <div className="rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-accent/10 p-7 text-center shadow-elegant">
         <div className="text-4xl mb-3" role="img" aria-label="Celebration">🎉</div>
         <h3 className="font-display text-xl font-semibold text-foreground">
-          Congratulations! Your novel has been published.
+          {isEpisodeAware 
+            ? `Congratulations! ${epText} are now live.`
+            : "Congratulations! Your novel has been published."
+          }
         </h3>
         <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-          Your work is now live on Urdu Novel Bank and being read by our community.
-          Thank you for sharing your story with us.
+          {isEpisodeAware
+            ? "Your latest episodes are now available on Urdu Novel Bank and being read by our community."
+            : "Your work is now live on Urdu Novel Bank and being read by our community. Thank you for sharing your story with us."
+          }
         </p>
 
         {record.publishedUrl && (
@@ -976,8 +1003,10 @@ export default function TrackPage() {
                   </div>
                 )}
 
-                {/* Published — celebration card (replaces progress timeline) */}
-                {record.status === "Published" && <PublishedCard record={record} />}
+                {/* Published — celebration card (replaces progress timeline if status is Published, or shown alongside timeline if only episodes are published) */}
+                {(record.status === "Published" || (record.novelStatus === "Ongoing" && record.episodes?.some(ep => ep.published))) && (
+                  <PublishedCard record={record} />
+                )}
 
                 {/* Rejected — rejection card (replaces progress timeline) */}
                 {record.status === "Rejected" && <RejectedCard record={record} />}
