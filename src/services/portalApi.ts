@@ -55,6 +55,8 @@ export type SubmissionRecord = {
   coverUrl?: string | null;
   manuscriptUploadFailed?: boolean;
   coverUploadFailed?: boolean;
+  episodeCount?: number | undefined;
+  episodes?: Array<{ episode_number: number; upload_failed: boolean; drive_url?: string | null }> | undefined;
 };
 
 export type ApiResult<T> = { success: true; data: T } | { success: false; error: string };
@@ -498,6 +500,8 @@ export async function trackSubmission(
       cover_drive_url: string | null;
       manuscript_upload_failed: boolean;
       cover_upload_failed: boolean;
+      episode_count: number | null;
+      episodes: any;
     }>;
 
     if (rows.length === 0) {
@@ -529,6 +533,8 @@ export async function trackSubmission(
         coverUrl: row.cover_drive_url,
         manuscriptUploadFailed: row.manuscript_upload_failed,
         coverUploadFailed: row.cover_upload_failed,
+        episodeCount: row.episode_count ?? undefined,
+        episodes: Array.isArray(row.episodes) && row.episodes.length > 0 ? row.episodes : undefined,
       },
     };
   } catch {
