@@ -539,6 +539,7 @@ export default function SubmitPage() {
         novelTitle: form.novelTitle,
         submissionCode: code,
         ...(failedFiles.length > 0 && { missingFiles: failedFiles.length === 2 ? "manuscript and cover" : failedFiles[0] }),
+        ...(form.novelStatus === "Ongoing" && { episodeCount: episodes.length }),
       };
       await sendNotificationEmail("received", emailPayload);
     }
@@ -565,7 +566,11 @@ export default function SubmitPage() {
         <div className="rounded-2xl border border-border bg-card p-8 text-center shadow-elegant">
           <CheckCircle2 className="mx-auto size-10 text-primary" />
           <h1 className="mt-4 text-2xl font-semibold">Submission Successful</h1>
-          <p className="urdu mt-1 text-xl text-muted-foreground">آپ کا ناول موصول ہو گیا ہے</p>
+          <p className="urdu mt-1 text-xl text-muted-foreground">
+            {result.episodeCount && result.episodeCount > 0 
+              ? `آپ کے ناول کی ${result.episodeCount} اقساط موصول ہو گئی ہیں` 
+              : "آپ کا ناول موصول ہو گیا ہے"}
+          </p>
           <p className="mt-4 text-sm text-muted-foreground">
             Thank you for submitting <span className="font-medium text-foreground">{result.novelTitle}</span>.
             Please save your Submission ID — you will need it to track your novel.
