@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Loader2, Search, ExternalLink, AlertCircle, Send, CheckCircle2, BookOpen, Calendar, XCircle } from "lucide-react";
+import { Loader2, Search, ExternalLink, AlertCircle, Send, CheckCircle2, BookOpen, Calendar, XCircle, FileText, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { PageHero } from "@/components/portal/PageHero";
 import { processStages, submissionStatuses, getMissingFileMessage } from "@/data/content";
-import { trackSubmission, submitResponse, getSubmissionsByEmail, type SubmissionRecord, type WriterSubmissionSummary } from "@/services/portalApi";
+import { trackSubmission, submitResponse, getSubmissionsByEmail, addEpisodesToSubmission, uploadEpisodeFile, sendNotificationEmail, type SubmissionRecord, type WriterSubmissionSummary } from "@/services/portalApi";
 
 /**
  * Maps every possible admin-set current_status value to its 0-based index
@@ -71,6 +71,431 @@ const CONFETTI_PIECES: Array<{
   { cx: "-75px",  cy: "-115px", cr: "80deg",  color: "#fbbf24", size: 8,  shape: "circle", delay: 55  },
   { cx: "95px",   cy: "-120px", cr: "-45deg", color: "#38bdf8", size: 5,  shape: "circle", delay: 25  },
 ];
+
+// ── Sub-components ─────────────────────────────────────────────────────────────
+
+const MAX_FILE_MB = 25;
+const ALLOWED_DOC = [".doc", ".docx", ".pdf", ".txt", ".rtf"];
+
+function formatBytes(bytes: number, decimals = 1) {
+  if (!+bytes) return '0 Bytes';
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+}
+
+function simulateProgress(fileSize: number, setProgress: (p: number) => void): () => void {
+  let current = 0;
+  const maxFake = 85;
+  const expectedSeconds = Math.max(2, Math.min(25, fileSize / (0.5 * 1024 * 1024)));
+  const msPerStep = (expectedSeconds * 1000) / maxFake;
+
+  const timer = setInterval(() => {
+    current += 1;
+    if (current >= maxFake) {
+      current = maxFake;
+      clearInterval(timer);
+    }
+    setProgress(current);
+  }, msPerStep);
+
+  return () => clearInterval(timer);
+}
+
+const WAITING_MESSAGES = [
+  "Almost done...",
+  "Finishing up...",
+  "Just a moment more...",
+  "Wrapping things up...",
+  "Hang tight, nearly there...",
+];
+
+function RotatingWaitText() {
+  const [index, setIndex] = useState(0);
+  const [fade, setFade] = useState(true);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFade(false);
+      setTimeout(() => {
+        setIndex((i) => (i + 1) % WAITING_MESSAGES.length);
+        setFade(true);
+      }, 300);
+    }, 2500);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <span className={`transition-opacity duration-300 ease-in-out ${fade ? "opacity-100" : "opacity-0"}`}>
+      {WAITING_MESSAGES[index]}
+    </span>
+  );
+}
+
+type EpisodeSlot = {
+  id: string;
+  file: File | null;
+};
+
+/** Form to add new episodes to an ongoing submission */
+function AddNewEpisodesSection({
+  record,
+  submissionCode,
+  email,
+  onEpisodesAdded,
+}: {
+  record: SubmissionRecord;
+  submissionCode: string;
+  email: string;
+  onEpisodesAdded: () => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [episodes, setEpisodes] = useState<EpisodeSlot[]>([
+    { id: crypto.randomUUID(), file: null }
+  ]);
+  const [submitting, setSubmitting] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
+
+  type UploadStepState = "pending" | "uploading" | "done" | "error" | "timeout";
+  const [episodeStatuses, setEpisodeStatuses] = useState<Record<string, UploadStepState>>({});
+  const [episodeProgresses, setEpisodeProgresses] = useState<Record<string, number>>({});
+  const [episodeRetryTriggers, setEpisodeRetryTriggers] = useState<Record<string, { resolve: (action: "retry" | "skip") => void }>>({});
+
+  const addEpisode = () => {
+    setEpisodes(prev => [...prev, { id: crypto.randomUUID(), file: null }]);
+  };
+
+  const removeEpisode = (idToRemove: string) => {
+    if (episodes.length <= 1) return;
+    setEpisodes(prev => prev.filter(ep => ep.id !== idToRemove));
+  };
+
+  const setEpisodeFile = (id: string, file: File | null) => {
+    setEpisodes(prev => prev.map(ep => ep.id === id ? { ...ep, file } : ep));
+  };
+
+  function validateFile(file: File | null): string | undefined {
+    if (!file) return "Please attach your episode file";
+    const ext = `.${file.name.split(".").pop()?.toLowerCase() ?? ""}`;
+    if (!ALLOWED_DOC.includes(ext)) return `Allowed formats: ${ALLOWED_DOC.join(", ")}`;
+    if (file.size > MAX_FILE_MB * 1024 * 1024) return `File must be smaller than ${MAX_FILE_MB} MB`;
+    return undefined;
+  }
+
+  async function handleAddEpisodes(e: React.FormEvent) {
+    e.preventDefault();
+    setFormError(null);
+    
+    // Validation
+    const emptyCount = episodes.filter(ep => !ep.file).length;
+    if (emptyCount > 0) {
+      setFormError(`Please attach a file for all episode slots, or remove the empty slots.`);
+      return;
+    }
+    
+    for (const ep of episodes) {
+      const err = validateFile(ep.file);
+      if (err) {
+        setFormError(err);
+        return;
+      }
+    }
+
+    setSubmitting(true);
+    setUploadStatus("Starting upload...");
+    
+    const scriptUrl = import.meta.env["VITE_PORTAL_API_URL"] as string | undefined;
+    const uploadedFiles: Array<{ driveUrl: string | null; driveFileId: string | null; fileName: string | null; uploadFailed: boolean; }> = [];
+    const failedFiles: string[] = [];
+    const baseEpisodeNumber = record.episodeCount || 0;
+    let completedEps = 0;
+
+    async function performEpisodeUpload(ep: EpisodeSlot, displayNum: number) {
+      if (!ep.file) return false;
+      while (true) {
+        setEpisodeStatuses(prev => ({ ...prev, [ep.id]: "uploading" }));
+        setEpisodeProgresses(prev => ({ ...prev, [ep.id]: 0 }));
+        
+        const controller = new AbortController();
+        const timeoutMs = 90000 + (ep.file.size / (1024 * 1024)) * 30000;
+        
+        let retryResolve: ((action: "retry" | "skip") => void) | null = null;
+        const retryPromise = new Promise<"retry" | "skip">((resolve) => {
+          retryResolve = resolve;
+        });
+
+        const timeoutId = setTimeout(() => {
+          setEpisodeStatuses(prev => ({ ...prev, [ep.id]: "timeout" }));
+          setEpisodeRetryTriggers(prev => ({
+            ...prev,
+            [ep.id]: {
+              resolve: (action) => {
+                controller.abort();
+                retryResolve!(action);
+              }
+            }
+          }));
+        }, timeoutMs);
+
+        const stopSim = simulateProgress(ep.file.size, (p) => setEpisodeProgresses(prev => ({ ...prev, [ep.id]: p })));
+        
+        try {
+          const res = await Promise.race([
+            // Pass the logical display number to the Apps Script so the file name makes sense
+            uploadEpisodeFile(submissionCode, displayNum, ep.file, controller.signal),
+            retryPromise.then((action) => { throw new Error(action === "skip" ? "SKIP_UPLOAD" : "MANUAL_RETRY"); })
+          ]);
+          
+          clearTimeout(timeoutId);
+          stopSim();
+          setEpisodeRetryTriggers(prev => { const n = {...prev}; delete n[ep.id]; return n; });
+
+          if (res.success) {
+            uploadedFiles.push({
+              driveUrl: res.fileUrl || null,
+              driveFileId: res.fileId || null,
+              fileName: ep.file.name,
+              uploadFailed: false
+            });
+            setEpisodeStatuses(prev => ({ ...prev, [ep.id]: "done" }));
+            setEpisodeProgresses(prev => ({ ...prev, [ep.id]: 100 }));
+            return true;
+          } else {
+            setEpisodeStatuses(prev => ({ ...prev, [ep.id]: "timeout" }));
+            const action = await new Promise<"retry" | "skip">((resolve) => {
+              setEpisodeRetryTriggers(prev => ({
+                ...prev,
+                [ep.id]: { resolve: (a) => { controller.abort(); resolve(a); } }
+              }));
+            });
+            if (action === "skip") {
+              setEpisodeStatuses(prev => ({ ...prev, [ep.id]: "error" }));
+              uploadedFiles.push({ driveUrl: null, driveFileId: null, fileName: ep.file.name, uploadFailed: true });
+              return false;
+            }
+            continue;
+          }
+        } catch (err: any) {
+          clearTimeout(timeoutId);
+          stopSim();
+          setEpisodeRetryTriggers(prev => { const n = {...prev}; delete n[ep.id]; return n; });
+          
+          if (err.message === "MANUAL_RETRY") {
+            continue;
+          } else if (err.message === "SKIP_UPLOAD") {
+            setEpisodeStatuses(prev => ({ ...prev, [ep.id]: "error" }));
+            uploadedFiles.push({ driveUrl: null, driveFileId: null, fileName: ep.file.name, uploadFailed: true });
+            return false;
+          } else {
+            setEpisodeStatuses(prev => ({ ...prev, [ep.id]: "timeout" }));
+            const action = await new Promise<"retry" | "skip">((resolve) => {
+              setEpisodeRetryTriggers(prev => ({
+                ...prev,
+                [ep.id]: { resolve: (a) => { controller.abort(); resolve(a); } }
+              }));
+            });
+            if (action === "skip") {
+              setEpisodeStatuses(prev => ({ ...prev, [ep.id]: "error" }));
+              uploadedFiles.push({ driveUrl: null, driveFileId: null, fileName: ep.file.name, uploadFailed: true });
+              return false;
+            }
+            continue;
+          }
+        }
+      }
+    }
+
+    if (scriptUrl) {
+      setUploadStatus("Uploading episodes...");
+      
+      const tasks = episodes.map((ep, i) => async () => {
+        if (ep.file) {
+          setEpisodeStatuses(prev => ({ ...prev, [ep.id]: "pending" }));
+          const ok = await performEpisodeUpload(ep, baseEpisodeNumber + i + 1);
+          if (!ok) failedFiles.push(`episode ${baseEpisodeNumber + i + 1}`);
+          completedEps++;
+          setUploadStatus(`${completedEps} of ${episodes.length} episodes uploaded`);
+        }
+      });
+
+      const executing = new Set<Promise<void>>();
+      for (const task of tasks) {
+        const p = task().finally(() => executing.delete(p));
+        executing.add(p);
+        if (executing.size >= 3) {
+          await Promise.race(executing);
+        }
+      }
+      await Promise.all(executing);
+
+      // Now save them to the database
+      setUploadStatus("Saving to database...");
+      const saveRes = await addEpisodesToSubmission(submissionCode, email, uploadedFiles);
+      if (!saveRes.success) {
+        setFormError(saveRes.error);
+        setSubmitting(false);
+        setUploadStatus(null);
+        return;
+      }
+
+      setUploadStatus("Sending confirmation email...");
+      const emailPayload = {
+        writerEmail: email,
+        writerName: record.penName,
+        novelTitle: record.novelTitle,
+        submissionCode: submissionCode,
+        episodeCount: record.episodeCount ? record.episodeCount + episodes.length : episodes.length,
+      };
+      await sendNotificationEmail("episodes_added", emailPayload);
+    }
+
+    setUploadStatus(null);
+    setSubmitting(false);
+    setIsOpen(false);
+    setEpisodes([{ id: crypto.randomUUID(), file: null }]);
+    onEpisodesAdded();
+  }
+
+  if (!isOpen) {
+    return (
+      <div className="mt-6 flex justify-center">
+        <Button onClick={() => setIsOpen(true)} variant="outline" className="gap-2">
+          <Plus className="h-4 w-4" /> Add New Episodes
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-6 rounded-xl border border-primary/20 bg-primary/5 p-5 shadow-sm">
+      <div className="flex justify-between items-start mb-4">
+        <div>
+          <h3 className="font-semibold text-primary">Add New Episodes</h3>
+          <p className="text-sm text-muted-foreground mt-1">
+            Attach your newly completed episodes below. Max {MAX_FILE_MB} MB per file.
+          </p>
+        </div>
+        <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="text-muted-foreground" disabled={submitting}>
+          <XCircle className="h-5 w-5" />
+        </Button>
+      </div>
+
+      {formError && (
+        <div className="mb-4 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+          {formError}
+        </div>
+      )}
+
+      <form onSubmit={handleAddEpisodes} className="space-y-4">
+        <div className="space-y-3">
+          {episodes.map((ep, idx) => (
+            <div key={ep.id} className="flex flex-col sm:flex-row gap-3 items-start sm:items-center rounded-lg border border-border bg-card p-3">
+              <div className="flex-1 w-full space-y-1.5">
+                <Label htmlFor={`new-episode-${ep.id}`} className="text-xs uppercase text-muted-foreground">
+                  Episode {(record.episodeCount || 0) + idx + 1}
+                </Label>
+                <div className="space-y-2">
+                  <Input
+                    id={`new-episode-${ep.id}`}
+                    type="file"
+                    accept={ALLOWED_DOC.join(",")}
+                    onChange={(e) => setEpisodeFile(ep.id, e.target.files?.[0] ?? null)}
+                    disabled={submitting}
+                  />
+                  {ep.file && (
+                    <div className="flex items-center gap-2 rounded-md bg-muted/50 p-2 text-sm text-muted-foreground">
+                      <CheckCircle2 className="size-4 text-green-500 shrink-0" />
+                      <span className="truncate max-w-[200px]" title={ep.file.name}>{ep.file.name}</span>
+                      <span className="text-xs shrink-0">({formatBytes(ep.file.size)})</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+              {episodes.length > 1 && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => removeEpisode(ep.id)}
+                  className="text-muted-foreground hover:text-destructive shrink-0 mt-6 sm:mt-0"
+                  disabled={submitting}
+                >
+                  <Trash2 className="size-4" />
+                </Button>
+              )}
+            </div>
+          ))}
+        </div>
+        
+        <div className="flex flex-col sm:flex-row gap-3 pt-2">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={addEpisode}
+            className="w-full sm:w-auto text-sm"
+            disabled={submitting}
+          >
+            <Plus className="size-4 mr-2" /> Add Another
+          </Button>
+          <Button type="submit" className="w-full sm:w-auto" disabled={submitting}>
+            {submitting ? <Loader2 className="size-4 mr-2 animate-spin" /> : <Send className="size-4 mr-2" />}
+            {submitting ? uploadStatus || "Uploading..." : "Submit Episodes"}
+          </Button>
+        </div>
+
+        {submitting && Object.keys(episodeStatuses).length > 0 && (
+          <div className="mt-4 space-y-3">
+            {episodes.map((ep, idx) => {
+              const status = episodeStatuses[ep.id] || "pending";
+              if (status === "pending" && !episodeProgresses[ep.id]) return null;
+              const progress = episodeProgresses[ep.id] || 0;
+              const retry = episodeRetryTriggers[ep.id];
+              const displayNum = (record.episodeCount || 0) + idx + 1;
+              
+              return (
+                <div key={ep.id} className="space-y-2">
+                  <div className="flex justify-between text-xs">
+                    <span className="flex items-center gap-1.5 text-muted-foreground">
+                      <FileText className="h-3.5 w-3.5" />
+                      {status === "done" ? `Episode ${displayNum} uploaded`
+                        : status === "error" ? `Episode ${displayNum} failed`
+                        : status === "timeout" ? `Episode ${displayNum} stalled`
+                        : status === "uploading" && progress >= 85 ? <RotatingWaitText />
+                        : `Uploading Episode ${displayNum}...`}
+                    </span>
+                    <span className={`font-medium ${status === "error" || status === "timeout" ? "text-destructive" : "text-foreground"}`}>
+                      {status === "error" || status === "timeout" ? "Error" : `${progress}%`}
+                    </span>
+                  </div>
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-primary/20">
+                    <div
+                      className={`h-full transition-all duration-300 ease-out ${
+                        status === "error" || status === "timeout" ? "bg-destructive" : "bg-primary"
+                      } ${status === "uploading" && progress >= 85 ? "progress-waiting" : ""}`}
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                  {status === "timeout" && retry && (
+                    <div className="mt-1 flex items-center justify-between gap-4 rounded-md bg-muted/50 px-2 py-1.5 text-xs">
+                      <span className="text-muted-foreground">Connection slow.</span>
+                      <div className="flex gap-2">
+                        <Button type="button" size="sm" variant="outline" onClick={() => retry.resolve("skip")} className="h-6 text-[10px]">Skip</Button>
+                        <Button type="button" size="sm" variant="outline" onClick={() => retry.resolve("retry")} className="h-6 text-[10px]">Retry</Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </form>
+    </div>
+  );
+}
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
@@ -566,6 +991,19 @@ export default function TrackPage() {
                     onResponseSent={() =>
                       setRecord((r) => (r ? { ...r, hasResponse: true } : r))
                     }
+                  />
+                )}
+
+                {/* Add New Episodes (Ongoing novels only) */}
+                {record.novelStatus === 'Ongoing' && !isSpecialStatus && record.status !== 'Withdrawn' && (
+                  <AddNewEpisodesSection
+                    record={record}
+                    submissionCode={submissionId}
+                    email={email}
+                    onEpisodesAdded={() => {
+                      // Refresh the record
+                      loadDetail(submissionId, email);
+                    }}
                   />
                 )}
 

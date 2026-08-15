@@ -221,7 +221,7 @@ function handleRenamePostFolder(body) {
  * Expected body:
  * {
  *   action: 'sendEmail',
- *   emailType: 'received' | 'action_required' | 'rejected' | 'published',
+ *   emailType: 'received' | 'action_required' | 'rejected' | 'published' | 'episodes_added',
  *   writerEmail: 'writer@example.com',
  *   writerName: 'Ahmad Ali',
  *   novelTitle: 'Mera Safar',
@@ -339,6 +339,23 @@ function handleSendEmail(body) {
         bodyUrdu: 'ہمیں خوشی ہے کہ آپ کا ناول اردو ناول بینک پر شائع ہو گیا ہے۔',
         ctaText: publishedUrl ? 'View Your Novel' : 'Track Submission',
         ctaLink: publishedUrl || trackLink
+      });
+      break;
+
+    case 'episodes_added':
+      subject = `New Episodes Added — ${submissionCode}`;
+      html = buildEmailTemplate({
+        heading: 'New Episodes Received',
+        headingUrdu: 'نئی اقساط موصول ہو گئیں',
+        body: `
+          <p>Dear ${escapeHtml(writerName || 'Writer')},</p>
+          <p>Thank you for submitting new episodes for your ongoing novel <strong>${escapeHtml(novelTitle || '')}</strong>.</p>
+          <p>We have successfully received the new episodes. Your submission now has a total of <strong>${body.episodeCount || ''}</strong> episodes.</p>
+          <p>You can track the status of your submission using your Submission ID: <strong>${escapeHtml(submissionCode)}</strong>.</p>
+        `,
+        bodyUrdu: 'آپ کی نئی اقساط ہمیں موصول ہو گئی ہیں، شکریہ۔',
+        ctaText: 'Track Your Submission',
+        ctaLink: trackLink
       });
       break;
 
