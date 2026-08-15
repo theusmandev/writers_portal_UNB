@@ -64,45 +64,62 @@ function jsonResponse(obj) {
  * }
  */
 function handleFileUpload(body) {
-  const { submissionCode, fileType, fileName, mimeType, base64Data } = body;
+  const { submissionCode, fileType, fileName, mimeType, base64Data, episodeNumber } = body;
 
   if (!submissionCode || !fileType || !fileName || !base64Data) {
     return { success: false, error: 'Missing required file upload fields.' };
   }
 
-  const rootFolder = getOrCreateFolder(CONFIG.ROOT_FOLDER_NAME, DriveApp.getRootFolder());
+  let rootFolder;
   let targetFolder;
 
-  // Handle post image uploads specifically
-  if (fileType === 'image') {
-    const postsRoot = getOrCreateFolder(CONFIG.POSTS_ROOT_FOLDER, rootFolder);
-    const shortToken = submissionCode.substring(0, 8);
-    const prefix = 'post-' + shortToken;
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(30000); // wait up to 30 seconds for the lock
     
-    const existing = postsRoot.getFolders();
-    let found = null;
-    while (existing.hasNext()) {
-      const folder = existing.next();
-      if (folder.getName().startsWith(prefix)) {
-        found = folder;
-        break;
+    rootFolder = getOrCreateFolder(CONFIG.ROOT_FOLDER_NAME, DriveApp.getRootFolder());
+
+    // Handle post image uploads specifically
+    if (fileType === 'image') {
+      const postsRoot = getOrCreateFolder(CONFIG.POSTS_ROOT_FOLDER, rootFolder);
+      const shortToken = submissionCode.substring(0, 8);
+      const prefix = 'post-' + shortToken;
+      
+      const existing = postsRoot.getFolders();
+      let found = null;
+      while (existing.hasNext()) {
+        const folder = existing.next();
+        if (folder.getName().startsWith(prefix)) {
+          found = folder;
+          break;
+        }
+      }
+      
+      if (found) {
+        targetFolder = found;
+      } else {
+        targetFolder = postsRoot.createFolder(prefix);
+      }
+    } else {
+      // Manuscript, cover, and episode submissions logic
+      const year = submissionCode.match(/UNB-(\d{4})-/)
+        ? submissionCode.match(/UNB-(\d{4})-/)[1]
+        : new Date().getFullYear().toString();
+    
+      const submissionsFolder = getOrCreateFolder('Submissions', rootFolder);
+      const yearFolder = getOrCreateFolder(year, submissionsFolder);
+      const submissionFolder = getOrCreateFolder(submissionCode, yearFolder);
+      
+      if (fileType === 'episode') {
+        targetFolder = getOrCreateFolder('Episodes', submissionFolder);
+      } else {
+        targetFolder = submissionFolder;
       }
     }
-    
-    if (found) {
-      targetFolder = found;
-    } else {
-      targetFolder = postsRoot.createFolder(prefix);
-    }
-  } else {
-    // Manuscript and cover submissions logic
-    const year = submissionCode.match(/UNB-(\d{4})-/)
-      ? submissionCode.match(/UNB-(\d{4})-/)[1]
-      : new Date().getFullYear().toString();
-  
-    const submissionsFolder = getOrCreateFolder('Submissions', rootFolder);
-    const yearFolder = getOrCreateFolder(year, submissionsFolder);
-    targetFolder = getOrCreateFolder(submissionCode, yearFolder);
+  } catch (err) {
+    return { success: false, error: 'Failed to acquire folder lock: ' + err.message };
+  } finally {
+    lock.releaseLock();
   }
 
   const decoded = Utilities.base64Decode(base64Data);
@@ -110,6 +127,8 @@ function handleFileUpload(body) {
 
   if (fileType === 'image') {
     blob.setName(`${submissionCode.substring(0, 8)}-${Date.now()}-${fileName}`);
+  } else if (fileType === 'episode') {
+    blob.setName(`${submissionCode}-episode-${episodeNumber}-${fileName}`);
   } else {
     const prefix = fileType === 'cover' ? 'cover' : 'manuscript';
     blob.setName(`${submissionCode}-${prefix}-${fileName}`);
@@ -155,31 +174,40 @@ function handleRenamePostFolder(body) {
   const shortToken = token.substring(0, 8);
   const prefix = 'post-' + shortToken;
   
-  const rootFolder = getOrCreateFolder(CONFIG.ROOT_FOLDER_NAME, DriveApp.getRootFolder());
-  const postsRoot = getOrCreateFolder(CONFIG.POSTS_ROOT_FOLDER, rootFolder);
-  
-  const existing = postsRoot.getFolders();
-  let targetFolder = null;
-  while (existing.hasNext()) {
-    const folder = existing.next();
-    if (folder.getName().startsWith(prefix)) {
-      targetFolder = folder;
-      break;
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(30000);
+    
+    const rootFolder = getOrCreateFolder(CONFIG.ROOT_FOLDER_NAME, DriveApp.getRootFolder());
+    const postsRoot = getOrCreateFolder(CONFIG.POSTS_ROOT_FOLDER, rootFolder);
+    
+    const existing = postsRoot.getFolders();
+    let targetFolder = null;
+    while (existing.hasNext()) {
+      const folder = existing.next();
+      if (folder.getName().startsWith(prefix)) {
+        targetFolder = folder;
+        break;
+      }
     }
-  }
 
-  if (targetFolder) {
-    const safeTitle = (title || 'Untitled')
-      .replace(/[\\/:*?"<>|]/g, '-')
-      .replace(/\s+/g, ' ')
-      .trim();
-    
-    const newName = `${prefix} - ${safeTitle}`;
-    
-    // Only rename if it's different to save API calls
-    if (targetFolder.getName() !== newName) {
-      targetFolder.setName(newName);
+    if (targetFolder) {
+      const safeTitle = (title || 'Untitled')
+        .replace(/[\\/:*?"<>|]/g, '-')
+        .replace(/\s+/g, ' ')
+        .trim();
+      
+      const newName = `${prefix} - ${safeTitle}`;
+      
+      // Only rename if it's different to save API calls
+      if (targetFolder.getName() !== newName) {
+        targetFolder.setName(newName);
+      }
     }
+  } catch (err) {
+    return { success: false, error: 'Failed to acquire folder lock: ' + err.message };
+  } finally {
+    lock.releaseLock();
   }
 
   // We return success even if no folder was found, because it's valid for a post

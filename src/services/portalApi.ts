@@ -34,6 +34,7 @@ export type SubmissionInput = {
   manuscriptFile?: File | undefined;
   /** Actual File object for Drive upload (optional) */
   coverFile?: File | undefined;
+  episodeCount?: number | undefined;
 };
 
 export type SubmissionRecord = {
@@ -121,9 +122,10 @@ export interface UploadFileResponse {
 
 export async function uploadFileToScript(
   submissionCode: string,
-  fileType: "manuscript" | "cover" | "image",
+  fileType: "manuscript" | "cover" | "image" | "episode",
   file: File,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  episodeNumber?: number
 ): Promise<UploadFileResponse> {
   const scriptUrl = import.meta.env["VITE_PORTAL_API_URL"] as string | undefined;
   if (!scriptUrl) {
@@ -153,6 +155,7 @@ export async function uploadFileToScript(
         fileName: file.name,
         mimeType: file.type,
         base64Data,
+        episodeNumber,
       }),
       signal: signal as any,
     });
@@ -262,6 +265,49 @@ export async function updateSubmissionFiles(
   }
 }
 
+// ── Public: uploadEpisodeFile ────────────────────────────────────────────────
+
+export async function uploadEpisodeFile(
+  submissionCode: string,
+  episodeNumber: number,
+  file: File,
+  signal?: AbortSignal
+): Promise<UploadFileResponse> {
+  return uploadFileToScript(submissionCode, "episode", file, signal, episodeNumber);
+}
+
+// ── Public: saveEpisodeRecord ────────────────────────────────────────────────
+
+export async function saveEpisodeRecord(
+  submissionCode: string,
+  episodeNumber: number,
+  driveUrl: string | null,
+  driveFileId: string | null,
+  fileName: string | null,
+  uploadFailed: boolean
+): Promise<ApiResult<null>> {
+  if (!isSupabaseConfigured) {
+    // Demo mode: skip local store update for now (or could add logic here)
+    await new Promise((r) => setTimeout(r, 200));
+    return { success: true, data: null };
+  }
+  try {
+    const { error } = await supabase.rpc("save_episode_record", {
+      p_submission_code: submissionCode,
+      p_episode_number: episodeNumber,
+      p_drive_url: driveUrl,
+      p_drive_file_id: driveFileId,
+      p_file_name: fileName,
+      p_upload_failed: uploadFailed,
+    });
+
+    if (error) return { success: false, error: error.message };
+    return { success: true, data: null };
+  } catch (err: any) {
+    return { success: false, error: err?.message || "Failed to save episode record." };
+  }
+}
+
 // ── Public: sendNotificationEmail ────────────────────────────────────────────
 // Triggers an email notification via Google Apps Script Web App.
 
@@ -365,6 +411,7 @@ export async function submitNovel(input: SubmissionInput): Promise<ApiResult<Sub
       p_manuscript_drive_file_id: null,
       p_cover_drive_url: null,
       p_cover_drive_file_id: null,
+      p_episode_count: input.episodeCount ?? null,
     });
 
     if (error) {
