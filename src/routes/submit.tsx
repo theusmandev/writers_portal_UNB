@@ -956,7 +956,7 @@ export default function SubmitPage() {
                             variant="ghost"
                             size="icon"
                             onClick={() => removeEpisode(ep.id)}
-                            className="text-muted-foreground hover:text-destructive shrink-0 mt-6 sm:mt-0"
+                            className="text-muted-foreground hover:text-destructive shrink-0 self-end sm:self-auto sm:mt-7"
                             title="Remove episode"
                           >
                             <Trash2 className="size-4" />
