@@ -142,18 +142,29 @@ export default function SubmitPage() {
   // Check minimum episodes based on email and novel status
   useEffect(() => {
     let active = true;
+
+    const adjustEpisodes = (prev: EpisodeSlot[], targetMin: number) => {
+      if (prev.length < targetMin) {
+        const diff = targetMin - prev.length;
+        return [...prev, ...Array.from({ length: diff }, (_, i) => ({ id: crypto.randomUUID(), file: null, number: prev.length + i + 1 }))];
+      } else if (prev.length > targetMin) {
+        const next = [...prev];
+        for (let i = next.length - 1; i >= 0 && next.length > targetMin; i--) {
+          if (next[i].file === null) {
+            next.splice(i, 1);
+          }
+        }
+        return next.map((ep, idx) => ({ ...ep, number: idx + 1 }));
+      }
+      return prev;
+    };
+
     const checkMin = async () => {
       if (form.novelStatus !== "Ongoing") return;
       if (!form.email || !/^\S+@\S+\.\S+$/.test(form.email)) {
         if (minEpisodes !== 5) {
           setMinEpisodes(5);
-          setEpisodes(prev => {
-            if (prev.length < 5) {
-              const diff = 5 - prev.length;
-              return [...prev, ...Array.from({ length: diff }, (_, i) => ({ id: crypto.randomUUID(), file: null, number: prev.length + i + 1 }))];
-            }
-            return prev;
-          });
+          setEpisodes(prev => adjustEpisodes(prev, 5));
         }
         return;
       }
@@ -162,13 +173,7 @@ export default function SubmitPage() {
       const newMin = isExempt ? 1 : 5;
       if (newMin !== minEpisodes) {
         setMinEpisodes(newMin);
-        setEpisodes(prev => {
-          if (prev.length < newMin) {
-            const diff = newMin - prev.length;
-            return [...prev, ...Array.from({ length: diff }, (_, i) => ({ id: crypto.randomUUID(), file: null, number: prev.length + i + 1 }))];
-          }
-          return prev;
-        });
+        setEpisodes(prev => adjustEpisodes(prev, newMin));
       }
     };
     
