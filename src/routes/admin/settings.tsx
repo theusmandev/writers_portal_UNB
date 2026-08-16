@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { Save, AlertCircle, CheckCircle2 } from "lucide-react";
-import { getSubmissionSettings, updateSubmissionSettings, getEpisodeMinimumExceptions, addEpisodeMinimumException, removeEpisodeMinimumException, type EpisodeMinimumException } from "@/services/portalApi";
+import { getSubmissionSettings, updateSubmissionSettings, getNotificationSettings, updateNotificationSettings, getEpisodeMinimumExceptions, addEpisodeMinimumException, removeEpisodeMinimumException, type EpisodeMinimumException } from "@/services/portalApi";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { Trash2, Plus, Loader2 } from "lucide-react";
 
 export default function AdminSettings() {
@@ -15,6 +15,11 @@ export default function AdminSettings() {
   
   const [paused, setPaused] = useState(false);
   const [message, setMessage] = useState("");
+
+  const [notificationEnabled, setNotificationEnabled] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState("");
+  const [notificationLinkUrl, setNotificationLinkUrl] = useState("");
+  const [notificationLinkText, setNotificationLinkText] = useState("");
 
   const [exceptions, setExceptions] = useState<EpisodeMinimumException[]>([]);
   const [loadingExceptions, setLoadingExceptions] = useState(false);
@@ -35,6 +40,14 @@ export default function AdminSettings() {
       setMessage(result.data.pause_message || "");
     } else {
       setError(result.error);
+    }
+    
+    const notifResult = await getNotificationSettings();
+    if (notifResult.success) {
+      setNotificationEnabled(notifResult.data.notification_enabled);
+      setNotificationMessage(notifResult.data.notification_message || "");
+      setNotificationLinkUrl(notifResult.data.notification_link_url || "");
+      setNotificationLinkText(notifResult.data.notification_link_text || "");
     }
     
     setLoadingExceptions(true);
@@ -90,19 +103,22 @@ export default function AdminSettings() {
     setSaving(true);
     setError(null);
     setSuccess(null);
-    
-    const result = await updateSubmissionSettings(paused, message);
-    if (result.success) {
+    const [result, notifResultSave] = await Promise.all([
+      updateSubmissionSettings(paused, message),
+      updateNotificationSettings(notificationEnabled, notificationMessage, notificationLinkUrl, notificationLinkText)
+    ]);
+
+    if (result.success && notifResultSave.success) {
       setSuccess("Settings saved successfully.");
       setTimeout(() => setSuccess(null), 3000);
     } else {
-      setError(result.error);
+      setError(result.error || notifResultSave.error || "Failed to save settings.");
     }
     setSaving(false);
   }
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="p-6 space-y-6 max-w-6xl">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
         <p className="text-muted-foreground">Manage site-wide configurations.</p>
@@ -121,6 +137,75 @@ export default function AdminSettings() {
           <p>{success}</p>
         </div>
       )}
+
+      <div className="rounded-xl border bg-card p-6 shadow-sm">
+        <h2 className="text-lg font-semibold mb-4">Site Notification Bar</h2>
+        
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <label htmlFor="notification-toggle" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Show Notification Bar
+              </label>
+              <p className="text-sm text-muted-foreground">
+                Display a dismissible notification at the top of every page.
+              </p>
+            </div>
+            <Switch
+              id="notification-toggle"
+              checked={notificationEnabled}
+              onCheckedChange={setNotificationEnabled}
+              disabled={loading || saving}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium leading-none">
+              Notification Message
+            </label>
+            <p className="text-sm text-muted-foreground">
+              The message to show. Saving a changed message will reset dismissals so it reappears for everyone.
+            </p>
+            <RichTextEditor
+              value={notificationMessage}
+              onChange={setNotificationMessage}
+              placeholder="e.g., Submissions for our upcoming anthology open next week!"
+            />
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <label htmlFor="notif-link-url" className="text-sm font-medium leading-none">
+                Link URL (Optional)
+              </label>
+              <Input
+                id="notif-link-url"
+                placeholder="e.g. https://chat.whatsapp.com/..."
+                value={notificationLinkUrl}
+                onChange={(e) => setNotificationLinkUrl(e.target.value)}
+                disabled={loading || saving}
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="notif-link-text" className="text-sm font-medium leading-none">
+                Link Text (Optional)
+              </label>
+              <Input
+                id="notif-link-text"
+                placeholder="e.g. Join our WhatsApp Channel"
+                value={notificationLinkText}
+                onChange={(e) => setNotificationLinkText(e.target.value)}
+                disabled={loading || saving}
+              />
+            </div>
+          </div>
+          
+          <Button onClick={handleSave} disabled={loading || saving} className="w-full sm:w-auto">
+            <Save className="mr-2 h-4 w-4" />
+            {saving ? "Saving..." : "Save Notification Settings"}
+          </Button>
+        </div>
+      </div>
 
       <div className="rounded-xl border bg-card p-6 shadow-sm">
         <h2 className="text-lg font-semibold mb-4">Submission Settings</h2>
@@ -150,13 +235,10 @@ export default function AdminSettings() {
             <p className="text-sm text-muted-foreground">
               The message shown to writers when they visit the submission form while paused.
             </p>
-            <Textarea
-              id="pause-message"
-              placeholder="e.g., We are temporarily not accepting new submissions..."
+            <RichTextEditor
               value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              disabled={loading || saving}
-              rows={4}
+              onChange={setMessage}
+              placeholder="e.g., We are temporarily not accepting new submissions..."
             />
           </div>
           

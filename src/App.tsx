@@ -3,6 +3,7 @@ import { SiteHeader } from "./components/portal/SiteHeader";
 import { SiteFooter } from "./components/portal/SiteFooter";
 import { AdminGuard } from "./components/portal/AdminGuard";
 import { AdminLayout } from "./components/portal/AdminLayout";
+import { NotificationBar } from "./components/portal/NotificationBar";
 
 // ── Public pages ──────────────────────────────────────────────────────────────
 import Index from "./routes/index";
@@ -34,6 +35,7 @@ import NotFound from "./routes/not-found";
 function PublicLayout() {
   return (
     <div className="flex min-h-screen flex-col">
+      <NotificationBar />
       <SiteHeader />
       <main className="flex-1">
         <Outlet />

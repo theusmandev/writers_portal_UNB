@@ -184,6 +184,11 @@ export interface Database {
           id: number;
           submissions_paused: boolean;
           pause_message: string | null;
+          notification_enabled: boolean;
+          notification_message: string | null;
+          notification_link_url: string | null;
+          notification_link_text: string | null;
+          notification_version: number;
         };
         Insert: Omit<Database["public"]["Tables"]["site_settings"]["Row"], "id"> & { id?: number };
         Update: Partial<Database["public"]["Tables"]["site_settings"]["Insert"]>;

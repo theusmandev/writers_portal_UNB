@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import DOMPurify from "dompurify";
 import { z } from "zod";
 import { CheckCircle2, Info, Loader2, FileText, Image, Copy, Check, Plus, Trash2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -712,9 +713,13 @@ export default function SubmitPage() {
           <div className="rounded-2xl border border-border bg-card p-8 text-center shadow-elegant">
             <Info className="mx-auto size-10 text-primary" />
             <h2 className="mt-4 text-2xl font-semibold">We are not accepting new submissions at this time</h2>
-            <p className="urdu mt-4 text-lg leading-loose text-muted-foreground whitespace-pre-line" dir="auto">
-              {pauseMessage}
-            </p>
+            <div 
+              className="prose prose-stone prose-lg max-w-none dark:prose-invert mx-auto mt-4 text-left leading-loose text-muted-foreground urdu"
+              dir="auto"
+              dangerouslySetInnerHTML={{ 
+                __html: DOMPurify.sanitize(pauseMessage, { ADD_ATTR: ['target', 'style', 'data-align'] }) 
+              }}
+            />
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Button asChild>
                 <Link to="/">Return to Home</Link>
