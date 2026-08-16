@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { AlertCircle } from "lucide-react";
 import { PageHero } from "@/components/portal/PageHero";
 import { processStages, timelineFactors } from "@/data/content";
+import { FadeIn } from "@/components/portal/FadeIn";
 
 
 
@@ -15,7 +16,7 @@ export default function TimelinePage() {
         description="Typical durations for each stage. These are honest estimates, not guarantees — actual time depends on the factors listed below."
       />
       <div className="mx-auto max-w-3xl px-5 py-16">
-        <div className="overflow-hidden rounded-xl border border-border bg-card shadow-soft">
+        <FadeIn className="overflow-hidden rounded-xl border border-border bg-card shadow-soft">
           <table className="w-full text-left text-sm">
             <thead className="bg-primary/10 text-xs tracking-wide text-primary uppercase">
               <tr>
@@ -37,9 +38,9 @@ export default function TimelinePage() {
               ))}
             </tbody>
           </table>
-        </div>
+        </FadeIn>
 
-        <div className="mt-10 rounded-xl border border-border bg-primary/5 p-6">
+        <FadeIn delayMs={100} className="mt-10 rounded-xl border border-border bg-primary/5 p-6">
           <div className="flex items-center gap-2">
             <AlertCircle className="size-4 text-primary" />
             <h2 className="font-display text-lg font-semibold">What can change these timings</h2>
@@ -51,7 +52,7 @@ export default function TimelinePage() {
               </li>
             ))}
           </ul>
-        </div>
+        </FadeIn>
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { PageHero } from "@/components/portal/PageHero";
 import { policy, policyVersion } from "@/data/content";
+import { FadeIn } from "@/components/portal/FadeIn";
 
 
 
@@ -19,17 +20,17 @@ export default function PolicyPage() {
       </PageHero>
       <div className="mx-auto max-w-3xl px-5 py-16">
         <div className="space-y-8">
-          {policy.map((section) => (
-            <section key={section.title}>
+          {policy.map((section, i) => (
+            <FadeIn as="section" key={section.title} delayMs={i * 50}>
               <h2 className="font-display text-lg font-semibold">{section.title}</h2>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{section.body}</p>
-            </section>
+            </FadeIn>
           ))}
         </div>
-        <p className="mt-12 rounded-lg border border-border bg-primary/5 p-5 text-sm text-muted-foreground">
+        <FadeIn as="p" className="mt-12 rounded-lg border border-border bg-primary/5 p-5 text-sm text-muted-foreground">
           Urdu Novel Bank never charges writers a fee for review, formatting or publication. If
           anyone asks you for payment on our behalf, please report it to us immediately.
-        </p>
+        </FadeIn>
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import type { PostRow } from "@/lib/supabase.types";
 import { PageHero } from "@/components/portal/PageHero";
 import { Loader2, ArrowRight, Calendar } from "lucide-react";
 import { formatDate } from "@/lib/utils";
+import { FadeIn } from "@/components/portal/FadeIn";
 
 export default function PostsPage() {
   const [posts, setPosts] = useState<PostRow[]>([]);
@@ -48,9 +49,11 @@ export default function PostsPage() {
           </div>
         ) : (
           <div className="flex flex-col gap-8">
-            {posts.map((post) => (
-              <article 
+            {posts.map((post, i) => (
+              <FadeIn 
+                as="article"
                 key={post.id} 
+                delayMs={i * 100}
                 className="group relative flex flex-col items-start justify-between rounded-2xl border border-border bg-card p-6 shadow-sm hover:shadow-md hover:border-primary/30 transition-all sm:flex-row sm:items-center sm:gap-8 sm:p-8"
               >
                 <div className="flex-1 space-y-3">
@@ -80,7 +83,7 @@ export default function PostsPage() {
                     Read more <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </span>
                 </div>
-              </article>
+              </FadeIn>
             ))}
           </div>
         )}

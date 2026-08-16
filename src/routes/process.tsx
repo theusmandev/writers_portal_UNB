@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { PageHero } from "@/components/portal/PageHero";
 import { processStages } from "@/data/content";
+import { FadeIn } from "@/components/portal/FadeIn";
 
 
 
@@ -17,7 +18,7 @@ export default function ProcessPage() {
       <div className="mx-auto max-w-3xl px-5 py-16">
         <ol className="relative border-l border-border pl-8">
           {processStages.map((stage, i) => (
-            <li key={stage.key} className="relative pb-10 last:pb-0">
+            <FadeIn as="li" key={stage.key} className="relative pb-10 last:pb-0" delayMs={i * 100}>
               <span className="absolute -left-[41px] flex size-6 items-center justify-center rounded-full border border-border bg-card text-[11px] font-semibold text-primary">
                 {i + 1}
               </span>
@@ -31,11 +32,11 @@ export default function ProcessPage() {
               <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
                 {stage.description}
               </p>
-            </li>
+            </FadeIn>
           ))}
         </ol>
 
-        <div className="mt-12 rounded-xl border border-border bg-card p-6 shadow-soft">
+        <FadeIn className="mt-12 rounded-xl border border-border bg-card p-6 shadow-soft">
           <h2 className="font-display text-lg font-semibold">Ready to begin?</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Read the submission guidelines first, then send your manuscript.
@@ -48,7 +49,7 @@ export default function ProcessPage() {
               <Link to="/guidelines">Submission Guidelines</Link>
             </Button>
           </div>
-        </div>
+        </FadeIn>
       </div>
     </div>
   );

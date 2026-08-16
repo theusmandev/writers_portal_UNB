@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { PageHero } from "@/components/portal/PageHero";
 import { processStages, submissionStatuses, getMissingFileMessage } from "@/data/content";
 import { trackSubmission, submitResponse, getSubmissionsByEmail, addEpisodesToSubmission, uploadEpisodeFile, sendNotificationEmail, type SubmissionRecord, type WriterSubmissionSummary } from "@/services/portalApi";
+import { FadeIn } from "@/components/portal/FadeIn";
 
 /**
  * Maps every possible admin-set current_status value to its 0-based index
@@ -1113,11 +1114,12 @@ export default function TrackPage() {
                   </div>
                 ) : (
                   <div className="grid gap-4 sm:grid-cols-2">
-                    {submissionsList.map((sub) => (
-                      <div
+                    {submissionsList.map((sub, i) => (
+                      <FadeIn
                         key={sub.submission_code}
+                        delayMs={i * 100}
                         onClick={() => void handleSelectSubmission(sub.submission_code)}
-                        className="group flex flex-col justify-between rounded-xl border border-border bg-card p-5 shadow-soft hover:shadow-md hover:border-primary/30 transition-all cursor-pointer"
+                        className="group flex flex-col justify-between rounded-xl border border-border bg-card p-5 shadow-soft hover:shadow-md hover:border-primary/30 transition-all cursor-pointer h-full"
                       >
                         <div className="space-y-2">
                           <div className="flex justify-between items-start gap-2">
@@ -1159,7 +1161,7 @@ export default function TrackPage() {
                             </span>
                           )}
                         </div>
-                      </div>
+                      </FadeIn>
                     ))}
                   </div>
                 )}
