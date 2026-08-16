@@ -92,6 +92,14 @@ export type SiteSettings = {
   pause_message: string | null;
 };
 
+export type NotificationSettings = {
+  notification_enabled: boolean;
+  notification_message: string | null;
+  notification_link_url: string | null;
+  notification_link_text: string | null;
+  notification_version: number;
+};
+
 // ── Internal: demo-mode store ─────────────────────────────────────────────────
 
 const STORE_KEY = "unb-portal-submissions";
@@ -851,12 +859,81 @@ export async function updateSubmissionSettings(
   try {
     const { error } = await supabase
       .from("site_settings")
-      .upsert({ id: 1, submissions_paused: paused, pause_message: message || null });
+      .update({ submissions_paused: paused, pause_message: message || null })
+      .eq("id", 1);
 
     if (error) return { success: false, error: error.message };
     return { success: true, data: null };
   } catch (err: any) {
     return { success: false, error: err?.message || "Failed to save settings." };
+  }
+}
+
+export async function getNotificationSettings(): Promise<ApiResult<NotificationSettings>> {
+  if (!isSupabaseConfigured) {
+    return { success: true, data: { notification_enabled: false, notification_message: null, notification_link_url: null, notification_link_text: null, notification_version: 1 } };
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("site_settings")
+      .select("notification_enabled, notification_message, notification_link_url, notification_link_text, notification_version")
+      .eq("id", 1)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return { success: true, data: { notification_enabled: false, notification_message: null, notification_link_url: null, notification_link_text: null, notification_version: 1 } };
+      }
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data };
+  } catch (err: any) {
+    return { success: false, error: err?.message || "Failed to load notification settings." };
+  }
+}
+
+export async function updateNotificationSettings(
+  enabled: boolean,
+  message: string,
+  linkUrl: string,
+  linkText: string
+): Promise<ApiResult<null>> {
+  if (!isSupabaseConfigured) {
+    await new Promise((r) => setTimeout(r, 400));
+    return { success: true, data: null };
+  }
+
+  try {
+    const current = await getNotificationSettings();
+    let newVersion = 1;
+    
+    if (current.success) {
+      const c = current.data;
+      newVersion = c.notification_version || 1;
+      if (c.notification_message !== (message || null) || 
+          c.notification_link_url !== (linkUrl || null) || 
+          c.notification_link_text !== (linkText || null)) {
+        newVersion += 1;
+      }
+    }
+
+    const { error } = await supabase
+      .from("site_settings")
+      .update({ 
+        notification_enabled: enabled, 
+        notification_message: message || null,
+        notification_link_url: linkUrl || null,
+        notification_link_text: linkText || null,
+        notification_version: newVersion
+      })
+      .eq("id", 1);
+
+    if (error) return { success: false, error: error.message };
+    return { success: true, data: null };
+  } catch (err: any) {
+    return { success: false, error: err?.message || "Failed to save notification settings." };
   }
 }
 
