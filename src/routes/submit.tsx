@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PageHero } from "@/components/portal/PageHero";
 import { genres, site, getMissingFileMessage } from "@/data/content";
-import { isDemoMode, submitNovel, uploadFileToScript, updateSubmissionFiles, sendNotificationEmail, getWriterInfoByEmail, uploadEpisodeFile, saveEpisodeRecord, getSubmissionSettings, type SubmissionRecord } from "@/services/portalApi";
+import { isDemoMode, submitNovel, uploadFileToScript, updateSubmissionFiles, sendNotificationEmail, getWriterInfoByEmail, uploadEpisodeFile, saveEpisodeRecord, getSubmissionSettings, checkEpisodeMinimumException, type SubmissionRecord } from "@/services/portalApi";
 
 
 
@@ -134,16 +134,58 @@ export default function SubmitPage() {
     file: File | null;
     number: number;
   };
+  const [minEpisodes, setMinEpisodes] = useState(5);
   const [episodes, setEpisodes] = useState<EpisodeSlot[]>(
     Array.from({ length: 5 }, (_, i) => ({ id: crypto.randomUUID(), file: null, number: i + 1 }))
   );
+
+  // Check minimum episodes based on email and novel status
+  useEffect(() => {
+    let active = true;
+    const checkMin = async () => {
+      if (form.novelStatus !== "Ongoing") return;
+      if (!form.email || !/^\S+@\S+\.\S+$/.test(form.email)) {
+        if (minEpisodes !== 5) {
+          setMinEpisodes(5);
+          setEpisodes(prev => {
+            if (prev.length < 5) {
+              const diff = 5 - prev.length;
+              return [...prev, ...Array.from({ length: diff }, (_, i) => ({ id: crypto.randomUUID(), file: null, number: prev.length + i + 1 }))];
+            }
+            return prev;
+          });
+        }
+        return;
+      }
+      const isExempt = await checkEpisodeMinimumException(form.email);
+      if (!active) return;
+      const newMin = isExempt ? 1 : 5;
+      if (newMin !== minEpisodes) {
+        setMinEpisodes(newMin);
+        setEpisodes(prev => {
+          if (prev.length < newMin) {
+            const diff = newMin - prev.length;
+            return [...prev, ...Array.from({ length: diff }, (_, i) => ({ id: crypto.randomUUID(), file: null, number: prev.length + i + 1 }))];
+          }
+          return prev;
+        });
+      }
+    };
+    
+    // Simple debounce
+    const timer = setTimeout(checkMin, 500);
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [form.email, form.novelStatus, minEpisodes]);
 
   const addEpisode = () => {
     setEpisodes(prev => [...prev, { id: crypto.randomUUID(), file: null, number: prev.length + 1 }]);
   };
 
   const removeEpisode = (idToRemove: string) => {
-    if (episodes.length <= 5) return;
+    if (episodes.length <= minEpisodes) return;
     setEpisodes(prev => {
       const next = prev.filter(ep => ep.id !== idToRemove);
       return next.map((ep, idx) => ({ ...ep, number: idx + 1 }));
@@ -665,12 +707,15 @@ export default function SubmitPage() {
           <div className="rounded-2xl border border-border bg-card p-8 text-center shadow-elegant">
             <Info className="mx-auto size-10 text-primary" />
             <h2 className="mt-4 text-2xl font-semibold">We are not accepting new submissions at this time</h2>
-            <p className="mt-4 text-muted-foreground whitespace-pre-line">
+            <p className="urdu mt-4 text-lg leading-loose text-muted-foreground whitespace-pre-line" dir="auto">
               {pauseMessage}
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Button asChild>
                 <Link to="/">Return to Home</Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link to="/track">Track Submission</Link>
               </Button>
               <Button asChild variant="outline">
                 <Link to="/updates">Check Updates</Link>
@@ -861,8 +906,13 @@ export default function SubmitPage() {
               ) : (
                 <div className="sm:col-span-2 space-y-4">
                   <div className="space-y-1.5">
-                    <Label>Episodes (Minimum 5)</Label>
-                    <p className="text-xs text-muted-foreground">At least 5 episodes are required to submit an ongoing novel. Attach each episode as a separate file below. Max {MAX_FILE_MB} MB per file.</p>
+                    <Label>Episodes (Minimum {minEpisodes})</Label>
+                    <p className="text-xs text-muted-foreground">
+                      {minEpisodes === 1 
+                        ? "You're approved to submit with 1 or more episodes. Attach each episode as a separate file below." 
+                        : `At least ${minEpisodes} episodes are required to submit an ongoing novel. Attach each episode as a separate file below.`}
+                      {" "}Max {MAX_FILE_MB} MB per file.
+                    </p>
                     {errors["episodes"] && <p className="text-xs text-destructive">{errors["episodes"]}</p>}
                   </div>
                   
@@ -890,7 +940,7 @@ export default function SubmitPage() {
                             )}
                           </Field>
                         </div>
-                        {episodes.length > 5 && (
+                        {episodes.length > minEpisodes && (
                           <Button
                             type="button"
                             variant="ghost"

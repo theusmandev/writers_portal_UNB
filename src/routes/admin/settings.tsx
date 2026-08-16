@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { Save, AlertCircle, CheckCircle2 } from "lucide-react";
-import { getSubmissionSettings, updateSubmissionSettings } from "@/services/portalApi";
+import { getSubmissionSettings, updateSubmissionSettings, getEpisodeMinimumExceptions, addEpisodeMinimumException, removeEpisodeMinimumException, type EpisodeMinimumException } from "@/services/portalApi";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Trash2, Plus, Loader2 } from "lucide-react";
 
 export default function AdminSettings() {
   const [loading, setLoading] = useState(true);
@@ -13,6 +15,12 @@ export default function AdminSettings() {
   
   const [paused, setPaused] = useState(false);
   const [message, setMessage] = useState("");
+
+  const [exceptions, setExceptions] = useState<EpisodeMinimumException[]>([]);
+  const [loadingExceptions, setLoadingExceptions] = useState(false);
+  const [newExceptionEmail, setNewExceptionEmail] = useState("");
+  const [newExceptionNote, setNewExceptionNote] = useState("");
+  const [addingException, setAddingException] = useState(false);
 
   useEffect(() => {
     void load();
@@ -28,7 +36,54 @@ export default function AdminSettings() {
     } else {
       setError(result.error);
     }
+    
+    setLoadingExceptions(true);
+    const exceptionsResult = await getEpisodeMinimumExceptions();
+    if (exceptionsResult.success) {
+      setExceptions(exceptionsResult.data);
+    }
+    setLoadingExceptions(false);
+    
     setLoading(false);
+  }
+
+  async function handleAddException(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newExceptionEmail || !/^\S+@\S+\.\S+$/.test(newExceptionEmail)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+    setAddingException(true);
+    setError(null);
+    setSuccess(null);
+    
+    const res = await addEpisodeMinimumException(newExceptionEmail, newExceptionNote);
+    if (res.success) {
+      setSuccess("Exception added successfully.");
+      setNewExceptionEmail("");
+      setNewExceptionNote("");
+      // Reload exceptions
+      const updated = await getEpisodeMinimumExceptions();
+      if (updated.success) setExceptions(updated.data);
+      setTimeout(() => setSuccess(null), 3000);
+    } else {
+      setError(res.error);
+    }
+    setAddingException(false);
+  }
+
+  async function handleRemoveException(id: string) {
+    if (!confirm("Are you sure you want to remove this exception?")) return;
+    setError(null);
+    setSuccess(null);
+    const res = await removeEpisodeMinimumException(id);
+    if (res.success) {
+      setSuccess("Exception removed.");
+      setExceptions(prev => prev.filter(e => e.id !== id));
+      setTimeout(() => setSuccess(null), 3000);
+    } else {
+      setError(res.error);
+    }
   }
 
   async function handleSave() {
@@ -109,6 +164,75 @@ export default function AdminSettings() {
             <Save className="mr-2 h-4 w-4" />
             {saving ? "Saving..." : "Save Settings"}
           </Button>
+        </div>
+      </div>
+
+      <div className="rounded-xl border bg-card p-6 shadow-sm">
+        <h2 className="text-lg font-semibold mb-4">Episode Minimum Exceptions</h2>
+        <p className="text-sm text-muted-foreground mb-6">
+          Writers in this list can submit an "Ongoing" novel with just 1 episode, instead of the standard minimum of 5.
+        </p>
+
+        <form onSubmit={handleAddException} className="mb-8 grid gap-4 sm:grid-cols-[1fr_1fr_auto] items-start">
+          <div className="space-y-1.5">
+            <label htmlFor="exc-email" className="text-sm font-medium">Writer Email</label>
+            <Input 
+              id="exc-email" 
+              type="email" 
+              placeholder="writer@example.com" 
+              value={newExceptionEmail}
+              onChange={(e) => setNewExceptionEmail(e.target.value)}
+              disabled={addingException}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label htmlFor="exc-note" className="text-sm font-medium">Note (Optional)</label>
+            <Input 
+              id="exc-note" 
+              placeholder="Admin note for this exception" 
+              value={newExceptionNote}
+              onChange={(e) => setNewExceptionNote(e.target.value)}
+              disabled={addingException}
+            />
+          </div>
+          <div className="pt-6">
+            <Button type="submit" disabled={addingException} className="w-full">
+              {addingException ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
+              Add Email
+            </Button>
+          </div>
+        </form>
+
+        <div className="rounded-lg border">
+          {loadingExceptions ? (
+            <div className="p-8 flex justify-center">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : exceptions.length === 0 ? (
+            <div className="p-8 text-center text-sm text-muted-foreground">
+              No exceptions currently set.
+            </div>
+          ) : (
+            <div className="divide-y">
+              {exceptions.map(exc => (
+                <div key={exc.id} className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">
+                  <div>
+                    <p className="font-medium">{exc.email}</p>
+                    {exc.note && <p className="text-sm text-muted-foreground">{exc.note}</p>}
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="text-muted-foreground hover:text-destructive"
+                    onClick={() => handleRemoveException(exc.id)}
+                    title="Remove exception"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
