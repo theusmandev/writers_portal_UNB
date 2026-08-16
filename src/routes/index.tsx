@@ -8,6 +8,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { faqs, processStages, site } from "@/data/content";
+import { FadeIn } from "@/components/portal/FadeIn";
 
 
 
@@ -63,7 +64,7 @@ export default function Index() {
 
       <section className="mx-auto max-w-6xl px-5 py-20">
         <div className="grid gap-10 lg:grid-cols-2">
-          <div>
+          <FadeIn>
             <h2 className="text-2xl font-semibold sm:text-3xl">What is Urdu Novel Bank?</h2>
             <p className="mt-4 leading-relaxed text-muted-foreground">
               Urdu Novel Bank publishes Urdu novels by writers from across Pakistan and the wider
@@ -78,71 +79,80 @@ export default function Index() {
               یہ پورٹل لکھاریوں کے لیے بنایا گیا ہے تاکہ ناول بھیجنے، جائزے اور اشاعت کا سارا عمل
               واضح، منظم اور شفاف ہو۔
             </p>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-6 shadow-soft">
-            <h3 className="font-display text-lg font-semibold">Who can submit?</h3>
-            <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
-              <li>• New and established Urdu writers alike — we read every submission.</li>
-              <li>• The novel must be written by you, in Urdu script.</li>
-              <li>• Complete novels are preferred; ongoing work needs 5+ ready episodes.</li>
-              <li>• You keep the copyright; we only ask for permission to publish.</li>
-            </ul>
-            <Button asChild variant="outline" className="mt-6">
-              <Link to="/guidelines">Full Guidelines</Link>
-            </Button>
-          </div>
+          </FadeIn>
+          <FadeIn delayMs={100}>
+            <div className="rounded-xl border border-border bg-card p-6 shadow-soft">
+              <h3 className="font-display text-lg font-semibold">Who can submit?</h3>
+              <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
+                <li>• New and established Urdu writers alike — we read every submission.</li>
+                <li>• The novel must be written by you, in Urdu script.</li>
+                <li>• Complete novels are preferred; ongoing work needs 5+ ready episodes.</li>
+                <li>• You keep the copyright; we only ask for permission to publish.</li>
+              </ul>
+              <Button asChild variant="outline" className="mt-6">
+                <Link to="/guidelines">Full Guidelines</Link>
+              </Button>
+            </div>
+          </FadeIn>
         </div>
       </section>
 
       <section>
         <div className="mx-auto max-w-6xl px-5 py-20">
-          <h2 className="text-2xl font-semibold sm:text-3xl">How it works</h2>
-          <p className="mt-2 text-muted-foreground">Four steps, start to finish.</p>
+          <FadeIn>
+            <h2 className="text-2xl font-semibold sm:text-3xl">How it works</h2>
+            <p className="mt-2 text-muted-foreground">Four steps, start to finish.</p>
+          </FadeIn>
           <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {steps.map((step, i) => (
-              <Link
-                key={step.title}
-                to={step.to}
-                className="group rounded-xl border border-border bg-card p-6 shadow-soft transition-shadow hover:shadow-elegant"
-              >
-                <div className="flex items-center justify-between">
-                  <step.icon className="size-5 text-primary" />
-                  <span className="font-display text-sm text-muted-foreground">0{i + 1}</span>
-                </div>
-                <h3 className="mt-4 font-display text-base font-semibold">{step.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{step.text}</p>
-              </Link>
+              <FadeIn key={step.title} delayMs={i * 100}>
+                <Link
+                  to={step.to}
+                  className="block group rounded-xl border border-border bg-card p-6 shadow-soft transition-shadow hover:shadow-elegant h-full"
+                >
+                  <div className="flex items-center justify-between">
+                    <step.icon className="size-5 text-primary" />
+                    <span className="font-display text-sm text-muted-foreground">0{i + 1}</span>
+                  </div>
+                  <h3 className="mt-4 font-display text-base font-semibold">{step.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{step.text}</p>
+                </Link>
+              </FadeIn>
             ))}
           </div>
         </div>
       </section>
 
       <section className="mx-auto max-w-6xl px-5 py-20">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h2 className="text-2xl font-semibold sm:text-3xl">The publication journey</h2>
-            <p className="mt-2 text-muted-foreground">
-              Every manuscript passes through the same stages.
-            </p>
+        <FadeIn>
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h2 className="text-2xl font-semibold sm:text-3xl">The publication journey</h2>
+              <p className="mt-2 text-muted-foreground">
+                Every manuscript passes through the same stages.
+              </p>
+            </div>
+            <Button asChild variant="outline">
+              <Link to="/timeline">See expected timings</Link>
+            </Button>
           </div>
-          <Button asChild variant="outline">
-            <Link to="/timeline">See expected timings</Link>
-          </Button>
-        </div>
+        </FadeIn>
         <div className="mt-8 grid gap-3 sm:grid-cols-3">
           {processStages.map((stage, i) => (
-            <div key={stage.key} className="rounded-lg border border-border bg-card p-4">
-              <p className="text-xs text-muted-foreground">Stage {i + 1}</p>
-              <p className="mt-1 font-medium">{stage.title}</p>
-              <p className="urdu text-base text-muted-foreground">{stage.titleUrdu}</p>
-            </div>
+            <FadeIn key={stage.key} delayMs={i * 100}>
+              <div className="rounded-lg border border-border bg-card p-4 h-full">
+                <p className="text-xs text-muted-foreground">Stage {i + 1}</p>
+                <p className="mt-1 font-medium">{stage.title}</p>
+                <p className="urdu text-base text-muted-foreground">{stage.titleUrdu}</p>
+              </div>
+            </FadeIn>
           ))}
         </div>
       </section>
 
       <section>
         <div className="mx-auto grid max-w-6xl gap-10 px-5 py-20 lg:grid-cols-3">
-          <div>
+          <FadeIn>
             <ShieldCheck className="size-6 text-primary" />
             <h2 className="mt-4 text-2xl font-semibold">Important to know</h2>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
@@ -152,8 +162,8 @@ export default function Index() {
             <div className="mt-5 flex items-center gap-2 text-sm text-muted-foreground">
               <Clock className="size-4" /> Typical review time: {site.reviewWindow}
             </div>
-          </div>
-          <div className="lg:col-span-2">
+          </FadeIn>
+          <FadeIn delayMs={100} className="lg:col-span-2">
             <h2 className="text-2xl font-semibold">Common questions</h2>
             <Accordion type="single" collapsible className="mt-4 rounded-xl border border-border bg-card px-5">
               {faqs.slice(0, 5).map((f) => (
@@ -170,24 +180,26 @@ export default function Index() {
             <Button asChild variant="ghost" className="mt-4">
               <Link to="/faq">All FAQs</Link>
             </Button>
-          </div>
+          </FadeIn>
         </div>
       </section>
 
-      <section className="mx-auto max-w-4xl px-5 py-20 text-center">
-        <h2 className="text-3xl font-semibold text-balance">Ready to send your novel?</h2>
-        <p className="mt-3 text-muted-foreground">
-          Prepare your manuscript, fill the form, and keep your Submission ID safe.
-        </p>
-        <div className="mt-7 flex flex-wrap justify-center gap-3">
-          <Button asChild size="lg">
-            <Link to="/submit">Submit Your Novel</Link>
-          </Button>
-          <Button asChild size="lg" variant="outline">
-            <Link to="/policy">Read the Policy</Link>
-          </Button>
-        </div>
-      </section>
+      <FadeIn>
+        <section className="mx-auto max-w-4xl px-5 py-20 text-center">
+          <h2 className="text-3xl font-semibold text-balance">Ready to send your novel?</h2>
+          <p className="mt-3 text-muted-foreground">
+            Prepare your manuscript, fill the form, and keep your Submission ID safe.
+          </p>
+          <div className="mt-7 flex flex-wrap justify-center gap-3">
+            <Button asChild size="lg">
+              <Link to="/submit">Submit Your Novel</Link>
+            </Button>
+            <Button asChild size="lg" variant="outline">
+              <Link to="/policy">Read the Policy</Link>
+            </Button>
+          </div>
+        </section>
+      </FadeIn>
     </div>
   );
 }

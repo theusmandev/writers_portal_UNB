@@ -8,6 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { PageHero } from "@/components/portal/PageHero";
 import { faqs } from "@/data/content";
+import { FadeIn } from "@/components/portal/FadeIn";
 
 
 
@@ -23,8 +24,8 @@ export default function FaqPage() {
         description="If your question is not answered here, write to us and we will reply."
       />
       <div className="mx-auto max-w-3xl px-5 py-16">
-        {categories.map((category) => (
-          <section key={category} className="mb-10">
+        {categories.map((category, i) => (
+          <FadeIn as="section" key={category} className="mb-10" delayMs={i * 100}>
             <h2 className="mb-3 text-xs font-semibold tracking-[0.2em] text-muted-foreground uppercase">
               {category}
             </h2>
@@ -42,17 +43,17 @@ export default function FaqPage() {
                   </AccordionItem>
                 ))}
             </Accordion>
-          </section>
+          </FadeIn>
         ))}
 
-        <div className="flex flex-wrap gap-3">
+        <FadeIn className="flex flex-wrap gap-3">
           <Button asChild>
             <Link to="/submit">Submit Your Novel</Link>
           </Button>
           <Button asChild variant="outline">
             <Link to="/contact">Ask a Question</Link>
           </Button>
-        </div>
+        </FadeIn>
       </div>
     </div>
   );

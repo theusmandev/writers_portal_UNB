@@ -3,6 +3,7 @@ import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHero } from "@/components/portal/PageHero";
 import { guidelines, site } from "@/data/content";
+import { FadeIn } from "@/components/portal/FadeIn";
 
 
 
@@ -17,9 +18,11 @@ export default function GuidelinesPage() {
       />
       <div className="mx-auto max-w-4xl px-5 py-16">
         <div className="grid gap-6 sm:grid-cols-2">
-          {guidelines.map((section) => (
-            <section
+          {guidelines.map((section, i) => (
+            <FadeIn
+              as="section"
               key={section.title}
+              delayMs={i * 100}
               className="rounded-xl border border-border bg-card p-6 shadow-soft"
             >
               <h2 className="font-display text-lg font-semibold">{section.title}</h2>
@@ -36,11 +39,11 @@ export default function GuidelinesPage() {
                   {section.note}
                 </p>
               )}
-            </section>
+            </FadeIn>
           ))}
         </div>
 
-        <div className="mt-10 rounded-xl border border-border bg-primary/5 p-6">
+        <FadeIn className="mt-10 rounded-xl border border-border bg-primary/5 p-6">
           <p className="urdu text-lg leading-loose">
             براہِ کرم اپنا مسودہ یونیکوڈ اردو فونٹ میں بھیجیں۔ مکمل ناول کو ترجیح دی جاتی ہے، اور
             ہر مسودے کا جائزہ ادارتی ٹیم خود لیتی ہے۔
@@ -53,7 +56,7 @@ export default function GuidelinesPage() {
               <Link to="/policy">Read the Publication Policy</Link>
             </Button>
           </div>
-        </div>
+        </FadeIn>
       </div>
     </div>
   );
