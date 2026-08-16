@@ -167,9 +167,9 @@ export default function AdminSettings() {
               The message to show. Saving a changed message will reset dismissals so it reappears for everyone.
             </p>
             <RichTextEditor
-              value={notificationMessage}
+              content={notificationMessage}
               onChange={setNotificationMessage}
-              placeholder="e.g., Submissions for our upcoming anthology open next week!"
+              size="compact"
             />
           </div>
 
@@ -236,9 +236,8 @@ export default function AdminSettings() {
               The message shown to writers when they visit the submission form while paused.
             </p>
             <RichTextEditor
-              value={message}
+              content={message}
               onChange={setMessage}
-              placeholder="e.g., We are temporarily not accepting new submissions..."
             />
           </div>
           
