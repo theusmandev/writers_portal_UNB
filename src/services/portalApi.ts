@@ -1050,6 +1050,73 @@ export async function deletePost(id: string): Promise<ApiResult<null>> {
   }
 }
 
+// ── Episode Minimum Exceptions ────────────────────────────────────────────────
+export async function checkEpisodeMinimumException(email: string): Promise<boolean> {
+  if (!isSupabaseConfigured) return false;
+  try {
+    const { data, error } = await supabase.rpc("is_episode_minimum_exception", {
+      p_email: email,
+    });
+    if (error) return false;
+    return !!data;
+  } catch {
+    return false;
+  }
+}
+
+export type EpisodeMinimumException = {
+  id: string;
+  email: string;
+  added_at: string;
+  note: string | null;
+};
+
+export async function getEpisodeMinimumExceptions(): Promise<ApiResult<EpisodeMinimumException[]>> {
+  if (!isSupabaseConfigured) return { success: true, data: [] };
+  try {
+    const { data, error } = await supabase
+      .from("episode_minimum_exceptions")
+      .select("*")
+      .order("added_at", { ascending: false });
+    if (error) throw error;
+    return { success: true, data: (data ?? []) as EpisodeMinimumException[] };
+  } catch (err: any) {
+    return { success: false, error: err?.message || "Could not load exceptions." };
+  }
+}
+
+export async function addEpisodeMinimumException(email: string, note?: string): Promise<ApiResult<null>> {
+  if (!isSupabaseConfigured) return { success: false, error: "Demo mode" };
+  try {
+    const { error } = await supabase
+      .from("episode_minimum_exceptions")
+      .insert({ email: email.trim().toLowerCase(), note: note || null });
+    if (error) {
+      if (error.code === '23505') {
+        return { success: false, error: "This email is already in the exceptions list." };
+      }
+      throw error;
+    }
+    return { success: true, data: null };
+  } catch (err: any) {
+    return { success: false, error: err?.message || "Could not add exception." };
+  }
+}
+
+export async function removeEpisodeMinimumException(id: string): Promise<ApiResult<null>> {
+  if (!isSupabaseConfigured) return { success: false, error: "Demo mode" };
+  try {
+    const { error } = await supabase
+      .from("episode_minimum_exceptions")
+      .delete()
+      .eq("id", id);
+    if (error) throw error;
+    return { success: true, data: null };
+  } catch (err: any) {
+    return { success: false, error: err?.message || "Could not remove exception." };
+  }
+}
+
 // ── isDemoMode export (used by submit.tsx banner) ─────────────────────────────
 
 export const isDemoMode = !isSupabaseConfigured;
