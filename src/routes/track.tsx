@@ -1061,7 +1061,7 @@ export default function TrackPage() {
             {/* Search form */}
             <form
               onSubmit={handleFindSubmissions}
-              className="flex gap-3 items-end rounded-xl border border-border bg-card p-6 shadow-soft"
+              className="flex flex-col sm:flex-row gap-4 sm:gap-3 items-stretch sm:items-end rounded-xl border border-border bg-card p-6 shadow-soft"
             >
               <div className="flex-1 space-y-1.5 text-left">
                 <Label htmlFor="search-email">Email address</Label>
@@ -1073,7 +1073,7 @@ export default function TrackPage() {
                   onChange={(e) => setEmailForList(e.target.value)}
                 />
               </div>
-              <Button type="submit" disabled={listLoading}>
+              <Button type="submit" className="w-full sm:w-auto" disabled={listLoading}>
                 {listLoading ? <Loader2 className="size-4 animate-spin" /> : <Search className="size-4" />}
                 {listLoading ? "Searching…" : "Find My Novels"}
               </Button>
@@ -1122,8 +1122,8 @@ export default function TrackPage() {
                         className="group flex flex-col justify-between rounded-xl border border-border bg-card p-5 shadow-soft hover:shadow-md hover:border-primary/30 transition-all cursor-pointer h-full"
                       >
                         <div className="space-y-2">
-                          <div className="flex justify-between items-start gap-2">
-                            <h4 className="font-semibold group-hover:text-primary transition-colors line-clamp-1 leading-snug">
+                          <div className="flex flex-wrap justify-between items-start gap-2">
+                            <h4 className="font-semibold group-hover:text-primary transition-colors line-clamp-2 leading-snug">
                               {sub.novel_title}
                             </h4>
                             <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${statusColors[sub.current_status] ?? "bg-muted text-muted-foreground"}`}>
@@ -1140,7 +1140,7 @@ export default function TrackPage() {
                           </div>
                         </div>
 
-                        <div className="mt-4 pt-3 border-t border-border/50 flex justify-between items-center text-xs">
+                        <div className="mt-4 pt-3 border-t border-border/50 flex flex-wrap justify-between items-center gap-2 text-xs">
                           <span className="font-mono text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded">
                             {sub.submission_code}
                           </span>
