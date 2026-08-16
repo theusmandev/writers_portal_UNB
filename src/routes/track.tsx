@@ -506,21 +506,8 @@ function PublishedCard({ record }: { record: SubmissionRecord }) {
   
   let epText = "";
   if (isEpisodeAware) {
-    const nums = publishedEpisodes.map(e => e.episode_number).sort((a, b) => a - b);
-    let ranges = [];
-    let start = nums[0];
-    let end = nums[0];
-    for(let i=1; i<nums.length; i++) {
-      if(nums[i] === end + 1) {
-        end = nums[i];
-      } else {
-        ranges.push(start === end ? `${start}` : `${start}-${end}`);
-        start = nums[i];
-        end = nums[i];
-      }
-    }
-    ranges.push(start === end ? `${start}` : `${start}-${end}`);
-    epText = `Episodes ${ranges.join(", ")}`;
+    const count = publishedEpisodes.length;
+    epText = `${count} episode${count === 1 ? '' : 's'} ${count === 1 ? 'is' : 'are'}`;
   }
 
   return (
@@ -551,13 +538,15 @@ function PublishedCard({ record }: { record: SubmissionRecord }) {
         <div className="text-4xl mb-3" role="img" aria-label="Celebration">🎉</div>
         <h3 className="font-display text-xl font-semibold text-foreground">
           {isEpisodeAware 
-            ? `Congratulations! ${epText} are now live.`
+            ? `Congratulations! ${epText} now live.`
             : "Congratulations! Your novel has been published."
           }
         </h3>
         <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
           {isEpisodeAware
-            ? "Your latest episodes are now available on Urdu Novel Bank and being read by our community."
+            ? (publishedEpisodes.length === 1 
+                ? "Your latest episode is now available on Urdu Novel Bank and being read by our community."
+                : "Your latest episodes are now available on Urdu Novel Bank and being read by our community.")
             : "Your work is now live on Urdu Novel Bank and being read by our community. Thank you for sharing your story with us."
           }
         </p>
