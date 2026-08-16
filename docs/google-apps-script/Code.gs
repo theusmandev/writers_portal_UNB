@@ -261,13 +261,16 @@ function handleSendEmail(body) {
         `
         : '';
 
-      const isOngoingReceived = body.episodeCount && body.episodeCount > 0;
+      let headingUrduText = 'آپ کی تحریر موصول ہو گئی';
+      if (body.episodeCount === 1 || body.episodeCount === "1") {
+        headingUrduText = 'آپ کے ناول کی 1 قسط موصول ہو گئی ہے';
+      } else if (body.episodeCount > 1) {
+        headingUrduText = `آپ کے ناول کی ${body.episodeCount} اقساط موصول ہو گئی ہیں`;
+      }
 
       html = buildEmailTemplate({
         heading: 'Submission Received',
-        headingUrdu: isOngoingReceived 
-          ? `آپ کے ناول کی ${body.episodeCount} اقساط موصول ہو گئی ہیں` 
-          : 'آپ کی تحریر موصول ہو گئی',
+        headingUrdu: headingUrduText,
         body: `
           <p>Dear ${escapeHtml(writerName || 'Writer')},</p>
           <p>Thank you for submitting <strong>${escapeHtml(novelTitle || 'your novel')}</strong> to Urdu Novel Bank. 
