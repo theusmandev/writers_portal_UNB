@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect, useRef } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
@@ -25,9 +25,10 @@ interface RichTextEditorProps {
   content: string;
   onChange: (content: string) => void;
   postFolderToken?: string;
+  size?: 'default' | 'compact';
 }
 
-export function RichTextEditor({ content, onChange, postFolderToken }: RichTextEditorProps) {
+export function RichTextEditor({ content, onChange, postFolderToken, size = 'default' }: RichTextEditorProps) {
   const [viewMode, setViewMode] = useState<'visual' | 'html'>('visual');
   const [htmlContent, setHtmlContent] = useState(content);
 
@@ -68,14 +69,25 @@ export function RichTextEditor({ content, onChange, postFolderToken }: RichTextE
     content,
     editorProps: {
       attributes: {
-        class: 'prose prose-stone dark:prose-invert max-w-none min-h-[400px] p-6 focus:outline-none urdu prose-headings:font-urdu prose-p:leading-loose prose-headings:leading-[1.8] leading-loose',
+        class: `prose prose-stone dark:prose-invert max-w-none ${size === 'compact' ? 'min-h-[80px]' : 'min-h-[400px]'} p-6 focus:outline-none urdu prose-headings:font-urdu prose-p:leading-loose prose-headings:leading-[1.8] leading-loose`,
         dir: 'auto',
       },
     },
     onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
+      const html = editor.getHTML();
+      lastUpdateRef.current = html;
+      onChange(html);
     },
   });
+
+  const lastUpdateRef = useRef<string>(content);
+
+  useEffect(() => {
+    if (editor && content !== lastUpdateRef.current) {
+      editor.commands.setContent(content);
+      lastUpdateRef.current = content;
+    }
+  }, [content, editor]);
 
   const setLink = useCallback(() => {
     if (linkUrl === null) return;
@@ -269,7 +281,7 @@ export function RichTextEditor({ content, onChange, postFolderToken }: RichTextE
               setHtmlContent(e.target.value);
               onChange(e.target.value);
             }}
-            className="min-h-[400px] w-full resize-y rounded-none border-0 font-mono text-sm leading-relaxed p-6 focus-visible:ring-0 bg-zinc-950 text-zinc-50 dark:bg-zinc-950 dark:text-zinc-50"
+            className={`${size === 'compact' ? 'min-h-[80px]' : 'min-h-[400px]'} w-full resize-y rounded-none border-0 font-mono text-sm leading-relaxed p-6 focus-visible:ring-0 bg-zinc-950 text-zinc-50 dark:bg-zinc-950 dark:text-zinc-50`}
             placeholder="<p>Enter HTML here...</p>"
             dir="ltr"
             spellCheck={false}
