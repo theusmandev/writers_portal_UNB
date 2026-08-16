@@ -5,6 +5,7 @@ import { AdminGuard } from "./components/portal/AdminGuard";
 import { AdminLayout } from "./components/portal/AdminLayout";
 import { NotificationBar } from "./components/portal/NotificationBar";
 import { ScrollToTop } from "./components/portal/ScrollToTop";
+import { BackToTop } from "./components/portal/BackToTop";
 
 // ── Public pages ──────────────────────────────────────────────────────────────
 import Index from "./routes/index";
@@ -50,6 +51,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
+      <BackToTop />
       <Routes>
         {/* ── Admin login (no auth guard, no public layout) ── */}
         <Route path="/admin/login" element={<AdminLoginPage />} />
