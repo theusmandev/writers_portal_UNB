@@ -37,11 +37,11 @@ export default function Index() {
             Submit your Urdu novel, know exactly how it will be reviewed, and follow its progress
             from screening to publication — no messages lost, no guessing.
           </p>
-          <div className="mt-9 flex flex-wrap gap-3">
-            <Button asChild size="lg" variant="secondary">
+          <div className="mt-9 flex gap-3 w-full sm:w-auto">
+            <Button asChild className="flex-1 sm:flex-none bg-foreground text-background hover:bg-foreground/90 h-[40px] px-1.5 text-[11px] sm:h-10 sm:px-8 sm:text-sm shadow-elegant border-transparent">
               <Link to="/submit">Submit Your Novel</Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="border-primary-foreground/40 bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground">
+            <Button asChild variant="outline" className="flex-1 sm:flex-none border-transparent bg-card/95 text-foreground hover:bg-card hover:text-foreground h-[40px] px-1.5 text-[11px] sm:h-10 sm:px-8 sm:text-sm shadow-soft font-semibold">
               <Link to="/track">Track Submission</Link>
             </Button>
           </div>
