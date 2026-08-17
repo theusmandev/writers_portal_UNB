@@ -637,7 +637,7 @@ export default function SubmitPage() {
               : "آپ کا ناول موصول ہو گیا ہے"}
           </p>
           <p className="mt-4 text-sm text-muted-foreground">
-            Thank you for submitting <span className="font-medium text-foreground">{result.novelTitle}</span>.
+            Thank you for submitting <span className="font-medium text-foreground break-words [word-break:break-word]">{result.novelTitle}</span>.
             Please save your Submission ID — you will need it to track your novel.
           </p>
           <div className="mt-6 flex flex-col items-center justify-center rounded-xl border border-dashed border-primary/40 bg-primary/5 p-4 sm:p-5 relative">

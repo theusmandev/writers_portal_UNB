@@ -931,8 +931,8 @@ export default function TrackPage() {
                 {/* Header — always shown */}
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <h2 className="font-display text-xl font-semibold">{record.novelTitle}</h2>
-                    <p className="text-sm text-muted-foreground">
+                    <h2 className="font-display text-xl font-semibold break-words [word-break:break-word]">{record.novelTitle}</h2>
+                    <p className="text-sm text-muted-foreground break-words [word-break:break-word]">
                       {record.penName} · {record.genre}
                     </p>
                   </div>
@@ -945,7 +945,7 @@ export default function TrackPage() {
                 <dl className="mt-5 grid gap-4 border-t border-border pt-5 text-sm sm:grid-cols-3">
                   <div>
                     <dt className="text-xs text-muted-foreground uppercase">Submission ID</dt>
-                    <dd className="mt-1 font-medium">{record.submissionId}</dd>
+                    <dd className="mt-1 font-medium break-words [word-break:break-word]">{record.submissionId}</dd>
                   </div>
                   <div>
                     <dt className="text-xs text-muted-foreground uppercase">Submitted</dt>
@@ -1124,7 +1124,7 @@ export default function TrackPage() {
                       >
                         <div className="space-y-2">
                           <div className="flex flex-wrap justify-between items-start gap-2">
-                            <h4 className="font-semibold group-hover:text-primary transition-colors line-clamp-2 leading-snug">
+                            <h4 className="font-semibold group-hover:text-primary transition-colors line-clamp-2 leading-snug break-words [word-break:break-word]">
                               {sub.novel_title}
                             </h4>
                             <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${statusColors[sub.current_status] ?? "bg-muted text-muted-foreground"}`}>
