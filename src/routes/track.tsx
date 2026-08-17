@@ -1092,7 +1092,7 @@ export default function TrackPage() {
                 {submissionsList.length > 0 && submissionsList[0].full_name && (
                   <div className="mb-8 text-center">
                     <h2 className="font-display text-2xl font-semibold text-foreground mb-2">
-                      Welcome back, {submissionsList[0].full_name}
+                      Welcome, {submissionsList[0].full_name}
                     </h2>
                     <p className="text-muted-foreground text-sm">
                       Here are all your submissions.

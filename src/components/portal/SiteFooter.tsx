@@ -71,7 +71,7 @@ export function SiteFooter() {
           </ul>
         </div>
       </div>
-      <div className="mx-auto flex max-w-6xl flex-wrap justify-center gap-4 px-5 pb-10 sm:justify-start">
+      <div className="mx-auto flex max-w-6xl flex-wrap justify-center gap-3 px-5 pb-14">
         {socialLinks.map((social, index) => {
           const Icon = social.icon;
           return (
@@ -81,15 +81,15 @@ export function SiteFooter() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label={social.label}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-background text-secondary transition-colors hover:bg-primary-glow hover:text-primary-foreground"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-background text-secondary transition-all duration-200 hover:scale-110 hover:bg-primary-glow hover:text-primary-foreground"
             >
-              <Icon className="h-5 w-5" />
+              <Icon className="h-4 w-4" />
             </a>
           );
         })}
       </div>
       <div className="border-t border-secondary-foreground/20">
-        <div className="mx-auto max-w-6xl px-5 py-5 text-xs opacity-70">
+        <div className="mx-auto max-w-6xl px-5 py-5 text-center text-xs opacity-70">
           © {new Date().getFullYear()} {site.name}. Writer &amp; Publication Portal.
         </div>
       </div>
