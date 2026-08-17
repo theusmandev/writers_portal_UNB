@@ -79,7 +79,7 @@ function Field({
   children,
 }: {
   id: string;
-  label: string;
+  label: React.ReactNode;
   hint?: string | undefined;
   error?: string | undefined;
   children: React.ReactNode;
@@ -763,7 +763,10 @@ export default function SubmitPage() {
 
         <form onSubmit={handleSubmit} className="space-y-8" noValidate>
           <section className="rounded-xl border border-border bg-card p-6 shadow-soft">
-            <h2 className="font-display text-lg font-semibold">Writer Information</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="font-display text-lg font-semibold">Writer Information</h2>
+              <span className="text-xs text-muted-foreground"><span className="text-red-500">*</span> Required field</span>
+            </div>
             
             {/* Auto-fill Prompt */}
             <div className="mt-4 mb-6 rounded-lg border border-primary/20 bg-primary/5 p-4 sm:p-5">
@@ -803,16 +806,16 @@ export default function SubmitPage() {
             </div>
 
             <div className="mt-5 grid gap-5 sm:grid-cols-2">
-              <Field id="fullName" label="Full name" error={errors["fullName"]}>
+              <Field id="fullName" label={<>Full name <span className="text-red-500">*</span></>} error={errors["fullName"]}>
                 <Input id="fullName" value={form.fullName} onChange={(e) => set("fullName", e.target.value)} />
               </Field>
-              <Field id="penName" label="Pen name" hint="The name shown with your novel" error={errors["penName"]}>
+              <Field id="penName" label={<>Pen name <span className="text-red-500">*</span></>} hint="The name shown with your novel" error={errors["penName"]}>
                 <Input id="penName" value={form.penName} onChange={(e) => set("penName", e.target.value)} />
               </Field>
-              <Field id="email" label="Email address" error={errors["email"]}>
+              <Field id="email" label={<>Email address <span className="text-red-500">*</span></>} error={errors["email"]}>
                 <Input id="email" type="email" value={form.email} onChange={(e) => set("email", e.target.value)} />
               </Field>
-              <Field id="whatsapp" label="WhatsApp number" error={errors["whatsapp"]}>
+              <Field id="whatsapp" label={<>WhatsApp number <span className="text-red-500">*</span></>} error={errors["whatsapp"]}>
                 <Input id="whatsapp" inputMode="tel" placeholder="+92 300 0000000" value={form.whatsapp} onChange={(e) => set("whatsapp", e.target.value)} />
               </Field>
               <Field id="location" label="City / country (optional)" error={errors["location"]}>
@@ -834,10 +837,10 @@ export default function SubmitPage() {
           <section className="rounded-xl border border-border bg-card p-6 shadow-soft">
             <h2 className="font-display text-lg font-semibold">Novel Information</h2>
             <div className="mt-5 grid gap-5 sm:grid-cols-2">
-              <Field id="novelTitle" label="Novel title" error={errors["novelTitle"]}>
+              <Field id="novelTitle" label={<>Novel title <span className="text-red-500">*</span></>} error={errors["novelTitle"]}>
                 <Input id="novelTitle" value={form.novelTitle} onChange={(e) => set("novelTitle", e.target.value)} />
               </Field>
-              <Field id="genre" label="Genre" error={errors["genre"]}>
+              <Field id="genre" label={<>Genre <span className="text-red-500">*</span></>} error={errors["genre"]}>
                 <select
                   id="genre"
                   value={form.genre}
@@ -852,7 +855,7 @@ export default function SubmitPage() {
                   ))}
                 </select>
               </Field>
-              <Field id="novelStatus" label="Novel status" error={errors["novelStatus"]}>
+              <Field id="novelStatus" label={<>Novel status <span className="text-red-500">*</span></>} error={errors["novelStatus"]}>
                 <select
                   id="novelStatus"
                   value={form.novelStatus}
@@ -863,7 +866,7 @@ export default function SubmitPage() {
                   <option value="Ongoing">Ongoing</option>
                 </select>
               </Field>
-              <Field id="language" label="Language" error={errors["language"]}>
+              <Field id="language" label={<>Language <span className="text-red-500">*</span></>} error={errors["language"]}>
                 <select
                   id="language"
                   value={form.language}
@@ -877,7 +880,7 @@ export default function SubmitPage() {
               <div className="sm:col-span-2">
                 <Field
                   id="synopsis"
-                  label="Short description / synopsis"
+                  label={<>Short description / synopsis <span className="text-red-500">*</span></>}
                   hint="At least 50 characters. Urdu is welcome."
                   error={errors["synopsis"]}
                 >
@@ -893,7 +896,7 @@ export default function SubmitPage() {
               {form.novelStatus === "Complete" ? (
                 <Field
                   id="manuscript"
-                  label="Manuscript"
+                  label={<>Manuscript <span className="text-red-500">*</span></>}
                   hint={`Preferred formats: .doc or .docx (editable) — .pdf and .txt also accepted. Max ${MAX_FILE_MB} MB.`}
                   error={errors["manuscript"]}
                 >
@@ -916,7 +919,7 @@ export default function SubmitPage() {
               ) : (
                 <div className="sm:col-span-2 space-y-4">
                   <div className="space-y-1.5">
-                    <Label>Episodes (Minimum {minEpisodes})</Label>
+                    <Label>Episodes (Minimum {minEpisodes}) <span className="text-red-500">*</span></Label>
                     <p className="text-xs text-muted-foreground">
                       {minEpisodes === 1 
                         ? "You're approved to submit with 1 or more episodes. Attach each episode as a separate file below." 
@@ -932,7 +935,7 @@ export default function SubmitPage() {
                         <div className="flex-1 w-full">
                           <Field
                             id={`episode-${ep.id}`}
-                            label={`Episode ${ep.number}`}
+                            label={<>Episode {ep.number} <span className="text-red-500">*</span></>}
                             error={errors[`episode_${ep.id}`]}
                           >
                             <Input
@@ -1019,7 +1022,7 @@ export default function SubmitPage() {
                     onCheckedChange={(v) => setAgree((a) => ({ ...a, [item.key]: v === true }))}
                     className="mt-0.5"
                   />
-                  <span className="text-muted-foreground">{item.label}</span>
+                  <span className="text-muted-foreground">{item.label} <span className="text-red-500">*</span></span>
                 </label>
               ))}
             </div>
