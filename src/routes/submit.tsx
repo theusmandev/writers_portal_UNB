@@ -627,7 +627,7 @@ export default function SubmitPage() {
 
   if (result) {
     return (
-      <div className="mx-auto max-w-2xl px-5 py-20">
+      <div className="mx-auto max-w-2xl px-4 sm:px-5 py-20">
         <div className="rounded-2xl border border-border bg-card p-8 text-center shadow-elegant">
           <CheckCircle2 className="mx-auto size-10 text-primary" />
           <h1 className="mt-4 text-2xl font-semibold">Submission Successful</h1>
@@ -709,7 +709,7 @@ export default function SubmitPage() {
           titleUrdu="نئی بھرتیاں فی الحال بند ہیں"
           description="Please read the message below for more information."
         />
-        <div className="mx-auto max-w-2xl px-5 py-20">
+        <div className="mx-auto max-w-2xl px-4 sm:px-5 py-20">
           <div className="rounded-2xl border border-border bg-card p-8 text-center shadow-elegant">
             <Info className="mx-auto size-10 text-primary" />
             <h2 className="mt-4 text-2xl font-semibold">We are not accepting new submissions at this time</h2>
@@ -745,7 +745,7 @@ export default function SubmitPage() {
         titleUrdu="اپنا ناول بھیجیں"
         description="It takes about five minutes. Please make sure your manuscript follows the submission guidelines before sending it."
       />
-      <div className="mx-auto max-w-3xl px-5 py-12">
+      <div className="mx-auto max-w-3xl px-4 sm:px-5 py-12">
         {isDemoMode && (
           <div className="mb-6 flex gap-3 rounded-lg border border-border bg-primary/5 p-4 text-sm">
             <Info className="mt-0.5 size-4 shrink-0 text-primary" />
@@ -762,7 +762,7 @@ export default function SubmitPage() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-8" noValidate>
-          <section className="rounded-xl border border-border bg-card p-6 shadow-soft">
+          <section className="rounded-xl border border-border bg-card p-4 sm:p-6 shadow-soft">
             <div className="flex items-center justify-between">
               <h2 className="font-display text-lg font-semibold">Writer Information</h2>
               <span className="text-xs text-muted-foreground"><span className="text-red-500">*</span> Required field</span>
@@ -834,7 +834,7 @@ export default function SubmitPage() {
             </div>
           </section>
 
-          <section className="rounded-xl border border-border bg-card p-6 shadow-soft">
+          <section className="rounded-xl border border-border bg-card p-4 sm:p-6 shadow-soft">
             <h2 className="font-display text-lg font-semibold">Novel Information</h2>
             <div className="mt-5 grid gap-5 sm:grid-cols-2">
               <Field id="novelTitle" label={<>Novel title <span className="text-red-500">*</span></>} error={errors["novelTitle"]}>
@@ -890,7 +890,7 @@ export default function SubmitPage() {
             </div>
           </section>
 
-          <section className="rounded-xl border border-border bg-card p-6 shadow-soft">
+          <section className="rounded-xl border border-border bg-card p-4 sm:p-6 shadow-soft">
             <h2 className="font-display text-lg font-semibold">Files</h2>
             <div className="mt-5 grid gap-5 sm:grid-cols-2">
               {form.novelStatus === "Complete" ? (
@@ -1005,7 +1005,7 @@ export default function SubmitPage() {
             </div>
           </section>
 
-          <section className="rounded-xl border border-border bg-card p-6 shadow-soft">
+          <section className="rounded-xl border border-border bg-card p-4 sm:p-6 shadow-soft">
             <h2 className="font-display text-lg font-semibold">Confirmation</h2>
             <div className="mt-4 space-y-3">
               {[
@@ -1038,7 +1038,7 @@ export default function SubmitPage() {
           </section>
           
           {submitting && (manuscriptStatus !== "pending" || coverStatus !== "pending" || Object.keys(episodeStatuses).length > 0) && (
-            <section className="mt-8 rounded-xl border border-primary/20 bg-primary/5 p-6 shadow-sm">
+            <section className="mt-8 rounded-xl border border-primary/20 bg-primary/5 p-4 sm:p-6 shadow-sm">
               <h3 className="mb-4 text-sm font-semibold text-primary">Uploading Files</h3>
               <div className="space-y-5">
                 {form.novelStatus === "Complete" && manuscript && (
