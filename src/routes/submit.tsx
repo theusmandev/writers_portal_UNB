@@ -1071,13 +1071,13 @@ export default function SubmitPage() {
                       />
                     </div>
                     {manuscriptStatus === "timeout" && retryTrigger?.type === "manuscript" && (
-                      <div className="mt-2 flex items-center justify-between gap-4 rounded-md bg-muted/50 px-3 py-2 text-xs">
+                      <div className="mt-2 flex flex-col lg:flex-row lg:items-center justify-between gap-3 lg:gap-4 rounded-md bg-muted/50 px-3 py-3 lg:py-2 text-xs">
                         <span className="text-muted-foreground">This is taking longer than expected — your connection may be slow.</span>
-                        <div className="flex gap-2">
-                          <Button type="button" size="sm" variant="outline" onClick={() => retryTrigger.resolve("skip")} className="h-7 text-xs border-muted text-muted-foreground hover:bg-muted/50 hover:text-foreground">
+                        <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
+                          <Button type="button" size="sm" variant="outline" onClick={() => retryTrigger.resolve("skip")} className="h-auto py-2 sm:h-7 sm:py-0 text-xs border-muted text-muted-foreground hover:bg-muted/50 hover:text-foreground w-full sm:w-auto">
                             Skip and submit without this file
                           </Button>
-                          <Button type="button" size="sm" variant="outline" onClick={() => retryTrigger.resolve("retry")} className="h-7 text-xs">
+                          <Button type="button" size="sm" variant="outline" onClick={() => retryTrigger.resolve("retry")} className="h-auto py-2 sm:h-7 sm:py-0 text-xs w-full sm:w-auto">
                             Try Again
                           </Button>
                         </div>
@@ -1124,19 +1124,19 @@ export default function SubmitPage() {
                             />
                           </div>
                           {status === "timeout" && retry && (
-                            <div className="mt-2 flex items-center justify-between gap-4 rounded-md bg-muted/50 px-3 py-2 text-xs">
+                            <div className="mt-2 flex flex-col lg:flex-row lg:items-center justify-between gap-3 lg:gap-4 rounded-md bg-muted/50 px-3 py-3 lg:py-2 text-xs">
                               <span className="text-muted-foreground">This is taking longer than expected — your connection may be slow.</span>
-                              <div className="flex gap-2">
+                              <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
                                 <Button type="button" size="sm" variant="outline" onClick={() => {
                                   retry.resolve("skip");
                                   setEpisodeRetryTriggers(prev => { const n = {...prev}; delete n[ep.id]; return n; });
-                                }} className="h-7 text-xs border-muted text-muted-foreground hover:bg-muted/50 hover:text-foreground">
+                                }} className="h-auto py-2 sm:h-7 sm:py-0 text-xs border-muted text-muted-foreground hover:bg-muted/50 hover:text-foreground w-full sm:w-auto">
                                   Skip and submit without this file
                                 </Button>
                                 <Button type="button" size="sm" variant="outline" onClick={() => {
                                   retry.resolve("retry");
                                   setEpisodeRetryTriggers(prev => { const n = {...prev}; delete n[ep.id]; return n; });
-                                }} className="h-7 text-xs">
+                                }} className="h-auto py-2 sm:h-7 sm:py-0 text-xs w-full sm:w-auto">
                                   Try Again
                                 </Button>
                               </div>
@@ -1180,13 +1180,13 @@ export default function SubmitPage() {
                       />
                     </div>
                     {coverStatus === "timeout" && retryTrigger?.type === "cover" && (
-                      <div className="mt-2 flex items-center justify-between gap-4 rounded-md bg-muted/50 px-3 py-2 text-xs">
+                      <div className="mt-2 flex flex-col lg:flex-row lg:items-center justify-between gap-3 lg:gap-4 rounded-md bg-muted/50 px-3 py-3 lg:py-2 text-xs">
                         <span className="text-muted-foreground">This is taking longer than expected — your connection may be slow.</span>
-                        <div className="flex gap-2">
-                          <Button type="button" size="sm" variant="outline" onClick={() => retryTrigger.resolve("skip")} className="h-7 text-xs border-muted text-muted-foreground hover:bg-muted/50 hover:text-foreground">
+                        <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
+                          <Button type="button" size="sm" variant="outline" onClick={() => retryTrigger.resolve("skip")} className="h-auto py-2 sm:h-7 sm:py-0 text-xs border-muted text-muted-foreground hover:bg-muted/50 hover:text-foreground w-full sm:w-auto">
                             Skip and submit without this file
                           </Button>
-                          <Button type="button" size="sm" variant="outline" onClick={() => retryTrigger.resolve("retry")} className="h-7 text-xs">
+                          <Button type="button" size="sm" variant="outline" onClick={() => retryTrigger.resolve("retry")} className="h-auto py-2 sm:h-7 sm:py-0 text-xs w-full sm:w-auto">
                             Try Again
                           </Button>
                         </div>
