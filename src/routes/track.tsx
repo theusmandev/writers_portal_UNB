@@ -371,7 +371,7 @@ function AddNewEpisodesSection({
   }
 
   return (
-    <div className="mt-6 rounded-xl border border-primary/20 bg-primary/5 p-5 shadow-sm">
+    <div className="mt-6 rounded-xl border border-primary/20 bg-primary/5 p-4 sm:p-5 shadow-sm">
       <div className="flex justify-between items-start mb-4">
         <div>
           <h3 className="font-semibold text-primary">Add New Episodes</h3>
@@ -535,7 +535,7 @@ function PublishedCard({ record }: { record: SubmissionRecord }) {
       </div>
 
       {/* Card body */}
-      <div className="rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-accent/10 p-7 text-center shadow-elegant">
+      <div className="rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-accent/10 p-5 sm:p-7 text-center shadow-elegant">
         <div className="text-4xl mb-3" role="img" aria-label="Celebration">🎉</div>
         <h3 className="font-display text-xl font-semibold text-foreground">
           {isEpisodeAware 
@@ -571,7 +571,7 @@ function PublishedCard({ record }: { record: SubmissionRecord }) {
 /** Rejection card shown when current_status = "Rejected" */
 function RejectedCard({ record }: { record: SubmissionRecord }) {
   return (
-    <div className="mt-6 rounded-xl border border-destructive/30 bg-destructive/5 p-6">
+    <div className="mt-6 rounded-xl border border-destructive/30 bg-destructive/5 p-4 sm:p-6">
       <div className="flex items-start gap-3">
         <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-destructive/10">
           <AlertCircle className="h-4 w-4 text-destructive" />
@@ -637,7 +637,7 @@ function ActionRequiredSection({
   return (
     <div className="mt-6 space-y-4">
       {/* Action required card */}
-      <div className="rounded-xl border border-orange-400/40 bg-orange-500/5 p-5">
+      <div className="rounded-xl border border-orange-400/40 bg-orange-500/5 p-4 sm:p-5">
         <div className="flex items-start gap-3">
           <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-500/10">
             <AlertCircle className="h-4 w-4 text-orange-600" />
@@ -851,7 +851,7 @@ export default function TrackPage() {
         titleUrdu="اپنی سبمیشن کی صورتحال دیکھیں"
         description="Enter your Submission ID, or lookup all submissions sent from your email address."
       />
-      <div className="mx-auto max-w-3xl px-5 py-12 space-y-6">
+      <div className="mx-auto max-w-3xl px-4 sm:px-5 py-12 space-y-6">
         {/* Toggle tabs */}
         <div className="flex border-b border-border">
           <button
@@ -888,7 +888,7 @@ export default function TrackPage() {
             {/* Lookup form */}
             <form
               onSubmit={handleSubmit}
-              className="grid gap-5 rounded-xl border border-border bg-card p-6 shadow-soft sm:grid-cols-2"
+              className="grid gap-5 rounded-xl border border-border bg-card p-4 sm:p-6 shadow-soft sm:grid-cols-2"
             >
               <div className="space-y-1.5">
                 <Label htmlFor="sid">Submission ID</Label>
@@ -926,7 +926,7 @@ export default function TrackPage() {
 
             {/* Result card */}
             {record && (
-              <div className="rounded-xl border border-border bg-card p-6 shadow-soft">
+              <div className="rounded-xl border border-border bg-card p-4 sm:p-6 shadow-soft">
                 {/* Header — always shown */}
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
@@ -959,7 +959,7 @@ export default function TrackPage() {
                 {/* ── Status-specific content ── */}
 
                 {record.episodes && record.episodes.length > 0 && (
-                  <div className="mt-6 rounded-xl border border-border bg-muted/30 p-5 text-left">
+                  <div className="mt-6 rounded-xl border border-border bg-muted/30 p-4 sm:p-5 text-left">
                     <p className="font-semibold text-sm mb-3">
                       Episodes: {record.episodes.filter((e: any) => e.upload_failed === false && e.drive_url).length} of {record.episodeCount} submitted
                     </p>
@@ -978,7 +978,7 @@ export default function TrackPage() {
 
                 {/* Missing File Warning (shows across all statuses if files failed) */}
                 {missingFiles.length > 0 && (
-                  <div className="mt-6 rounded-xl border border-destructive/30 bg-destructive/5 p-5">
+                  <div className="mt-6 rounded-xl border border-destructive/30 bg-destructive/5 p-4 sm:p-5">
                     <div className="flex items-start gap-3">
                       <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-destructive/10">
                         <AlertCircle className="h-4 w-4 text-destructive" />
@@ -1061,7 +1061,7 @@ export default function TrackPage() {
             {/* Search form */}
             <form
               onSubmit={handleFindSubmissions}
-              className="flex flex-col sm:flex-row gap-4 sm:gap-3 items-stretch sm:items-end rounded-xl border border-border bg-card p-6 shadow-soft"
+              className="flex flex-col sm:flex-row gap-4 sm:gap-3 items-stretch sm:items-end rounded-xl border border-border bg-card p-4 sm:p-6 shadow-soft"
             >
               <div className="flex-1 space-y-1.5 text-left">
                 <Label htmlFor="search-email">Email address</Label>
@@ -1119,7 +1119,7 @@ export default function TrackPage() {
                         key={sub.submission_code}
                         delayMs={i * 100}
                         onClick={() => void handleSelectSubmission(sub.submission_code)}
-                        className="group flex flex-col justify-between rounded-xl border border-border bg-card p-5 shadow-soft hover:shadow-md hover:border-primary/30 transition-all cursor-pointer h-full"
+                        className="group flex flex-col justify-between rounded-xl border border-border bg-card p-4 sm:p-5 shadow-soft hover:shadow-md hover:border-primary/30 transition-all cursor-pointer h-full"
                       >
                         <div className="space-y-2">
                           <div className="flex flex-wrap justify-between items-start gap-2">
