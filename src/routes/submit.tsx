@@ -628,7 +628,7 @@ export default function SubmitPage() {
   if (result) {
     return (
       <div className="mx-auto max-w-2xl px-4 sm:px-5 py-20">
-        <div className="rounded-2xl border border-border bg-card p-8 text-center shadow-elegant">
+        <div className="rounded-2xl border border-border bg-card p-5 sm:p-8 text-center shadow-elegant">
           <CheckCircle2 className="mx-auto size-10 text-primary" />
           <h1 className="mt-4 text-2xl font-semibold">Submission Successful</h1>
           <p className="urdu mt-1 text-xl text-muted-foreground">
@@ -640,10 +640,10 @@ export default function SubmitPage() {
             Thank you for submitting <span className="font-medium text-foreground">{result.novelTitle}</span>.
             Please save your Submission ID — you will need it to track your novel.
           </p>
-          <div className="mt-6 flex flex-col items-center justify-center rounded-xl border border-dashed border-primary/40 bg-primary/5 p-5 relative">
+          <div className="mt-6 flex flex-col items-center justify-center rounded-xl border border-dashed border-primary/40 bg-primary/5 p-4 sm:p-5 relative">
             <p className="text-xs tracking-[0.2em] text-muted-foreground uppercase">Submission ID</p>
-            <div className="mt-1 flex items-center gap-3">
-              <p className="font-display text-3xl font-semibold text-primary">
+            <div className="mt-1 flex items-center gap-2 sm:gap-3">
+              <p className="font-display text-2xl sm:text-3xl tracking-tight sm:tracking-normal font-semibold text-primary">
                 {result.submissionId}
               </p>
               <button
@@ -656,7 +656,7 @@ export default function SubmitPage() {
             </div>
           </div>
           {result.episodes && result.episodes.length > 0 && (
-            <div className="mt-5 rounded-xl border border-border bg-muted/30 p-5 text-left">
+            <div className="mt-5 rounded-xl border border-border bg-muted/30 p-4 sm:p-5 text-left">
               <p className="font-semibold text-sm mb-3">
                 Episodes Submitted: {result.episodes.filter(e => !e.upload_failed).length} of {result.episodeCount}
               </p>
@@ -676,8 +676,8 @@ export default function SubmitPage() {
               {result.note}
             </div>
           )}
-          <p className="mt-5 text-xs text-muted-foreground">
-            A confirmation email will be sent to {result.email}. Next stage: initial screening.
+          <p className="mt-6 text-sm text-muted-foreground leading-relaxed break-words px-2 sm:px-0">
+            A confirmation email will be sent to <span className="font-medium text-foreground">{result.email}</span>.<br className="hidden sm:inline" /> Next stage: initial screening.
           </p>
           <div className="mt-7 flex flex-wrap justify-center gap-3">
             <Button asChild>
