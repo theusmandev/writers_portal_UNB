@@ -759,10 +759,11 @@ export default function TrackPage() {
     const initialCode = searchParams.get("code");
     const initialEmail = searchParams.get("email");
     if (initialCode && initialEmail) {
+      setSubmissionId(initialCode);
+      setEmail(initialEmail);
       setSearchParams({}, { replace: true });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [searchParams, setSearchParams]);
 
 
   async function handleSubmit(e: React.FormEvent) {
