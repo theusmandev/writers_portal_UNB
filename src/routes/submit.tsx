@@ -358,6 +358,11 @@ export default function SubmitPage() {
     setFormError(null);
     setUploadStatus("Creating submission record...");
 
+    // Smoothly scroll down slightly to ensure the upcoming progress UI is visible
+    setTimeout(() => {
+      window.scrollBy({ top: 350, behavior: "smooth" });
+    }, 50);
+
     const res = await submitNovel({
       ...form,
       manuscriptName: form.novelStatus === "Complete" ? manuscript?.name : undefined,
