@@ -809,6 +809,9 @@ export default function TrackPage() {
     setEmail(emailForList);
     setActiveTab("by-id");
     await loadDetail(code, emailForList);
+    setTimeout(() => {
+      document.getElementById("novel-title")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
   }
 
   // Derive progress from current_status, not the free-text current_stage field.
@@ -931,7 +934,7 @@ export default function TrackPage() {
                 {/* Header — always shown */}
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <h2 className="font-display text-xl font-semibold break-words [word-break:break-word]">{record.novelTitle}</h2>
+                    <h2 id="novel-title" className="font-display text-xl font-semibold break-words [word-break:break-word]">{record.novelTitle}</h2>
                     <p className="text-sm text-muted-foreground break-words [word-break:break-word]">
                       {record.penName} · {record.genre}
                     </p>
@@ -1116,9 +1119,8 @@ export default function TrackPage() {
                 ) : (
                   <div className="grid gap-4 sm:grid-cols-2">
                     {submissionsList.map((sub, i) => (
-                      <FadeIn
+                      <div
                         key={sub.submission_code}
-                        delayMs={i * 100}
                         onClick={() => void handleSelectSubmission(sub.submission_code)}
                         className="group flex flex-col justify-between rounded-xl border border-border bg-card p-4 sm:p-5 shadow-soft hover:shadow-md hover:border-primary/30 transition-all cursor-pointer h-full"
                       >
@@ -1146,23 +1148,11 @@ export default function TrackPage() {
                             {sub.submission_code}
                           </span>
 
-                          {sub.current_status === "Published" && sub.published_url ? (
-                            <a
-                              href={sub.published_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              className="text-primary hover:underline font-medium inline-flex items-center gap-0.5"
-                            >
-                              View Novel <ExternalLink className="h-3 w-3" />
-                            </a>
-                          ) : (
-                            <span className="text-primary group-hover:underline font-medium">
-                              Track Status →
-                            </span>
-                          )}
+                          <span className="text-primary group-hover:underline font-medium">
+                            Track Status →
+                          </span>
                         </div>
-                      </FadeIn>
+                      </div>
                     ))}
                   </div>
                 )}
