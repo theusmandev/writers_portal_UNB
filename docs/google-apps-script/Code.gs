@@ -37,6 +37,8 @@ function doPost(e) {
         return jsonResponse(handleSendEmail(body));
       case 'renamePostFolder':
         return jsonResponse(handleRenamePostFolder(body));
+      case 'deleteSubmissionFolder':
+        return jsonResponse(handleDeleteSubmissionFolder(body));
       default:
         return jsonResponse({ success: false, error: 'Unknown action: ' + action });
     }
@@ -212,6 +214,51 @@ function handleRenamePostFolder(body) {
 
   // We return success even if no folder was found, because it's valid for a post
   // to be saved without ever having uploaded any images.
+  return { success: true };
+}
+
+// ── PART 1C: DELETE SUBMISSION FOLDER (TRASH) ────────────────
+/**
+ * Expected body:
+ * {
+ *   action: 'deleteSubmissionFolder',
+ *   submissionCode: 'UNB-2026-0001'
+ * }
+ */
+function handleDeleteSubmissionFolder(body) {
+  const { submissionCode } = body;
+  
+  if (!submissionCode) {
+    return { success: false, error: 'Missing submissionCode.' };
+  }
+
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(30000);
+    
+    const rootFolder = getOrCreateFolder(CONFIG.ROOT_FOLDER_NAME, DriveApp.getRootFolder());
+    
+    // Extract year from submission code (e.g., 'UNB-2026-0001' -> '2026')
+    const year = submissionCode.match(/UNB-(\d{4})-/)
+        ? submissionCode.match(/UNB-(\d{4})-/)[1]
+        : new Date().getFullYear().toString();
+        
+    const submissionsFolder = getOrCreateFolder('Submissions', rootFolder);
+    const yearFolder = getOrCreateFolder(year, submissionsFolder);
+    
+    const existing = yearFolder.getFoldersByName(submissionCode);
+    if (existing.hasNext()) {
+      const submissionFolder = existing.next();
+      submissionFolder.setTrashed(true);
+    }
+    // If the folder doesn't exist, we just return success gracefully
+    
+  } catch (err) {
+    return { success: false, error: 'Failed to delete folder: ' + err.message };
+  } finally {
+    lock.releaseLock();
+  }
+
   return { success: true };
 }
 
