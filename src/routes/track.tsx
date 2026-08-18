@@ -810,8 +810,8 @@ export default function TrackPage() {
     setActiveTab("by-id");
     await loadDetail(code, emailForList);
     setTimeout(() => {
-      document.getElementById("novel-title")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 100);
+      document.getElementById("novel-title")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 150);
   }
 
   // Derive progress from current_status, not the free-text current_stage field.
