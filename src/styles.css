@@ -156,12 +156,34 @@
 .confetti-dot {
   position: absolute;
   border-radius: 50%;
-  animation: confettiBurst 1s ease-out forwards;
+  animation: confettiBurst 1.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
   pointer-events: none;
 }
 
 .confetti-dot-square {
   border-radius: 2px;
+}
+
+@keyframes iconPop {
+  0%   { transform: scale(0.5); opacity: 0; }
+  60%  { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.icon-pop-anim {
+  animation: iconPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  display: inline-block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .confetti-dot,
+  .confetti-dot-square {
+    display: none !important;
+  }
+  .icon-pop-anim,
+  .published-card-anim {
+    animation: none !important;
+  }
 }
 
 

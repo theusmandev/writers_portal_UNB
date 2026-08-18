@@ -512,31 +512,34 @@ function PublishedCard({ record }: { record: SubmissionRecord }) {
   }
 
   return (
-    <div className="published-card-anim mt-6 relative overflow-visible">
-      {/* Confetti dots — absolute, burst outward from card centre */}
-      <div className="absolute left-1/2 top-1/2 pointer-events-none" aria-hidden>
-        {CONFETTI_PIECES.map((p, i) => (
-          <div
-            key={i}
-            className={`confetti-dot${p.shape === "square" ? " confetti-dot-square" : ""}`}
-            style={{
-              "--cx": p.cx,
-              "--cy": p.cy,
-              "--cr": p.cr,
-              width: p.size,
-              height: p.size,
-              backgroundColor: p.color,
-              animationDelay: `${p.delay}ms`,
-              marginLeft: -p.size / 2,
-              marginTop: -p.size / 2,
-            } as React.CSSProperties}
-          />
-        ))}
-      </div>
-
+    <div className="published-card-anim mt-6">
       {/* Card body */}
-      <div className="rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-accent/10 p-5 sm:p-7 text-center shadow-elegant">
-        <div className="text-4xl mb-3" role="img" aria-label="Celebration">🎉</div>
+      <div className="relative overflow-hidden rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-accent/10 p-5 sm:p-7 text-center shadow-elegant">
+        
+        <div className="relative inline-flex items-center justify-center mb-3">
+          {/* Confetti dots — absolute, burst outward from behind the emoji */}
+          <div className="absolute left-1/2 top-1/2 pointer-events-none" aria-hidden>
+            {CONFETTI_PIECES.map((p, i) => (
+              <div
+                key={i}
+                className={`confetti-dot${p.shape === "square" ? " confetti-dot-square" : ""}`}
+                style={{
+                  "--cx": p.cx,
+                  "--cy": p.cy,
+                  "--cr": p.cr,
+                  width: p.size,
+                  height: p.size,
+                  backgroundColor: p.color,
+                  animationDelay: `${p.delay}ms`,
+                  marginLeft: -p.size / 2,
+                  marginTop: -p.size / 2,
+                } as React.CSSProperties}
+              />
+            ))}
+          </div>
+          <div className="text-4xl icon-pop-anim relative z-10" role="img" aria-label="Celebration">🎉</div>
+        </div>
+
         <h3 className="font-display text-xl font-semibold text-foreground">
           {isEpisodeAware 
             ? `Congratulations! ${epText} now live.`
