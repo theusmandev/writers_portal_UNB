@@ -627,6 +627,57 @@ export async function trackSubmission(
   }
 }
 
+// ── Public: deleteSubmission ──────────────────────────────────────────────────
+
+export async function deleteSubmission(submissionId: string, submissionCode: string): Promise<ApiResult<null>> {
+  if (!isSupabaseConfigured) {
+    // Demo mode: update local store
+    await new Promise((r) => setTimeout(r, 600));
+    const all = readStore();
+    writeStore(all.filter(s => s.submissionId !== submissionCode));
+    return { success: true, data: null };
+  }
+
+  try {
+    // 1. Call Apps Script to delete the Drive folder (graceful failure)
+    const scriptUrl = import.meta.env["VITE_PORTAL_API_URL"] as string | undefined;
+    if (scriptUrl) {
+      try {
+        const res = await fetch(scriptUrl, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: "deleteSubmissionFolder",
+            submissionCode,
+          }),
+        });
+        
+        if (!res.ok) {
+           console.warn(`Drive folder deletion returned status ${res.status}`);
+        } else {
+           const data = await res.json();
+           if (!data.success) {
+             console.warn("Drive folder deletion failed:", data.error);
+           }
+        }
+      } catch (err: any) {
+        console.warn("Error calling Apps Script to delete folder:", err?.message);
+        // We log the error but still proceed to delete the DB row, as the DB should be the single source of truth.
+      }
+    }
+
+    // 2. Delete from Supabase
+    const { error } = await supabase.from("submissions").delete().eq("id", submissionId);
+    if (error) {
+       return { success: false, error: "Database deletion failed: " + error.message };
+    }
+
+    return { success: true, data: null };
+  } catch (err: any) {
+    return { success: false, error: err?.message || "Failed to delete submission." };
+  }
+}
+
 // ── Public: getPublicWriters ──────────────────────────────────────────────────
 
 export async function getPublicWriters(): Promise<ApiResult<PublicWriterRow[]>> {

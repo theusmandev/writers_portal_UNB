@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, ExternalLink, Loader2, Save, AlertCircle, CheckCircle2, Clock, MessageSquare, FileText, Image, XCircle } from "lucide-react";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { ArrowLeft, ExternalLink, Loader2, Save, AlertCircle, CheckCircle2, Clock, MessageSquare, FileText, Image, XCircle, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/lib/supabase";
 import { submissionStatuses, getMissingFileMessage } from "@/data/content";
 import type { SubmissionRow, StatusHistoryRow, WriterRow, SubmissionResponseRow, EpisodeRow } from "@/lib/supabase.types";
-import { sendNotificationEmail, updateSubmissionFiles, publishEpisodes } from "@/services/portalApi";
+import { sendNotificationEmail, updateSubmissionFiles, publishEpisodes, deleteSubmission } from "@/services/portalApi";
 
 /**
  * Canonical stage name for each status value.
@@ -99,6 +99,12 @@ export default function AdminSubmissionDetail() {
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const [selectedEpisodes, setSelectedEpisodes] = useState<number[]>([]);
   const [publishingEps, setPublishingEps] = useState(false);
+  
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteCodeInput, setDeleteCodeInput] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const navigate = useNavigate();
   
   const [manuscriptResolveUrl, setManuscriptResolveUrl] = useState("");
   const [coverResolveUrl, setCoverResolveUrl] = useState("");
@@ -290,6 +296,19 @@ export default function AdminSubmissionDetail() {
     setSaveMsg("✓ Episodes published successfully.");
     setPublishingEps(false);
     setTimeout(() => setSaveMsg(null), 3000);
+  }
+
+  async function handleDelete() {
+    if (!detail) return;
+    setIsDeleting(true);
+    setDeleteError(null);
+    const res = await deleteSubmission(detail.id, detail.submission_code);
+    if (!res.success) {
+      setDeleteError(res.error);
+      setIsDeleting(false);
+    } else {
+      navigate("/admin/submissions", { state: { message: `Submission ${detail.submission_code} deleted permanently.` } });
+    }
   }
 
   if (loading) {
@@ -760,6 +779,85 @@ export default function AdminSubmissionDetail() {
           </section>
         </div>
       </div>
+
+      {/* Danger Zone */}
+      <section className="mt-8 rounded-xl border border-destructive/20 bg-destructive/5 p-6">
+        <h2 className="text-lg font-semibold text-destructive mb-2 flex items-center gap-2">
+          <Trash2 className="h-5 w-5" />
+          Danger Zone
+        </h2>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <p className="text-sm text-muted-foreground max-w-2xl">
+            Permanently delete this submission and all its data. This action cannot be undone and will also attempt to move the associated Google Drive folder to the trash.
+          </p>
+          <Button 
+            variant="destructive" 
+            onClick={() => {
+              setDeleteCodeInput("");
+              setDeleteError(null);
+              setDeleteModalOpen(true);
+            }}
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Delete Submission
+          </Button>
+        </div>
+      </section>
+
+      {/* Delete Confirmation Modal */}
+      {deleteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-xl border border-border bg-card shadow-lg p-6 space-y-6">
+            <div className="space-y-2 text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 mb-4">
+                <AlertCircle className="h-6 w-6 text-destructive" />
+              </div>
+              <h3 className="text-xl font-semibold tracking-tight">Delete Submission?</h3>
+              <p className="text-sm text-muted-foreground">
+                This will permanently delete <strong>{detail.novel_title}</strong> ({detail.submission_code}), all its data, and its files from Google Drive. This cannot be undone.
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="delete-confirm" className="text-sm font-medium">
+                To confirm, type <strong>{detail.submission_code}</strong> below:
+              </Label>
+              <Input
+                id="delete-confirm"
+                value={deleteCodeInput}
+                onChange={(e) => setDeleteCodeInput(e.target.value)}
+                placeholder={detail.submission_code}
+                className="font-mono text-center"
+              />
+            </div>
+            
+            {deleteError && (
+              <div className="rounded border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
+                {deleteError}
+              </div>
+            )}
+            
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setDeleteModalOpen(false)}
+                disabled={isDeleting}
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={() => void handleDelete()}
+                disabled={deleteCodeInput !== detail.submission_code || isDeleting}
+              >
+                {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
+                Delete Permanently
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
