@@ -6,6 +6,7 @@ import { PageHero } from "@/components/portal/PageHero";
 import { Loader2, ArrowRight, Calendar } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { FadeIn } from "@/components/portal/FadeIn";
+import { SEO } from "@/components/SEO";
 
 export default function PostsPage() {
   const [posts, setPosts] = useState<PostRow[]>([]);
@@ -27,6 +28,10 @@ export default function PostsPage() {
 
   return (
     <div className="pb-24">
+      <SEO 
+        title="Latest Updates & Announcements | Urdu Novel Bank" 
+        description="Stay informed with the latest updates, announcements, and news from Urdu Novel Bank. Read about new features, events, and community highlights." 
+      />
       <PageHero
         eyebrow="Posts & Updates"
         title="Portal Updates"

@@ -4,12 +4,15 @@ import { Button } from "@/components/ui/button";
 import { PageHero } from "@/components/portal/PageHero";
 import { guidelines, site } from "@/data/content";
 import { FadeIn } from "@/components/portal/FadeIn";
-
-
+import { SEO } from "@/components/SEO";
 
 export default function GuidelinesPage() {
   return (
     <div>
+      <SEO 
+        title="Submission Guidelines for Urdu Novel Writers | Urdu Novel Bank" 
+        description="Read our comprehensive submission guidelines. Learn about our formatting requirements, content policies, and how to prepare your Urdu novel for publication." 
+      />
       <PageHero
         eyebrow="For Writers"
         title="Submission Guidelines"

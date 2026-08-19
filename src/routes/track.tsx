@@ -9,6 +9,7 @@ import { PageHero } from "@/components/portal/PageHero";
 import { processStages, submissionStatuses, getMissingFileMessage } from "@/data/content";
 import { trackSubmission, submitResponse, getSubmissionsByEmail, addEpisodesToSubmission, uploadEpisodeFile, sendNotificationEmail, type SubmissionRecord, type WriterSubmissionSummary } from "@/services/portalApi";
 import { FadeIn } from "@/components/portal/FadeIn";
+import { SEO } from "@/components/SEO";
 
 /**
  * Maps every possible admin-set current_status value to its 0-based index
@@ -852,6 +853,10 @@ export default function TrackPage() {
 
   return (
     <div>
+      <SEO 
+        title="Track Your Novel Submission | Urdu Novel Bank" 
+        description="Check the status of your submitted Urdu novel. Enter your tracking ID to see real-time updates on our review and publication process." 
+      />
       <PageHero
         eyebrow="Submission"
         title="Track Submission"

@@ -1,10 +1,15 @@
 import { Link } from "react-router-dom";
 import { FileQuestion, Home, FileText, Search, Compass } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SEO } from "@/components/SEO";
 
 export default function NotFound() {
   return (
     <div className="flex min-h-[70vh] flex-col items-center justify-center px-6 py-16 text-center">
+      <SEO 
+        title="Page Not Found | Urdu Novel Bank" 
+        description="The page you are looking for does not exist. Return to the Urdu Novel Bank homepage to explore writer portal features and guidelines." 
+      />
       {/* Visual illustration / icon */}
       <div className="relative mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-accent/10 text-accent">
         <FileQuestion className="h-12 w-12" />

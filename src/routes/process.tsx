@@ -3,12 +3,15 @@ import { Button } from "@/components/ui/button";
 import { PageHero } from "@/components/portal/PageHero";
 import { processStages } from "@/data/content";
 import { FadeIn } from "@/components/portal/FadeIn";
-
-
+import { SEO } from "@/components/SEO";
 
 export default function ProcessPage() {
   return (
     <div>
+      <SEO 
+        title="Publication Process — How It Works | Urdu Novel Bank" 
+        description="Discover how our publication process works. From initial submission to final publishing, learn about each step your Urdu novel takes to reach readers." 
+      />
       <PageHero
         eyebrow="For Writers"
         title="Publication Process"

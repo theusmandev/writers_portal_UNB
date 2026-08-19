@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { PageHero } from "@/components/portal/PageHero";
 import { genres, site, getMissingFileMessage } from "@/data/content";
 import { isDemoMode, submitNovel, uploadFileToScript, updateSubmissionFiles, sendNotificationEmail, getWriterInfoByEmail, uploadEpisodeFile, saveEpisodeRecord, getSubmissionSettings, checkEpisodeMinimumException, type SubmissionRecord } from "@/services/portalApi";
+import { SEO } from "@/components/SEO";
 
 
 
@@ -633,6 +634,10 @@ export default function SubmitPage() {
   if (result) {
     return (
       <div className="mx-auto max-w-2xl px-4 sm:px-5 py-20">
+        <SEO 
+          title="Submit Your Novel | Urdu Novel Bank Writer Portal" 
+          description="Ready to publish? Submit your Urdu novel manuscript through our secure writer portal. Share your stories with a growing community of readers." 
+        />
         <div className="rounded-2xl border border-border bg-card p-5 sm:p-8 text-center shadow-elegant">
           <CheckCircle2 className="mx-auto size-10 text-primary" />
           <h1 className="mt-4 text-2xl font-semibold">Submission Successful</h1>
@@ -700,6 +705,10 @@ export default function SubmitPage() {
   if (settingsLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
+        <SEO 
+          title="Submit Your Novel | Urdu Novel Bank Writer Portal" 
+          description="Ready to publish? Submit your Urdu novel manuscript through our secure writer portal. Share your stories with a growing community of readers." 
+        />
         <Loader2 className="size-8 animate-spin text-primary" />
       </div>
     );
@@ -708,6 +717,10 @@ export default function SubmitPage() {
   if (isPaused) {
     return (
       <div>
+        <SEO 
+          title="Submit Your Novel | Urdu Novel Bank Writer Portal" 
+          description="Ready to publish? Submit your Urdu novel manuscript through our secure writer portal. Share your stories with a growing community of readers." 
+        />
         <PageHero
           eyebrow="Notice"
           title="Submissions Temporarily Paused"
@@ -744,6 +757,10 @@ export default function SubmitPage() {
 
   return (
     <div>
+      <SEO 
+        title="Submit Your Novel | Urdu Novel Bank Writer Portal" 
+        description="Ready to publish? Submit your Urdu novel manuscript through our secure writer portal. Share your stories with a growing community of readers." 
+      />
       <PageHero
         eyebrow="Submission"
         title="Submit Your Novel"

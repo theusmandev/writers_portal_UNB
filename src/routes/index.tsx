@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/accordion";
 import { faqs, processStages, site } from "@/data/content";
 import { FadeIn } from "@/components/portal/FadeIn";
-
+import { SEO } from "@/components/SEO";
 
 
 const steps = [
@@ -22,6 +22,10 @@ const steps = [
 export default function Index() {
   return (
     <div>
+      <SEO 
+        title="Urdu Novel Bank — Writer & Publication Portal | Submit Your Urdu Novel" 
+        description="Submit your Urdu novel to Urdu Novel Bank. Our writer portal offers an easy submission process, real-time tracking, and a transparent publication journey." 
+      />
       <section className="bg-hero text-primary-foreground">
         <div className="mx-auto max-w-6xl px-5 pt-12 pb-20 sm:pt-16 sm:pb-28">
           <p className="text-xs font-semibold tracking-[0.25em] text-primary-foreground/70 uppercase">
