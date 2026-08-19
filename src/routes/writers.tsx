@@ -3,6 +3,7 @@ import { ExternalLink, BookOpen, User, AlertCircle } from "lucide-react";
 import { PageHero } from "@/components/portal/PageHero";
 import { supabase } from "@/lib/supabase";
 import type { PublicWriterRow } from "@/lib/supabase.types";
+import { SEO } from "@/components/SEO";
 
 export default function WritersPage() {
   const [writers, setWriters] = useState<PublicWriterRow[]>([]);
@@ -24,6 +25,10 @@ export default function WritersPage() {
 
   return (
     <div>
+      <SEO 
+        title="Our Published Writers | Urdu Novel Bank" 
+        description="Explore the directory of talented writers published by Urdu Novel Bank. Discover the authors behind your favorite Urdu stories and novels." 
+      />
       <PageHero
         eyebrow="Published Authors"
         title="Our Writers"

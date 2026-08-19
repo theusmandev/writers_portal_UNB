@@ -3,12 +3,15 @@ import { AlertCircle } from "lucide-react";
 import { PageHero } from "@/components/portal/PageHero";
 import { processStages, timelineFactors } from "@/data/content";
 import { FadeIn } from "@/components/portal/FadeIn";
-
-
+import { SEO } from "@/components/SEO";
 
 export default function TimelinePage() {
   return (
     <div>
+      <SEO 
+        title="Publication Timeline | Urdu Novel Bank" 
+        description="View our estimated publication timeline. Get a clear understanding of how long it takes for a submitted Urdu novel to be reviewed and published." 
+      />
       <PageHero
         eyebrow="For Writers"
         title="Publication Timeline"

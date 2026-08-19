@@ -2,12 +2,15 @@ import { Link } from "react-router-dom";
 import { PageHero } from "@/components/portal/PageHero";
 import { policy, policyVersion } from "@/data/content";
 import { FadeIn } from "@/components/portal/FadeIn";
-
-
+import { SEO } from "@/components/SEO";
 
 export default function PolicyPage() {
   return (
     <div>
+      <SEO 
+        title="Publication Policy | Urdu Novel Bank" 
+        description="Review the Urdu Novel Bank publication policy. Understand our terms, copyright guidelines, and the standards we uphold for all published novels." 
+      />
       <PageHero
         eyebrow="For Writers"
         title="Publication Policy"

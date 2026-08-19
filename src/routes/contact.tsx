@@ -3,8 +3,7 @@ import { Mail, Instagram, Globe } from "lucide-react";
 import { PageHero } from "@/components/portal/PageHero";
 import { site } from "@/data/content";
 import { FadeIn } from "@/components/portal/FadeIn";
-
-
+import { SEO } from "@/components/SEO";
 
 const channels = [
   {
@@ -33,6 +32,10 @@ const channels = [
 export default function ContactPage() {
   return (
     <div>
+      <SEO 
+        title="Contact Us | Urdu Novel Bank" 
+        description="Get in touch with the Urdu Novel Bank team. Reach out for support, inquiries, or feedback regarding your novel submissions and publication." 
+      />
       <PageHero
         eyebrow="Support"
         title="Contact Us"

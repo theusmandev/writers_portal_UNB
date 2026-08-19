@@ -5,6 +5,7 @@ import { getPostBySlug } from "@/services/portalApi";
 import type { PostRow } from "@/lib/supabase.types";
 import { Loader2, Calendar, ArrowLeft } from "lucide-react";
 import { formatDate } from "@/lib/utils";
+import { SEO } from "@/components/SEO";
 
 export default function PostDetailPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -41,33 +42,21 @@ export default function PostDetailPage() {
   }, [slug]);
 
   // Handle SEO
-  useEffect(() => {
-    if (post) {
-      // Title
-      const titleText = post.meta_title || `${post.title} | Umera Ahmed Novel Bank`;
-      document.title = titleText;
-
-      // Meta Description
-      const rawText = (() => {
-        const tmp = document.createElement("div");
-        tmp.innerHTML = post.content;
-        return tmp.textContent || tmp.innerText || "";
-      })();
-      const descText = post.meta_description || rawText.substring(0, 150).replace(/\n/g, ' ') + '...';
-      
-      let metaDesc = document.querySelector('meta[name="description"]');
-      if (!metaDesc) {
-        metaDesc = document.createElement('meta');
-        metaDesc.setAttribute('name', 'description');
-        document.head.appendChild(metaDesc);
-      }
-      metaDesc.setAttribute('content', descText);
+  const seoTitle = post?.meta_title || (post?.title ? `${post.title} | Urdu Novel Bank` : "Update | Urdu Novel Bank");
+  const seoDescription = (() => {
+    if (post?.meta_description) return post.meta_description;
+    if (post?.content) {
+      const tmp = document.createElement("div");
+      tmp.innerHTML = post.content;
+      return (tmp.textContent || tmp.innerText || "").substring(0, 150).replace(/\n/g, ' ') + '...';
     }
-  }, [post]);
+    return "Read the latest update from Urdu Novel Bank.";
+  })();
 
   if (loading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
+        <SEO title={seoTitle} description={seoDescription} />
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
@@ -76,6 +65,7 @@ export default function PostDetailPage() {
   if (error || !post) {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-center px-6">
+        <SEO title={seoTitle} description={seoDescription} />
         <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-6 text-destructive max-w-md w-full">
           <p className="font-medium">{error || "This post could not be found."}</p>
         </div>
@@ -88,6 +78,7 @@ export default function PostDetailPage() {
 
   return (
     <article className="mx-auto max-w-3xl px-6 py-12 md:py-20">
+      <SEO title={seoTitle} description={seoDescription} />
       <Link 
         to="/updates" 
         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-10"

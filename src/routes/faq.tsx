@@ -9,14 +9,17 @@ import { Button } from "@/components/ui/button";
 import { PageHero } from "@/components/portal/PageHero";
 import { faqs } from "@/data/content";
 import { FadeIn } from "@/components/portal/FadeIn";
-
-
+import { SEO } from "@/components/SEO";
 
 export default function FaqPage() {
   const categories = [...new Set(faqs.map((f) => f.category))];
 
   return (
     <div>
+      <SEO 
+        title="Frequently Asked Questions | Urdu Novel Bank Writer Portal" 
+        description="Find answers to frequently asked questions about submitting and publishing your Urdu novel with the Urdu Novel Bank writer portal." 
+      />
       <PageHero
         eyebrow="Support"
         title="Frequently Asked Questions"
