@@ -666,8 +666,10 @@ export async function deleteSubmission(submissionId: string, submissionCode: str
       }
     }
 
-    // 2. Delete from Supabase
-    const { error } = await supabase.from("submissions").delete().eq("id", submissionId);
+    // 2. Delete from Supabase (using atomic RPC that also cleans up orphaned writers)
+    const { error } = await supabase.rpc("delete_submission_and_cleanup_writer", {
+      p_submission_id: submissionId,
+    });
     if (error) {
        return { success: false, error: "Database deletion failed: " + error.message };
     }
