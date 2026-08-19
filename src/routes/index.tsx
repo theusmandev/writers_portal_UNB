@@ -23,7 +23,7 @@ export default function Index() {
   return (
     <div>
       <section className="bg-hero text-primary-foreground">
-        <div className="mx-auto max-w-6xl px-5 py-20 sm:py-28">
+        <div className="mx-auto max-w-6xl px-5 pt-12 pb-20 sm:pt-16 sm:pb-28">
           <p className="text-xs font-semibold tracking-[0.25em] text-primary-foreground/70 uppercase">
             {site.portalName}
           </p>
