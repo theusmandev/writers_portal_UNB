@@ -64,8 +64,9 @@ export default function ContactPage() {
 
         <FadeIn className="mt-10 rounded-xl border border-border bg-primary/5 p-6">
           <p className="urdu text-lg leading-loose">
-            کسی بھی سوال کے لیے ای میل کریں۔ اگر آپ نے ناول بھیج دیا ہے تو براہِ کرم اپنا سبمیشن
-            آئی ڈی ضرور لکھیں تاکہ ہم جلد جواب دے سکیں۔
+            کسی بھی فوری سوال یا رہنمائی کے لیے انسٹاگرام پر رابطہ کریں۔ سبمیشن
+            سے متعلق سوالات یا اصلاح کے لیے ای میل کریں، اور براہِ کرم اپنا
+            سبمیشن آئی ڈی ضرور لکھیں تاکہ ہم جلد جواب دے سکیں۔
           </p>
         </FadeIn>
       </div>
