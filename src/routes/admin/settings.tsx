@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
+import { AdminPagination } from "@/components/admin/AdminPagination";
 import { Trash2, Plus, Loader2 } from "lucide-react";
 
 export default function AdminSettings() {
@@ -26,6 +27,7 @@ export default function AdminSettings() {
   const [newExceptionEmail, setNewExceptionEmail] = useState("");
   const [newExceptionNote, setNewExceptionNote] = useState("");
   const [addingException, setAddingException] = useState(false);
+  const [exceptionsPage, setExceptionsPage] = useState(1);
 
   useEffect(() => {
     void load();
@@ -92,7 +94,14 @@ export default function AdminSettings() {
     const res = await removeEpisodeMinimumException(id);
     if (res.success) {
       setSuccess("Exception removed.");
-      setExceptions(prev => prev.filter(e => e.id !== id));
+      setExceptions(prev => {
+        const updated = prev.filter(e => e.id !== id);
+        const newTotalPages = Math.ceil(updated.length / 8);
+        if (exceptionsPage > newTotalPages && newTotalPages > 0) {
+          setExceptionsPage(newTotalPages);
+        }
+        return updated;
+      });
       setTimeout(() => setSuccess(null), 3000);
     } else {
       setError(res.error);
@@ -116,6 +125,10 @@ export default function AdminSettings() {
     }
     setSaving(false);
   }
+
+  const itemsPerPage = 8;
+  const exceptionsTotalPages = Math.ceil(exceptions.length / itemsPerPage);
+  const paginatedExceptions = exceptions.slice((exceptionsPage - 1) * itemsPerPage, exceptionsPage * itemsPerPage);
 
   return (
     <div className="p-6 space-y-6 max-w-6xl">
@@ -249,7 +262,14 @@ export default function AdminSettings() {
       </div>
 
       <div className="rounded-xl border bg-card p-6 shadow-sm">
-        <h2 className="text-lg font-semibold mb-4">Episode Minimum Exceptions</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">Episode Minimum Exceptions</h2>
+          {!loadingExceptions && (
+            <span className="text-sm font-medium text-muted-foreground bg-muted px-2.5 py-0.5 rounded-full">
+              {exceptions.length} {exceptions.length === 1 ? 'writer' : 'writers'} total
+            </span>
+          )}
+        </div>
         <p className="text-sm text-muted-foreground mb-6">
           Writers in this list can submit an "Ongoing" novel with just 1 episode, instead of the standard minimum of 5.
         </p>
@@ -295,7 +315,7 @@ export default function AdminSettings() {
             </div>
           ) : (
             <div className="divide-y">
-              {exceptions.map(exc => (
+              {paginatedExceptions.map(exc => (
                 <div key={exc.id} className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">
                   <div>
                     <p className="font-medium">{exc.email}</p>
@@ -315,6 +335,14 @@ export default function AdminSettings() {
             </div>
           )}
         </div>
+        
+        {exceptionsTotalPages > 1 && (
+          <AdminPagination 
+            currentPage={exceptionsPage}
+            totalPages={exceptionsTotalPages}
+            onPageChange={setExceptionsPage}
+          />
+        )}
       </div>
     </div>
   );
