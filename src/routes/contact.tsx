@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Mail, MessageCircle, Globe } from "lucide-react";
+import { Mail, Instagram, Globe } from "lucide-react";
 import { PageHero } from "@/components/portal/PageHero";
 import { site } from "@/data/content";
 import { FadeIn } from "@/components/portal/FadeIn";
@@ -15,10 +15,11 @@ const channels = [
     note: "Best for submission questions and corrections. Always include your Submission ID.",
   },
   {
-    icon: MessageCircle,
-    label: "WhatsApp",
-    value: "Shared after submission",
-    note: "Used for quick clarifications during review.",
+    icon: Instagram,
+    label: "Instagram",
+    value: "@urdunovelbank",
+    href: "https://www.instagram.com/urdunovelbank/",
+    note: "Have a quick question about the portal or your submission? Need guidance? Message us on Instagram.",
   },
   {
     icon: Globe,
@@ -45,7 +46,12 @@ export default function ContactPage() {
               <c.icon className="size-5 text-primary" />
               <p className="mt-3 text-sm font-semibold">{c.label}</p>
               {c.href ? (
-                <a href={c.href} className="mt-1 block text-sm break-words text-primary underline-offset-4 hover:underline">
+                <a 
+                  href={c.href} 
+                  target={c.href.startsWith("http") ? "_blank" : undefined}
+                  rel={c.href.startsWith("http") ? "noopener noreferrer" : undefined}
+                  className="mt-1 block text-sm break-words text-primary underline-offset-4 hover:underline"
+                >
                   {c.value}
                 </a>
               ) : (
