@@ -53,10 +53,22 @@ export default function PostDetailPage() {
     return "Read the latest update from Urdu Novel Bank.";
   })();
 
+  const seoImage = (() => {
+    if (post?.content) {
+      const tmp = document.createElement("div");
+      tmp.innerHTML = post.content;
+      const img = tmp.querySelector("img");
+      if (img && img.src) {
+        return img.src;
+      }
+    }
+    return undefined;
+  })();
+
   if (loading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <SEO title={seoTitle} description={seoDescription} />
+        <SEO title={seoTitle} description={seoDescription} type="article" image={seoImage} />
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
@@ -65,7 +77,7 @@ export default function PostDetailPage() {
   if (error || !post) {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-center px-6">
-        <SEO title={seoTitle} description={seoDescription} />
+        <SEO title={seoTitle} description={seoDescription} type="article" image={seoImage} />
         <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-6 text-destructive max-w-md w-full">
           <p className="font-medium">{error || "This post could not be found."}</p>
         </div>
@@ -78,7 +90,7 @@ export default function PostDetailPage() {
 
   return (
     <article className="mx-auto max-w-3xl px-6 py-12 md:py-20">
-      <SEO title={seoTitle} description={seoDescription} />
+      <SEO title={seoTitle} description={seoDescription} type="article" image={seoImage} />
       <Link 
         to="/updates" 
         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-10"
