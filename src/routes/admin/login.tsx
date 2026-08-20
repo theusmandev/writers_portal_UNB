@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { SEO } from "@/components/SEO";
 
 export default function AdminLoginPage() {
   const { session, loading, signIn } = useAdminAuth();
@@ -36,6 +37,11 @@ export default function AdminLoginPage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
+      <SEO 
+        noindex 
+        title="Admin Login | UNB" 
+        description="Internal admin login" 
+      />
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="mb-8 flex flex-col items-center gap-3">

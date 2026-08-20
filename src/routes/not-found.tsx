@@ -7,6 +7,7 @@ export default function NotFound() {
   return (
     <div className="flex min-h-[70vh] flex-col items-center justify-center px-6 py-16 text-center">
       <SEO 
+        noindex
         title="Page Not Found | Urdu Novel Bank" 
         description="The page you are looking for does not exist. Return to the Urdu Novel Bank homepage to explore writer portal features and guidelines." 
       />

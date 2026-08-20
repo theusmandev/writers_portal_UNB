@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { LayoutDashboard, FileText, Users, Newspaper, LogOut, BookOpen, Settings } from "lucide-react";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { SEO } from "@/components/SEO";
 
 const navItems = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
@@ -19,6 +20,11 @@ export function AdminLayout() {
 
   return (
     <div className="flex min-h-screen bg-background">
+      <SEO 
+        noindex 
+        title="Admin Portal | UNB" 
+        description="Internal admin portal" 
+      />
       {/* ── Sidebar ── */}
       <aside className="flex w-56 shrink-0 flex-col border-r border-border bg-card">
         {/* Logo */}

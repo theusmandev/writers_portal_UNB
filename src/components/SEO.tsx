@@ -6,6 +6,7 @@ export interface SEOProps {
   description: string;
   type?: 'website' | 'article';
   image?: string;
+  noindex?: boolean;
 }
 
 const DEFAULT_IMAGE = "https://portal.urdunovelbanks.com/banner.png";
@@ -20,7 +21,7 @@ function setMetaTag(attrName: 'name' | 'property', attrValue: string, content: s
   element.setAttribute('content', content);
 }
 
-export function SEO({ title, description, type = 'website', image }: SEOProps) {
+export function SEO({ title, description, type = 'website', image, noindex = false }: SEOProps) {
   const location = useLocation();
 
   useEffect(() => {
@@ -48,7 +49,17 @@ export function SEO({ title, description, type = 'website', image }: SEOProps) {
     setMetaTag('name', 'twitter:description', description);
     setMetaTag('name', 'twitter:image', ogImage);
 
-  }, [title, description, type, location.pathname, image]);
+    // Robots (noindex)
+    if (noindex) {
+      setMetaTag('name', 'robots', 'noindex, nofollow');
+    } else {
+      const robotsMeta = document.querySelector('meta[name="robots"]');
+      if (robotsMeta) {
+        robotsMeta.remove();
+      }
+    }
+
+  }, [title, description, type, location.pathname, image, noindex]);
 
   return null;
 }
