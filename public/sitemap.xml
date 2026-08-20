@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <!-- Home -->
+  <url>
+    <loc>https://portal.urdunovelbanks.com/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- Primary action pages — highest-traffic after home -->
+  <url>
+    <loc>https://portal.urdunovelbanks.com/submit</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://portal.urdunovelbanks.com/track</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Updates index — new posts appear regularly -->
+  <url>
+    <loc>https://portal.urdunovelbanks.com/updates</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Writers directory -->
+  <url>
+    <loc>https://portal.urdunovelbanks.com/writers</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Informational / reference pages — change rarely -->
+  <url>
+    <loc>https://portal.urdunovelbanks.com/guidelines</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://portal.urdunovelbanks.com/process</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://portal.urdunovelbanks.com/timeline</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://portal.urdunovelbanks.com/faq</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://portal.urdunovelbanks.com/contact</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://portal.urdunovelbanks.com/policy</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.4</priority>
+  </url>
+
+  <!--
+    NOTE: Individual /updates/:slug post pages are NOT included here.
+    They are dynamic content stored in Supabase and cannot be enumerated
+    at build time without a fetch step that would make deployments fragile
+    on our free-tier stack. This is a known limitation and a candidate for
+    a future build-time enhancement once the post volume justifies it.
+  -->
+
+</urlset>
