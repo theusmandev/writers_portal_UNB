@@ -58,6 +58,7 @@ export type SubmissionRecord = {
   novelStatus?: string | undefined;
   episodeCount?: number | undefined;
   episodes?: Array<{ episode_number: number; upload_failed: boolean; drive_url?: string | null; published?: boolean }> | undefined;
+  estimatedPublishAt?: string | null;
 };
 
 export type ApiResult<T> = { success: true; data: T } | { success: false; error: string };
@@ -76,6 +77,7 @@ export type WriterSubmissionSummary = {
   manuscript_upload_failed: boolean;
   cover_upload_failed: boolean;
   full_name?: string;
+  estimated_publish_at?: string | null;
 };
 
 export type WriterDetailWithSubmissions = WriterRow & {
@@ -586,6 +588,7 @@ export async function trackSubmission(
       cover_upload_failed: boolean;
       episode_count: number | null;
       episodes: any;
+      estimated_publish_at: string | null;
     }>;
 
     if (rows.length === 0) {
@@ -619,7 +622,8 @@ export async function trackSubmission(
         coverUploadFailed: row.cover_upload_failed,
         novelStatus: row.novel_status,
         episodeCount: row.episode_count ?? undefined,
-        episodes: Array.isArray(row.episodes) && row.episodes.length > 0 ? row.episodes : undefined,
+        episodes: row.episodes ?? undefined,
+        estimatedPublishAt: row.estimated_publish_at ?? null,
       },
     };
   } catch {
