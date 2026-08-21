@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, ExternalLink, Loader2, Save, AlertCircle, CheckCircle2, Clock, MessageSquare, FileText, Image, XCircle, Trash2 } from "lucide-react";
+import { ArrowLeft, ExternalLink, Loader2, Save, AlertCircle, CheckCircle2, Clock, MessageSquare, FileText, Image, XCircle, Trash2, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -116,6 +116,7 @@ export default function AdminSubmissionDetail() {
   
   const [manuscriptResolveUrl, setManuscriptResolveUrl] = useState("");
   const [coverResolveUrl, setCoverResolveUrl] = useState("");
+  const [copiedTracking, setCopiedTracking] = useState(false);
 
   const isTerminalStatus = ["Published", "Rejected", "Withdrawn"].includes(detail?.current_status || "");
 
@@ -339,6 +340,21 @@ export default function AdminSubmissionDetail() {
 
   const w = detail.writers;
 
+  const trackingUrl = detail && w?.email
+    ? `https://portal.urdunovelbanks.com/track?code=${detail.submission_code}&email=${encodeURIComponent(w.email)}`
+    : null;
+
+  async function copyTrackingUrl() {
+    if (!trackingUrl) return;
+    try {
+      await navigator.clipboard.writeText(trackingUrl);
+      setCopiedTracking(true);
+      setTimeout(() => setCopiedTracking(false), 1500);
+    } catch (e) {
+      console.error("Failed to copy", e);
+    }
+  }
+
   return (
     <div className="p-6 space-y-6 max-w-5xl">
       {/* Header */}
@@ -353,6 +369,30 @@ export default function AdminSubmissionDetail() {
           <div>
             <h1 className="text-xl font-semibold">{detail.novel_title}</h1>
             <p className="text-sm text-muted-foreground mt-1 font-mono">{detail.submission_code}</p>
+            {trackingUrl && (
+              <div className="mt-3 flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-1.5 text-xs w-max">
+                <span className="text-muted-foreground font-medium">Tracking Link:</span>
+                <span className="font-mono text-muted-foreground truncate max-w-[200px] sm:max-w-sm">{trackingUrl}</span>
+                <div className="flex items-center gap-1 ml-2 pl-3 border-l border-border/50">
+                  <button
+                    onClick={copyTrackingUrl}
+                    title="Copy Link"
+                    className="p-1 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground"
+                  >
+                    {copiedTracking ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
+                  </button>
+                  <a
+                    href={trackingUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Open in new tab"
+                    className="p-1 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </a>
+                </div>
+              </div>
+            )}
           </div>
           <span
             className={`rounded-full px-3 py-1 text-xs font-medium ${statusColors[detail.current_status] ?? "bg-muted text-muted-foreground"}`}
