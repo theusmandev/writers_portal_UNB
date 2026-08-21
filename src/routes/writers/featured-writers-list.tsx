@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { AlertCircle, Star } from "lucide-react";
+import { Link } from "react-router-dom";
+import { AlertCircle, Star, ArrowLeft } from "lucide-react";
 import { PageHero } from "@/components/portal/PageHero";
 import { WriterCard } from "@/components/portal/WriterCard";
 import { supabase } from "@/lib/supabase";
@@ -39,6 +40,16 @@ export default function FeaturedWritersList() {
       />
 
       <div className="mx-auto max-w-5xl px-5 py-12">
+        <div className="mb-8">
+          <Link
+            to="/writers"
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to All Writers
+          </Link>
+        </div>
+
         {loading && (
           <div className="flex justify-center py-20">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
