@@ -11,7 +11,7 @@
  */
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import type { SubmissionStatus } from "@/data/content";
-import type { WriterRow, SubmissionRow, PublicWriterRow, SiteSettingsRow, FeaturedWriterPublic } from "@/lib/supabase.types";
+import type { WriterRow, SubmissionRow, PublicWriterRow, SiteSettingsRow, FeaturedWriterPublic, WriterDashboardData } from "@/lib/supabase.types";
 
 // ── Public Types ──────────────────────────────────────────────────────────────
 
@@ -1274,6 +1274,37 @@ export async function removeEpisodeMinimumException(id: string): Promise<ApiResu
     return { success: true, data: null };
   } catch (err: any) {
     return { success: false, error: err?.message || "Could not remove exception." };
+  }
+}
+
+// ── Public: Writer Analytics Dashboard (token-gated) ─────────────────────────
+
+/**
+ * Fetches a writer's analytics dashboard data using an opaque token.
+ * Calls get_writer_dashboard_by_token() which returns ONLY:
+ *   full_name, pen_name, looker_studio_embed_url
+ * — and returns ZERO ROWS for any invalid/unrecognised token.
+ *
+ * SECURITY: This function treats all failure modes identically. Whether
+ * the token is completely random, slightly wrong, or for an un-featured
+ * writer, the caller receives the same null result. The token is never
+ * logged or exposed.
+ */
+export async function getWriterDashboardByToken(
+  token: string
+): Promise<ApiResult<WriterDashboardData | null>> {
+  if (!isSupabaseConfigured) return { success: true, data: null };
+  try {
+    const { data, error } = await supabase.rpc(
+      "get_writer_dashboard_by_token",
+      { p_token: token }
+    );
+    if (error) throw error;
+    const rows = (data ?? []) as WriterDashboardData[];
+    return { success: true, data: rows[0] ?? null };
+  } catch {
+    // Swallow all errors — no detail surfaced to the caller.
+    return { success: true, data: null };
   }
 }
 

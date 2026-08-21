@@ -219,6 +219,16 @@ export interface Database {
       };
     };
     Functions: {
+      get_writer_dashboard_by_token: {
+        Args: { p_token: string };
+        Returns: Array<{
+          full_name: string;
+          pen_name: string | null;
+          looker_studio_embed_url: string | null;
+          // NOTE: dashboard_token is NOT in this return type.
+          // The DB function never surfaces it back to the caller.
+        }>;
+      };
       get_featured_writer_public: {
         Args: { p_slug: string };
         Returns: Array<{
@@ -250,6 +260,15 @@ export type EpisodeRow = Database["public"]["Tables"]["episodes"]["Row"];
 export type PostRow = Database["public"]["Tables"]["posts"]["Row"];
 export type PublicWriterRow = Database["public"]["Views"]["public_writers_view"]["Row"];
 export type SiteSettingsRow = Database["public"]["Tables"]["site_settings"]["Row"];
+
+/** Shape returned by get_writer_dashboard_by_token() RPC.
+ *  Only returned when token matches an is_featured=true writer.
+ *  The dashboard_token itself is never echoed back. */
+export type WriterDashboardData = {
+  full_name: string;
+  pen_name: string | null;
+  looker_studio_embed_url: string | null;
+};
 
 /** Shape returned by get_featured_writer_public() RPC.
  *  dashboard_token and looker_studio_embed_url are NOT present — excluded at DB level. */

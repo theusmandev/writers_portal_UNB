@@ -33,6 +33,7 @@ import AdminPosts from "./routes/admin/posts";
 import AdminPostEdit from "./routes/admin/post-edit";
 import AdminSettings from "./routes/admin/settings";
 import NotFound from "./routes/not-found";
+import WriterStatsPage from "./routes/writer-stats";
 
 /** Public layout — wraps all public routes with the site header and footer */
 function PublicLayout() {
@@ -56,6 +57,9 @@ export default function App() {
       <Routes>
         {/* ── Admin login (no auth guard, no public layout) ── */}
         <Route path="/admin/login" element={<AdminLoginPage />} />
+
+        {/* ── Writer analytics dashboard (bare, token-gated, noindex) ── */}
+        <Route path="/writer-stats/:token" element={<WriterStatsPage />} />
 
         {/* ── Protected admin routes (require session, own layout) ── */}
         <Route
