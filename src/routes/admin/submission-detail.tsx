@@ -80,6 +80,13 @@ function groupEpisodesByDate(episodes: EpisodeRow[]) {
   }
   return Object.entries(groups).sort(([dateA], [dateB]) => dateA.localeCompare(dateB));
 }
+function formatToDatetimeLocal(isoString: string | null) {
+  if (!isoString) return "";
+  const d = new Date(isoString);
+  if (isNaN(d.getTime())) return "";
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
 
 export default function AdminSubmissionDetail() {
   const { id } = useParams<{ id: string }>();
@@ -95,6 +102,7 @@ export default function AdminSubmissionDetail() {
   const [notes, setNotes] = useState("");          // admin_notes (internal / writer-facing update)
   const [statusNote, setStatusNote] = useState(""); // status_note (visible on Rejected / Action Required cards)
   const [publishedUrl, setPublishedUrl] = useState(""); // published_url (visible on Published card)
+  const [estimatedPublishAt, setEstimatedPublishAt] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const [selectedEpisodes, setSelectedEpisodes] = useState<number[]>([]);
@@ -160,6 +168,7 @@ export default function AdminSubmissionDetail() {
         setNotes(d.admin_notes ?? "");
         setStatusNote(d.status_note ?? "");
         setPublishedUrl(d.published_url ?? "");
+        setEstimatedPublishAt(d.estimated_publish_at ? formatToDatetimeLocal(d.estimated_publish_at) : "");
       }
       setHistory((historyRes.data ?? []) as StatusHistoryRow[]);
       setWriterResponses((responsesRes.data ?? []) as SubmissionResponseRow[]);
@@ -200,6 +209,7 @@ export default function AdminSubmissionDetail() {
     if (newStatus === "Published") {
       updates.published_url = publishedUrl.trim() || null;
     }
+    updates.estimated_publish_at = estimatedPublishAt ? new Date(estimatedPublishAt).toISOString() : null;
 
     const { error: err } = await supabase.from("submissions").update(updates).eq("id", id);
 
@@ -712,6 +722,31 @@ export default function AdminSubmissionDetail() {
                 </p>
               </div>
             )}
+
+            {/* Estimated Publish Date */}
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-4">
+                <Label htmlFor="estimated-publish-at">Estimated Publish Date</Label>
+                {estimatedPublishAt && (
+                  <button
+                    type="button"
+                    onClick={() => setEstimatedPublishAt("")}
+                    className="text-xs text-muted-foreground hover:text-destructive underline"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+              <Input
+                id="estimated-publish-at"
+                type="datetime-local"
+                value={estimatedPublishAt}
+                onChange={(e) => setEstimatedPublishAt(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Writers will see a countdown to this date/time on their tracking page while the submission is Approved, in Formatting, or Scheduled for Publication.
+              </p>
+            </div>
 
             {/* Admin notes (internal / writer-facing update) */}
             <div className="space-y-1.5">

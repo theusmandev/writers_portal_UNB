@@ -61,6 +61,7 @@ export interface Database {
           status_note: string | null;
           published_url: string | null;
           episode_count: number | null;
+          estimated_publish_at: string | null;
         };
         Insert: Omit<
           Database["public"]["Tables"]["submissions"]["Row"],
