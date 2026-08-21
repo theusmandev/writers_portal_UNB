@@ -18,6 +18,7 @@ import Contact from "./routes/contact";
 import SubmitPage from "./routes/submit";
 import TrackPage from "./routes/track";
 import WritersPage from "./routes/writers";
+import FeaturedWritersList from "./routes/writers/featured-writers-list";
 import FeaturedWriterPage from "./routes/writers/featured-writer";
 import PostsPage from "./routes/posts";
 import PostDetailPage from "./routes/post-detail";
@@ -94,6 +95,7 @@ export default function App() {
           <Route path="/submit" element={<SubmitPage />} />
           <Route path="/track" element={<TrackPage />} />
           <Route path="/writers" element={<WritersPage />} />
+          <Route path="/writers/featured" element={<FeaturedWritersList />} />
           <Route path="/writers/featured/:slug" element={<FeaturedWriterPage />} />
           <Route path="/updates" element={<PostsPage />} />
           <Route path="/updates/:slug" element={<PostDetailPage />} />
