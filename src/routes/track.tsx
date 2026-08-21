@@ -828,7 +828,7 @@ function ProgressTimeline({ activeIndex }: { activeIndex: number }) {
 const SHOW_COUNTDOWN_STATUSES = ["Approved", "Formatting", "Scheduled for Publication"];
 
 function PublishCountdown({ estimatedPublishAt, isSmall = false }: { estimatedPublishAt: string; isSmall?: boolean }) {
-  const [timeLeft, setTimeLeft] = useState<{ days: number; hours: number; minutes: number } | null>(null);
+  const [timeLeft, setTimeLeft] = useState<{ days: number; hours: number; minutes: number; seconds: number } | null>(null);
   const [isPast, setIsPast] = useState(false);
 
   useEffect(() => {
@@ -846,39 +846,69 @@ function PublishCountdown({ estimatedPublishAt, isSmall = false }: { estimatedPu
         const days = Math.floor(diff / (1000 * 60 * 60 * 24));
         const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        setTimeLeft({ days, hours, minutes });
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        setTimeLeft({ days, hours, minutes, seconds });
       }
     }
 
     update();
-    const interval = setInterval(update, 60000);
+    const interval = setInterval(update, 1000);
     return () => clearInterval(interval);
   }, [estimatedPublishAt]);
 
   const containerClass = isSmall
     ? "mt-3 flex items-center gap-1.5 rounded bg-amber-500/10 px-2.5 py-2 text-[11px] text-amber-700 font-medium"
-    : "mt-6 flex items-center gap-3 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 sm:p-5 text-sm text-amber-700 shadow-sm";
+    : "mt-6 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 sm:p-5 text-amber-700 shadow-sm";
 
   if (isPast) {
     return (
       <div className={containerClass}>
         <Calendar className={isSmall ? "h-3.5 w-3.5 shrink-0" : "h-5 w-5 shrink-0"} />
-        <span>Publishing very soon...</span>
+        <span className={isSmall ? "" : "text-sm"}>Publishing very soon...</span>
       </div>
     );
   }
 
   if (!timeLeft) return null;
 
-  const parts = [];
-  if (timeLeft.days > 0) parts.push(`${timeLeft.days} ${timeLeft.days === 1 ? 'day' : 'days'}`);
-  if (timeLeft.hours > 0) parts.push(`${timeLeft.hours} ${timeLeft.hours === 1 ? 'hour' : 'hours'}`);
-  if (timeLeft.minutes > 0 || parts.length === 0) parts.push(`${timeLeft.minutes} ${timeLeft.minutes === 1 ? 'min' : 'mins'}`);
+  if (isSmall) {
+    const parts = [];
+    if (timeLeft.days > 0) parts.push(`${timeLeft.days}d`);
+    if (timeLeft.hours > 0) parts.push(`${timeLeft.hours}h`);
+    if (timeLeft.minutes > 0) parts.push(`${timeLeft.minutes}m`);
+    parts.push(`${timeLeft.seconds}s`);
+    return (
+      <div className={containerClass}>
+        <Calendar className="h-3.5 w-3.5 shrink-0" />
+        <span>Est. publish in: <strong>{parts.join(" ")}</strong></span>
+      </div>
+    );
+  }
+
+  const pad = (n: number) => n.toString().padStart(2, "0");
+
+  const TimeUnit = ({ label, value }: { label: string; value: number }) => (
+    <div className="flex flex-col items-center justify-center rounded-lg bg-white shadow-sm border border-amber-500/10 px-3 py-2 min-w-[60px]">
+      <span className="text-xl font-display font-bold text-amber-600">{pad(value)}</span>
+      <span className="text-[10px] font-medium uppercase tracking-wider text-amber-700/70">{label}</span>
+    </div>
+  );
 
   return (
     <div className={containerClass}>
-      <Calendar className={isSmall ? "h-3.5 w-3.5 shrink-0" : "h-5 w-5 shrink-0"} />
-      <span>Estimated publish in: <strong>{parts.join(", ")}</strong></span>
+      <div className="flex items-center gap-2 mb-2 sm:mb-0">
+        <Calendar className="h-5 w-5 shrink-0 text-amber-600" />
+        <span className="text-sm font-medium">Estimated publish in:</span>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <TimeUnit label="Days" value={timeLeft.days} />
+        <span className="text-amber-500/30 font-bold pb-4 hidden sm:block">:</span>
+        <TimeUnit label="Hours" value={timeLeft.hours} />
+        <span className="text-amber-500/30 font-bold pb-4 hidden sm:block">:</span>
+        <TimeUnit label="Mins" value={timeLeft.minutes} />
+        <span className="text-amber-500/30 font-bold pb-4 hidden sm:block">:</span>
+        <TimeUnit label="Secs" value={timeLeft.seconds} />
+      </div>
     </div>
   );
 }
