@@ -858,7 +858,7 @@ function PublishCountdown({ estimatedPublishAt, isSmall = false }: { estimatedPu
 
   const containerClass = isSmall
     ? "mt-3 flex items-center gap-1.5 rounded bg-amber-500/10 px-2.5 py-2 text-[11px] text-amber-700 font-medium"
-    : "mt-6 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 sm:p-5 text-amber-700 shadow-sm";
+    : "mt-6 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 sm:p-5 text-amber-700 shadow-sm";
 
   if (isPast) {
     return (
@@ -896,11 +896,11 @@ function PublishCountdown({ estimatedPublishAt, isSmall = false }: { estimatedPu
 
   return (
     <div className={containerClass}>
-      <div className="flex items-center gap-2 mb-2 sm:mb-0">
+      <div className="flex items-center justify-center gap-2 mb-2 sm:mb-0">
         <Calendar className="h-5 w-5 shrink-0 text-amber-600" />
         <span className="text-sm font-medium">Estimated publish in:</span>
       </div>
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap justify-center items-center gap-2">
         <TimeUnit label="Days" value={timeLeft.days} />
         <span className="text-amber-500/30 font-bold pb-4 hidden sm:block">:</span>
         <TimeUnit label="Hours" value={timeLeft.hours} />
