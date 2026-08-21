@@ -215,6 +215,10 @@ export interface Database {
             genre: string | null;
             published_url: string | null;
           }>;
+          /** Added by migration 022. dashboard_token and looker_studio_embed_url
+           *  are intentionally NOT present here. */
+          is_featured: boolean;
+          featured_slug: string | null;
         };
       };
     };

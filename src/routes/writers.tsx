@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { ExternalLink, BookOpen, User, AlertCircle } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ExternalLink, BookOpen, User, AlertCircle, Star } from "lucide-react";
 import { PageHero } from "@/components/portal/PageHero";
 import { supabase } from "@/lib/supabase";
 import type { PublicWriterRow } from "@/lib/supabase.types";
@@ -86,12 +87,29 @@ function WriterCard({ writer }: { writer: PublicWriterRow }) {
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
           <User className="h-5 w-5 text-primary" />
         </div>
-        <div className="min-w-0">
-          <h2 className="truncate font-semibold leading-tight">{writer.full_name}</h2>
+        <div className="min-w-0 flex-1">
+          {/* Name — links to the featured page for featured writers, plain text otherwise */}
+          {writer.is_featured && writer.featured_slug ? (
+            <Link
+              to={`/writers/featured/${writer.featured_slug}`}
+              className="truncate font-semibold leading-tight hover:text-primary hover:underline underline-offset-2 transition-colors block"
+            >
+              {writer.full_name}
+            </Link>
+          ) : (
+            <h2 className="truncate font-semibold leading-tight">{writer.full_name}</h2>
+          )}
           {writer.pen_name && writer.pen_name !== writer.full_name && (
             <p className="truncate text-xs text-muted-foreground">{writer.pen_name}</p>
           )}
         </div>
+        {/* Featured badge — only for featured writers */}
+        {writer.is_featured && (
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-600">
+            <Star className="h-2.5 w-2.5 fill-amber-500 text-amber-500" />
+            Featured
+          </span>
+        )}
       </div>
 
       {/* Bio */}
