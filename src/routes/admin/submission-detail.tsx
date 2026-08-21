@@ -184,8 +184,12 @@ export default function AdminSubmissionDetail() {
     setSaving(true);
     setSaveMsg(null);
 
-    // Validate published_url if status is Published
-    if (newStatus === "Published" && publishedUrl.trim()) {
+    const isEarlyPublishEligible = detail.novel_status === "Complete" && 
+      ["Approved", "Formatting", "Scheduled for Publication"].includes(newStatus);
+    const isPublishedOnly = newStatus === "Published";
+
+    // Validate published_url if eligible for editing
+    if ((isEarlyPublishEligible || isPublishedOnly) && publishedUrl.trim()) {
       if (!/^https?:\/\/.+\..+/.test(publishedUrl.trim())) {
         setSaveMsg("❌ Published URL must start with https://");
         setSaving(false);
@@ -207,7 +211,7 @@ export default function AdminSubmissionDetail() {
     if (needsNote(newStatus)) {
       updates.status_note = statusNote.trim() || null;
     }
-    if (newStatus === "Published") {
+    if (isEarlyPublishEligible || isPublishedOnly) {
       updates.published_url = publishedUrl.trim() || null;
     }
     updates.estimated_publish_at = estimatedPublishAt ? new Date(estimatedPublishAt).toISOString() : null;
@@ -744,24 +748,36 @@ export default function AdminSubmissionDetail() {
             )}
 
             {/* Conditional: Published URL */}
-            {newStatus === "Published" && (
-              <div className="space-y-1.5">
-                <Label htmlFor="published-url">
-                  Published novel URL{" "}
-                  <span className="text-muted-foreground font-normal">(shown on tracking page)</span>
-                </Label>
-                <Input
-                  id="published-url"
-                  type="url"
-                  value={publishedUrl}
-                  onChange={(e) => setPublishedUrl(e.target.value)}
-                  placeholder="https://urdunovelbanks.com/novel/..."
-                />
-                <p className="text-xs text-muted-foreground">
-                  A "View Your Novel" button appears on the writer's tracking page linking here.
-                </p>
-              </div>
-            )}
+            {(() => {
+              const isEarlyPublishEligible = detail.novel_status === "Complete" && 
+                ["Approved", "Formatting", "Scheduled for Publication"].includes(newStatus);
+              const isPublishedOnly = newStatus === "Published";
+              
+              if (!isEarlyPublishEligible && !isPublishedOnly) return null;
+
+              return (
+                <div className="space-y-1.5">
+                  <Label htmlFor="published-url">
+                    Published novel URL{" "}
+                    <span className="text-muted-foreground font-normal">
+                      {isPublishedOnly ? "(shown on tracking page)" : "(early publish link)"}
+                    </span>
+                  </Label>
+                  <Input
+                    id="published-url"
+                    type="url"
+                    value={publishedUrl}
+                    onChange={(e) => setPublishedUrl(e.target.value)}
+                    placeholder="https://urdunovelbanks.com/novel/..."
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {isPublishedOnly 
+                      ? "A \"View Your Novel\" button appears on the writer's tracking page linking here."
+                      : "Add this early to have the novel auto-publish when its Estimated Publish Date arrives. Leave blank if not ready yet."}
+                  </p>
+                </div>
+              );
+            })()}
 
             {/* Estimated Publish Date */}
             <div className="space-y-1.5">
