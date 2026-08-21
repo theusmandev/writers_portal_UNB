@@ -11,7 +11,7 @@
  */
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import type { SubmissionStatus } from "@/data/content";
-import type { WriterRow, SubmissionRow, PublicWriterRow, SiteSettingsRow } from "@/lib/supabase.types";
+import type { WriterRow, SubmissionRow, PublicWriterRow, SiteSettingsRow, FeaturedWriterPublic } from "@/lib/supabase.types";
 
 // ── Public Types ──────────────────────────────────────────────────────────────
 
@@ -1045,6 +1045,36 @@ export async function toggleWriterPublic(id: string, isPublic: boolean): Promise
   }
 }
 
+export async function setFeaturedWriter(
+  writerId: string,
+  isFeatured: boolean,
+  featuredBio: string,
+  featuredSlug: string,
+  lookerStudioEmbedUrl: string
+): Promise<ApiResult<null>> {
+  try {
+    const { error } = await supabase.rpc("admin_set_featured_writer", {
+      p_writer_id: writerId,
+      p_is_featured: isFeatured,
+      p_featured_bio: featuredBio || null,
+      p_featured_slug: featuredSlug.trim() || null,
+      p_looker_studio_embed_url: lookerStudioEmbedUrl.trim() || null,
+    });
+
+    if (error) {
+      // Postgres unique violation on featured_slug (error code 23505)
+      if (error.code === "23505" && error.message.includes("featured_slug")) {
+        return { success: false, error: "__SLUG_COLLISION__" };
+      }
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data: null };
+  } catch (err: any) {
+    return { success: false, error: err?.message || "Failed to update featured writer settings." };
+  }
+}
+
 // ── Public: Posts ─────────────────────────────────────────────────────────────
 
 import type { PostRow } from "@/lib/supabase.types";
@@ -1244,6 +1274,36 @@ export async function removeEpisodeMinimumException(id: string): Promise<ApiResu
     return { success: true, data: null };
   } catch (err: any) {
     return { success: false, error: err?.message || "Could not remove exception." };
+  }
+}
+
+// ── Public: Featured Writer ───────────────────────────────────────────────────
+
+/**
+ * Fetches a featured writer's public profile by their slug.
+ * Calls get_featured_writer_public() which explicitly DOES NOT return
+ * dashboard_token or looker_studio_embed_url — those are excluded at
+ * the database level (migration 021).
+ *
+ * Returns null data when the slug is not found or is_featured = false.
+ */
+
+export async function getFeaturedWriterBySlug(
+  slug: string
+): Promise<ApiResult<FeaturedWriterPublic | null>> {
+  if (!isSupabaseConfigured) return { success: true, data: null };
+  try {
+    const { data, error } = await supabase.rpc("get_featured_writer_public", {
+      p_slug: slug,
+    });
+    if (error) throw error;
+    const rows = (data ?? []) as FeaturedWriterPublic[];
+    return { success: true, data: rows[0] ?? null };
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err?.message || "Could not load featured writer.",
+    };
   }
 }
 

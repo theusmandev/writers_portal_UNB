@@ -23,6 +23,12 @@ export interface Database {
           registration_date: string;
           status: string;
           is_public: boolean;
+          // ── Featured Writer (migration 021) ──────────────────────────
+          is_featured: boolean;
+          featured_bio: string | null;
+          featured_slug: string | null;
+          looker_studio_embed_url: string | null;
+          dashboard_token: string | null;
         };
         Insert: Omit<Database["public"]["Tables"]["writers"]["Row"], "id" | "registration_date"> & {
           id?: string;
@@ -212,7 +218,26 @@ export interface Database {
         };
       };
     };
-    Functions: Record<string, any>;
+    Functions: {
+      get_featured_writer_public: {
+        Args: { p_slug: string };
+        Returns: Array<{
+          full_name: string;
+          pen_name: string | null;
+          featured_bio: string | null;
+          featured_slug: string | null;
+          social_media_link: string | null;
+          published_novels: Array<{
+            novel_title: string;
+            genre: string | null;
+            published_url: string | null;
+          }>;
+          // NOTE: dashboard_token and looker_studio_embed_url are
+          // deliberately NOT in this return type — they are excluded
+          // at the database level in 021_featured_writer_system.sql.
+        }>;
+      };
+    };
     Enums: Record<string, never>;
   };
 }
@@ -225,3 +250,18 @@ export type EpisodeRow = Database["public"]["Tables"]["episodes"]["Row"];
 export type PostRow = Database["public"]["Tables"]["posts"]["Row"];
 export type PublicWriterRow = Database["public"]["Views"]["public_writers_view"]["Row"];
 export type SiteSettingsRow = Database["public"]["Tables"]["site_settings"]["Row"];
+
+/** Shape returned by get_featured_writer_public() RPC.
+ *  dashboard_token and looker_studio_embed_url are NOT present — excluded at DB level. */
+export type FeaturedWriterPublic = {
+  full_name: string;
+  pen_name: string | null;
+  featured_bio: string | null;
+  featured_slug: string | null;
+  social_media_link: string | null;
+  published_novels: Array<{
+    novel_title: string;
+    genre: string | null;
+    published_url: string | null;
+  }>;
+};
