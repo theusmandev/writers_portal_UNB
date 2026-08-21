@@ -1,7 +1,13 @@
 import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Loader2, Search, ExternalLink, AlertCircle, Send, CheckCircle2, BookOpen, Calendar, XCircle, FileText, Plus, Trash2 } from "lucide-react";
+import { Loader2, Search, ExternalLink, AlertCircle, Send, CheckCircle2, BookOpen, Calendar, XCircle, FileText, Plus, Trash2, Copy, Check, Share, MessageCircle, Twitter, Facebook } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -506,6 +512,36 @@ function PublishedCard({ record }: { record: SubmissionRecord }) {
   const publishedEpisodes = record.episodes?.filter(e => e.published) || [];
   const isEpisodeAware = record.novelStatus === "Ongoing" && publishedEpisodes.length > 0;
   
+  const [copied, setCopied] = useState(false);
+  const url = record.publishedUrl || "";
+  const novelTitle = record.novelTitle || "a novel";
+
+  const handleCopy = () => {
+    if (!url) return;
+    navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+
+  const handleNativeShare = async () => {
+    if (!url) return;
+    try {
+      await navigator.share({
+        title: novelTitle,
+        text: `Read "${novelTitle}" on Urdu Novel Bank!`,
+        url: url,
+      });
+    } catch (e) {
+      // Ignore abort/cancel errors
+    }
+  };
+
+  const canNativeShare = typeof navigator !== "undefined" && !!navigator.share;
+  
+  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`Read "${novelTitle}" on Urdu Novel Bank!\n${url}`)}`;
+  const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+  const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(`Read "${novelTitle}" on Urdu Novel Bank!`)}&url=${encodeURIComponent(url)}`;
+
   let epText = "";
   if (isEpisodeAware) {
     const count = publishedEpisodes.length;
@@ -557,15 +593,74 @@ function PublishedCard({ record }: { record: SubmissionRecord }) {
         </p>
 
         {record.publishedUrl && (
-          <a
-            id="view-your-novel-btn"
-            href={record.publishedUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 hover:shadow-md active:scale-95"
-          >
-            View Your Novel <ExternalLink className="h-4 w-4" />
-          </a>
+          <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <a
+              id="view-your-novel-btn"
+              href={record.publishedUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 hover:shadow-md active:scale-95"
+            >
+              View Your Novel <ExternalLink className="h-4 w-4" />
+            </a>
+
+            <div className="flex w-full sm:w-auto items-center justify-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-10 w-full sm:w-auto rounded-xl gap-2 font-medium bg-background/50 hover:bg-background border-border"
+                onClick={handleCopy}
+              >
+                {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4 text-muted-foreground" />}
+                {copied ? "Copied!" : "Copy Link"}
+              </Button>
+
+              {canNativeShare ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-10 w-full sm:w-auto rounded-xl gap-2 font-medium bg-background/50 hover:bg-background border-border"
+                  onClick={handleNativeShare}
+                >
+                  <Share className="h-4 w-4 text-muted-foreground" />
+                  Share
+                </Button>
+              ) : (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-10 w-full sm:w-auto rounded-xl gap-2 font-medium bg-background/50 hover:bg-background border-border"
+                    >
+                      <Share className="h-4 w-4 text-muted-foreground" />
+                      Share
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="center" className="w-48 rounded-xl">
+                    <DropdownMenuItem asChild className="rounded-lg cursor-pointer py-2.5 my-0.5">
+                      <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+                        <MessageCircle className="h-4 w-4 text-[#25D366]" />
+                        <span className="font-medium">WhatsApp</span>
+                      </a>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild className="rounded-lg cursor-pointer py-2.5 my-0.5">
+                      <a href={facebookUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+                        <Facebook className="h-4 w-4 text-[#1877F2]" />
+                        <span className="font-medium">Facebook</span>
+                      </a>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild className="rounded-lg cursor-pointer py-2.5 my-0.5">
+                      <a href={twitterUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+                        <Twitter className="h-4 w-4 text-[#1DA1F2]" />
+                        <span className="font-medium">Twitter</span>
+                      </a>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
+          </div>
         )}
       </div>
     </div>
@@ -1101,10 +1196,10 @@ export default function TrackPage() {
             {/* List results */}
             {submissionsList && (
               <div className="space-y-4">
-                {submissionsList.length > 0 && submissionsList[0].full_name && (
+                {submissionsList.length > 0 && submissionsList[0]?.full_name && (
                   <div className="mb-8 text-center">
                     <h2 className="font-display text-2xl font-semibold text-foreground mb-2">
-                      Welcome, {submissionsList[0].full_name}
+                      Welcome, {submissionsList[0]?.full_name}
                     </h2>
                     <p className="text-muted-foreground text-sm">
                       Here are all your submissions.
