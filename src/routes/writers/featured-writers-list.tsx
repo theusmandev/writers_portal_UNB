@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { ExternalLink, BookOpen, User, AlertCircle, Star } from "lucide-react";
+import { AlertCircle, Star } from "lucide-react";
 import { PageHero } from "@/components/portal/PageHero";
 import { WriterCard } from "@/components/portal/WriterCard";
 import { supabase } from "@/lib/supabase";
 import type { PublicWriterRow } from "@/lib/supabase.types";
 import { SEO } from "@/components/SEO";
 
-export default function WritersPage() {
+export default function FeaturedWritersList() {
   const [writers, setWriters] = useState<PublicWriterRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -16,9 +15,10 @@ export default function WritersPage() {
     async function load() {
       const { data, error: err } = await supabase.rpc("get_public_writers");
       if (err) {
-        setError("Could not load the writers directory. Please try again later.");
+        setError("Could not load the featured writers. Please try again later.");
       } else {
-        setWriters((data ?? []) as PublicWriterRow[]);
+        const allWriters = (data ?? []) as PublicWriterRow[];
+        setWriters(allWriters.filter(w => w.is_featured));
       }
       setLoading(false);
     }
@@ -28,14 +28,14 @@ export default function WritersPage() {
   return (
     <div>
       <SEO 
-        title="Our Published Writers | Urdu Novel Bank" 
-        description="Explore the directory of talented writers published by Urdu Novel Bank. Discover the authors behind your favorite Urdu stories and novels." 
+        title="Featured Writers | Urdu Novel Bank" 
+        description="Discover the featured writers at Urdu Novel Bank. Explore profiles of our standout authors." 
       />
       <PageHero
-        eyebrow="Published Authors"
-        title="Our Writers"
-        titleUrdu="ہمارے ادیب"
-        description="Talented authors who have shared their work with Urdu Novel Bank readers."
+        eyebrow="Standout Authors"
+        title="Featured Writers"
+        titleUrdu="نمایاں ادیب"
+        description="Our standout authors who bring exceptional stories to Urdu Novel Bank readers."
       />
 
       <div className="mx-auto max-w-5xl px-5 py-12">
@@ -54,9 +54,9 @@ export default function WritersPage() {
 
         {!loading && !error && writers.length === 0 && (
           <div className="py-16 text-center">
-            <BookOpen className="mx-auto h-10 w-10 text-muted-foreground/40" />
+            <Star className="mx-auto h-10 w-10 text-muted-foreground/40" />
             <p className="mt-4 text-muted-foreground">
-              No published writers yet — check back soon.
+              No featured writers yet. Check back soon.
             </p>
           </div>
         )}
@@ -64,7 +64,7 @@ export default function WritersPage() {
         {!loading && writers.length > 0 && (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {writers.map((writer) => (
-              <WriterCard key={writer.id} writer={writer} />
+              <WriterCard key={writer.id} writer={writer} hideFeaturedBadge />
             ))}
           </div>
         )}
@@ -72,4 +72,3 @@ export default function WritersPage() {
     </div>
   );
 }
-
