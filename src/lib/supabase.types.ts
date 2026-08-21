@@ -229,6 +229,7 @@ export interface Database {
           full_name: string;
           pen_name: string | null;
           looker_studio_embed_url: string | null;
+          featured_slug: string | null;
           // NOTE: dashboard_token is NOT in this return type.
           // The DB function never surfaces it back to the caller.
         }>;
@@ -272,6 +273,7 @@ export type WriterDashboardData = {
   full_name: string;
   pen_name: string | null;
   looker_studio_embed_url: string | null;
+  featured_slug: string | null;
 };
 
 /** Shape returned by get_featured_writer_public() RPC.

@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { Loader2, BarChart2, LinkIcon, Lock } from "lucide-react";
 import { getWriterDashboardByToken } from "@/services/portalApi";
 import type { WriterDashboardData } from "@/lib/supabase.types";
+import { Button } from "@/components/ui/button";
 import { SEO } from "@/components/SEO";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -160,6 +161,22 @@ export default function WriterStatsPage() {
             </p>
           </div>
         )}
+
+        {/* Navigation Actions */}
+        <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          {dashboard.featured_slug && (
+            <Button asChild variant="outline" className="w-full sm:w-auto border-primary/20 text-primary hover:bg-primary/5">
+              <Link to={`/writers/featured/${dashboard.featured_slug}`}>
+                View Your Profile
+              </Link>
+            </Button>
+          )}
+          <Button asChild variant="outline" className="w-full sm:w-auto border-border">
+            <Link to="/">
+              Back to Home
+            </Link>
+          </Button>
+        </div>
 
         {/* Footer note */}
         <div className="mt-5 flex items-center justify-center gap-1.5 text-xs text-muted-foreground/50">
