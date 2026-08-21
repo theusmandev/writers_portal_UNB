@@ -825,6 +825,64 @@ function ProgressTimeline({ activeIndex }: { activeIndex: number }) {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
+const SHOW_COUNTDOWN_STATUSES = ["Approved", "Formatting", "Scheduled for Publication"];
+
+function PublishCountdown({ estimatedPublishAt, isSmall = false }: { estimatedPublishAt: string; isSmall?: boolean }) {
+  const [timeLeft, setTimeLeft] = useState<{ days: number; hours: number; minutes: number } | null>(null);
+  const [isPast, setIsPast] = useState(false);
+
+  useEffect(() => {
+    const targetDate = new Date(estimatedPublishAt).getTime();
+
+    function update() {
+      const now = new Date().getTime();
+      const diff = targetDate - now;
+
+      if (diff <= 0) {
+        setIsPast(true);
+        setTimeLeft(null);
+      } else {
+        setIsPast(false);
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        setTimeLeft({ days, hours, minutes });
+      }
+    }
+
+    update();
+    const interval = setInterval(update, 60000);
+    return () => clearInterval(interval);
+  }, [estimatedPublishAt]);
+
+  const containerClass = isSmall
+    ? "mt-3 flex items-center gap-1.5 rounded bg-amber-500/10 px-2.5 py-2 text-[11px] text-amber-700 font-medium"
+    : "mt-6 flex items-center gap-3 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 sm:p-5 text-sm text-amber-700 shadow-sm";
+
+  if (isPast) {
+    return (
+      <div className={containerClass}>
+        <Calendar className={isSmall ? "h-3.5 w-3.5 shrink-0" : "h-5 w-5 shrink-0"} />
+        <span>Publishing very soon...</span>
+      </div>
+    );
+  }
+
+  if (!timeLeft) return null;
+
+  const parts = [];
+  if (timeLeft.days > 0) parts.push(`${timeLeft.days} ${timeLeft.days === 1 ? 'day' : 'days'}`);
+  if (timeLeft.hours > 0) parts.push(`${timeLeft.hours} ${timeLeft.hours === 1 ? 'hour' : 'hours'}`);
+  if (timeLeft.minutes > 0 || parts.length === 0) parts.push(`${timeLeft.minutes} ${timeLeft.minutes === 1 ? 'min' : 'mins'}`);
+
+  return (
+    <div className={containerClass}>
+      <Calendar className={isSmall ? "h-3.5 w-3.5 shrink-0" : "h-5 w-5 shrink-0"} />
+      <span>Estimated publish in: <strong>{parts.join(", ")}</strong></span>
+    </div>
+  );
+}
+
 export default function TrackPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<"by-id" | "by-email">("by-id");
@@ -1133,6 +1191,11 @@ export default function TrackPage() {
                   />
                 )}
 
+                {/* Countdown display */}
+                {record.estimatedPublishAt && SHOW_COUNTDOWN_STATUSES.includes(record.status) && (
+                  <PublishCountdown estimatedPublishAt={record.estimatedPublishAt} />
+                )}
+
                 {/* Progress timeline — shown for all non-terminal statuses */}
                 {!isSpecialStatus && record.status !== "Withdrawn" && (
                   <ProgressTimeline activeIndex={activeIndex} />
@@ -1244,6 +1307,11 @@ export default function TrackPage() {
                               {formatDate(sub.submission_date)}
                             </span>
                           </div>
+
+                          {/* Countdown display (list view) */}
+                          {sub.estimated_publish_at && SHOW_COUNTDOWN_STATUSES.includes(sub.current_status) && (
+                            <PublishCountdown estimatedPublishAt={sub.estimated_publish_at} isSmall={true} />
+                          )}
                         </div>
 
                         <div className="mt-4 pt-3 border-t border-border/50 flex flex-wrap justify-between items-center gap-2 text-xs">
