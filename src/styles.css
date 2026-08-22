@@ -181,7 +181,9 @@
     display: none !important;
   }
   .icon-pop-anim,
-  .published-card-anim {
+  .published-card-anim,
+  .icon-pulse-glow,
+  .publishing-dot {
     animation: none !important;
   }
 }
@@ -195,4 +197,41 @@
 }
 .progress-waiting {
   animation: progressPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Publishing very soon animations */
+@keyframes iconPulseGlow {
+  0%, 100% { 
+    transform: scale(1); 
+    opacity: 0.8; 
+    filter: drop-shadow(0 0 0 rgba(212, 162, 76, 0)); 
+  }
+  50% { 
+    transform: scale(1.1); 
+    opacity: 1; 
+    filter: drop-shadow(0 0 6px rgba(212, 162, 76, 0.5)); 
+  }
+}
+
+.icon-pulse-glow {
+  animation: iconPulseGlow 2s ease-in-out infinite;
+}
+
+@keyframes dotBlink {
+  0%, 20% { opacity: 0; }
+  50% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.publishing-dot {
+  animation: dotBlink 1.4s infinite both;
+}
+.publishing-dot:nth-child(1) {
+  animation-delay: 0s;
+}
+.publishing-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.publishing-dot:nth-child(3) {
+  animation-delay: 0.4s;
 }

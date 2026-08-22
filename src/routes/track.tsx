@@ -862,10 +862,28 @@ function PublishCountdown({ estimatedPublishAt, hideOnPast = false, isSmall = fa
 
   if (isPast) {
     if (hideOnPast) return null;
+    
+    const textBadgeClass = isSmall
+      ? "flex items-center px-2.5 py-0.5 rounded-md bg-white/70 dark:bg-black/20 shadow-sm border border-amber-500/20 dark:border-amber-400/20"
+      : "flex items-center px-4 py-1 rounded-lg bg-white/70 dark:bg-black/20 shadow-sm border border-amber-500/20 dark:border-amber-400/20";
+      
+    const textStyleClass = isSmall
+      ? "font-semibold text-[12px] tracking-[0.02em] bg-gradient-to-r from-amber-700 to-amber-500 dark:from-amber-300 dark:to-amber-100 bg-clip-text text-transparent"
+      : "font-semibold text-[15px] tracking-[0.02em] bg-gradient-to-r from-amber-700 to-amber-500 dark:from-amber-300 dark:to-amber-100 bg-clip-text text-transparent";
+
     return (
       <div className={containerClass}>
-        <Calendar className={isSmall ? "h-3.5 w-3.5 shrink-0" : "h-5 w-5 shrink-0"} />
-        <span className={isSmall ? "" : "text-sm"}>Publishing very soon...</span>
+        <Calendar className={`text-amber-600 ${isSmall ? "h-3.5 w-3.5 shrink-0 icon-pulse-glow" : "h-5 w-5 shrink-0 icon-pulse-glow"}`} />
+        <div className={textBadgeClass}>
+          <span className={textStyleClass}>
+            Publishing very soon
+            <span className="inline-flex ml-[1px]">
+              <span className="publishing-dot">.</span>
+              <span className="publishing-dot">.</span>
+              <span className="publishing-dot">.</span>
+            </span>
+          </span>
+        </div>
       </div>
     );
   }
