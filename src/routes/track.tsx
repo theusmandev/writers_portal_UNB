@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Loader2, Search, ExternalLink, AlertCircle, Send, CheckCircle2, BookOpen, Calendar, XCircle, FileText, Plus, Trash2, Copy, Check, Share, MessageCircle, Twitter, Facebook } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -826,14 +826,13 @@ function ProgressTimeline({ activeIndex }: { activeIndex: number }) {
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 const SHOW_COUNTDOWN_STATUSES = ["Approved", "Formatting", "Scheduled for Publication"];
-const AUTO_PUBLISH_CHECK_BUFFER_MS = 5 * 60 * 1000;
 
-function PublishCountdown({ estimatedPublishAt, isSmall = false }: { estimatedPublishAt: string; isSmall?: boolean }) {
+function PublishCountdown({ estimatedPublishAt, hideOnPast = false, isSmall = false }: { estimatedPublishAt: string; hideOnPast?: boolean; isSmall?: boolean }) {
   const [timeLeft, setTimeLeft] = useState<{ days: number; hours: number; minutes: number; seconds: number } | null>(null);
   const [isPast, setIsPast] = useState(false);
 
   useEffect(() => {
-    const targetDate = new Date(estimatedPublishAt).getTime() - AUTO_PUBLISH_CHECK_BUFFER_MS;
+    const targetDate = new Date(estimatedPublishAt).getTime();
 
     function update() {
       const now = new Date().getTime();
@@ -862,6 +861,7 @@ function PublishCountdown({ estimatedPublishAt, isSmall = false }: { estimatedPu
     : "mt-6 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 sm:p-5 text-amber-700 shadow-sm";
 
   if (isPast) {
+    if (hideOnPast) return null;
     return (
       <div className={containerClass}>
         <Calendar className={isSmall ? "h-3.5 w-3.5 shrink-0" : "h-5 w-5 shrink-0"} />
@@ -1033,7 +1033,50 @@ export default function TrackPage() {
         missingFiles.push("cover");
       }
     }
+    }
   }
+
+  // ── Optimistic Reveal Logic ──
+  const [isOptimisticPast, setIsOptimisticPast] = useState(false);
+
+  useEffect(() => {
+    if (!record?.estimatedPublishAt) {
+      setIsOptimisticPast(false);
+      return;
+    }
+    const target = new Date(record.estimatedPublishAt).getTime();
+    const update = () => setIsOptimisticPast(Date.now() >= target);
+    update();
+    const interval = setInterval(update, 1000);
+    return () => clearInterval(interval);
+  }, [record?.estimatedPublishAt]);
+
+  const isStatusEligible = record ? SHOW_COUNTDOWN_STATUSES.includes(record.status) : false;
+  const showOptimisticReveal = isStatusEligible && isOptimisticPast && !!record?.publishedUrl;
+
+  const { displayRecord, isOptimisticallyPublished } = useMemo(() => {
+    if (!record) return { displayRecord: null, isOptimisticallyPublished: false };
+    if (!showOptimisticReveal) return { displayRecord: record, isOptimisticallyPublished: false };
+
+    if (record.novelStatus === "Ongoing" && record.episodes) {
+       let virtuallyPublishedCount = 0;
+       const virtualEps = record.episodes.map(ep => {
+         if (ep.published === false && ep.upload_failed === false && !!ep.drive_url) {
+           virtuallyPublishedCount++;
+           return { ...ep, published: true };
+         }
+         return ep;
+       });
+       
+       if (virtuallyPublishedCount > 0) {
+           return { displayRecord: { ...record, episodes: virtualEps }, isOptimisticallyPublished: true }; 
+       }
+       return { displayRecord: record, isOptimisticallyPublished: false };
+    }
+    
+    // For Complete novels
+    return { displayRecord: record, isOptimisticallyPublished: true };
+  }, [record, showOptimisticReveal]);
 
   return (
     <div>
@@ -1190,12 +1233,12 @@ export default function TrackPage() {
                 )}
 
                 {/* Published — celebration card (replaces progress timeline if status is Published, or shown alongside timeline if only episodes are published) */}
-                {(record.status === "Published" || (record.novelStatus === "Ongoing" && record.episodes?.some(ep => ep.published))) && (
-                  <PublishedCard record={record} />
+                {displayRecord && (displayRecord.status === "Published" || (displayRecord.novelStatus === "Ongoing" && displayRecord.episodes?.some(ep => ep.published)) || (isOptimisticallyPublished && displayRecord.novelStatus !== "Ongoing")) && (
+                  <PublishedCard record={displayRecord} />
                 )}
 
                 {/* Rejected — rejection card (replaces progress timeline) */}
-                {record.status === "Rejected" && <RejectedCard record={record} />}
+                {displayRecord?.status === "Rejected" && <RejectedCard record={displayRecord} />}
 
                 {/* Action Required — attention card + response form (shown above timeline) */}
                 {record.status === "Action Required" && (
@@ -1223,8 +1266,8 @@ export default function TrackPage() {
                 )}
 
                 {/* Countdown display */}
-                {record.estimatedPublishAt && SHOW_COUNTDOWN_STATUSES.includes(record.status) && (
-                  <PublishCountdown estimatedPublishAt={record.estimatedPublishAt} />
+                {displayRecord?.estimatedPublishAt && SHOW_COUNTDOWN_STATUSES.includes(displayRecord.status) && (
+                  <PublishCountdown estimatedPublishAt={displayRecord.estimatedPublishAt} hideOnPast={isOptimisticallyPublished} />
                 )}
 
                 {/* Progress timeline — shown for all non-terminal statuses */}
