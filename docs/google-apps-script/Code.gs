@@ -466,8 +466,7 @@ function checkAndSendAutoPublishNotifications() {
     return;
   }
 
-  const endpoint = `${supabaseUrl}/rest/v1/rpc/auto_publish_due_submissions`;
-  const options = {
+  const baseOptions = {
     method: 'post',
     headers: {
       'apikey': supabaseAnonKey,
@@ -478,60 +477,127 @@ function checkAndSendAutoPublishNotifications() {
     muteHttpExceptions: true
   };
 
-  let response;
+  // =========================================================================
+  // BLOCK 1: Complete Novels (auto_publish_due_submissions)
+  // =========================================================================
+  let completeFoundCount = 0;
+  let completeSuccessCount = 0;
+  let completeFailCount = 0;
+
+  const endpointComplete = `${supabaseUrl}/rest/v1/rpc/auto_publish_due_submissions`;
+  let responseComplete;
   try {
-    response = UrlFetchApp.fetch(endpoint, options);
+    responseComplete = UrlFetchApp.fetch(endpointComplete, baseOptions);
   } catch (err) {
-    console.error('Failed to call Supabase RPC:', err);
-    return;
+    console.error('Failed to call Supabase RPC (auto_publish_due_submissions):', err);
   }
 
-  if (response.getResponseCode() !== 200) {
-    console.error(`Supabase RPC error (${response.getResponseCode()}): ${response.getContentText()}`);
-    return;
-  }
-
-  let publishedSubmissions = [];
-  try {
-    publishedSubmissions = JSON.parse(response.getContentText());
-  } catch (err) {
-    console.error('Failed to parse Supabase JSON response:', err);
-    return;
-  }
-
-  if (!Array.isArray(publishedSubmissions) || publishedSubmissions.length === 0) {
-    console.log('No due submissions found for auto-publishing.');
-    return;
-  }
-
-  let successCount = 0;
-  let failCount = 0;
-
-  for (const sub of publishedSubmissions) {
-    try {
-      const emailBody = {
-        emailType: 'published',
-        writerEmail: sub.writer_email,
-        writerName: sub.writer_name,
-        novelTitle: sub.novel_title,
-        submissionCode: sub.submission_code,
-        publishedUrl: sub.published_url
-      };
-      
-      const emailResult = handleSendEmail(emailBody);
-      
-      if (emailResult.success) {
-        successCount++;
-        console.log(`Successfully sent published email for ${sub.submission_code}`);
-      } else {
-        failCount++;
-        console.error(`Failed to send published email for ${sub.submission_code}: ${emailResult.error}`);
+  if (responseComplete) {
+    if (responseComplete.getResponseCode() === 200) {
+      let publishedSubmissions = [];
+      try {
+        publishedSubmissions = JSON.parse(responseComplete.getContentText());
+      } catch (err) {
+        console.error('Failed to parse Supabase JSON response (Complete):', err);
       }
-    } catch (err) {
-      failCount++;
-      console.error(`Exception while sending email for ${sub.submission_code}:`, err);
+
+      if (Array.isArray(publishedSubmissions) && publishedSubmissions.length > 0) {
+        completeFoundCount = publishedSubmissions.length;
+        for (const sub of publishedSubmissions) {
+          try {
+            const emailBody = {
+              emailType: 'published',
+              writerEmail: sub.writer_email,
+              writerName: sub.writer_name,
+              novelTitle: sub.novel_title,
+              submissionCode: sub.submission_code,
+              publishedUrl: sub.published_url
+            };
+            
+            const emailResult = handleSendEmail(emailBody);
+            
+            if (emailResult.success) {
+              completeSuccessCount++;
+              console.log(`Successfully sent published email for ${sub.submission_code}`);
+            } else {
+              completeFailCount++;
+              console.error(`Failed to send published email for ${sub.submission_code}: ${emailResult.error}`);
+            }
+          } catch (err) {
+            completeFailCount++;
+            console.error(`Exception while sending email for ${sub.submission_code}:`, err);
+          }
+        }
+      }
+    } else {
+      console.error(`Supabase RPC error Complete (${responseComplete.getResponseCode()}): ${responseComplete.getContentText()}`);
     }
   }
 
-  console.log(`Auto-publish summary: Found ${publishedSubmissions.length}, Sent ${successCount}, Failed ${failCount}`);
+  // =========================================================================
+  // BLOCK 2: Ongoing Episodes (auto_publish_due_episodes)
+  // =========================================================================
+  let episodeFoundCount = 0;
+  let episodeSuccessCount = 0;
+  let episodeFailCount = 0;
+
+  const endpointEpisodes = `${supabaseUrl}/rest/v1/rpc/auto_publish_due_episodes`;
+  let responseEpisodes;
+  try {
+    responseEpisodes = UrlFetchApp.fetch(endpointEpisodes, baseOptions);
+  } catch (err) {
+    console.error('Failed to call Supabase RPC (auto_publish_due_episodes):', err);
+  }
+
+  if (responseEpisodes) {
+    if (responseEpisodes.getResponseCode() === 200) {
+      let publishedEpisodes = [];
+      try {
+        publishedEpisodes = JSON.parse(responseEpisodes.getContentText());
+      } catch (err) {
+        console.error('Failed to parse Supabase JSON response (Episodes):', err);
+      }
+
+      if (Array.isArray(publishedEpisodes) && publishedEpisodes.length > 0) {
+        episodeFoundCount = publishedEpisodes.length;
+        for (const sub of publishedEpisodes) {
+          try {
+            const emailBody = {
+              emailType: 'episodes_published',
+              writerEmail: sub.writer_email,
+              writerName: sub.writer_name,
+              novelTitle: sub.novel_title,
+              submissionCode: sub.submission_code,
+              publishedUrl: sub.published_url,
+              episodeNumbers: sub.episode_numbers
+            };
+            
+            const emailResult = handleSendEmail(emailBody);
+            
+            if (emailResult.success) {
+              episodeSuccessCount++;
+              console.log(`Successfully sent episodes_published email for ${sub.submission_code} (episodes: ${sub.episode_numbers})`);
+            } else {
+              episodeFailCount++;
+              console.error(`Failed to send episodes_published email for ${sub.submission_code}: ${emailResult.error}`);
+            }
+          } catch (err) {
+            episodeFailCount++;
+            console.error(`Exception while sending episodes_published email for ${sub.submission_code}:`, err);
+          }
+        }
+      }
+    } else {
+      console.error(`Supabase RPC error Episodes (${responseEpisodes.getResponseCode()}): ${responseEpisodes.getContentText()}`);
+    }
+  }
+
+  // =========================================================================
+  // SUMMARY
+  // =========================================================================
+  if (completeFoundCount === 0 && episodeFoundCount === 0) {
+    console.log('No due submissions or episodes found for auto-publishing.');
+  } else {
+    console.log(`Auto-publish summary: Complete novels — Found ${completeFoundCount}, Sent ${completeSuccessCount}, Failed ${completeFailCount}. Episodes — Found ${episodeFoundCount}, Sent ${episodeSuccessCount}, Failed ${episodeFailCount}.`);
+  }
 }
