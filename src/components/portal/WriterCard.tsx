@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ExternalLink, BookOpen, User, Star } from "lucide-react";
 import type { PublicWriterRow } from "@/lib/supabase.types";
@@ -15,8 +16,27 @@ export function WriterCard({ writer, hideFeaturedBadge }: WriterCardProps) {
     published_url: string | null;
   }>;
 
+  // Bio Truncation State
+  const [isBioExpanded, setIsBioExpanded] = useState(false);
+  const [showBioToggle, setShowBioToggle] = useState(false);
+  const bioRef = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    if (bioRef.current) {
+      // If scrollHeight is greater than clientHeight, text is being truncated
+      if (bioRef.current.scrollHeight > bioRef.current.clientHeight) {
+        setShowBioToggle(true);
+      }
+    }
+  }, [writer.bio]);
+
+  // Novels Truncation State
+  const [isNovelsExpanded, setIsNovelsExpanded] = useState(false);
+  const displayedNovels = isNovelsExpanded ? novels : novels.slice(0, 3);
+  const hiddenNovelsCount = novels.length - 3;
+
   return (
-    <article className="flex flex-col rounded-2xl border border-border bg-card shadow-soft overflow-hidden transition-shadow hover:shadow-elegant">
+    <article className="flex flex-col h-full rounded-2xl border border-border bg-card shadow-soft overflow-hidden transition-shadow hover:shadow-elegant">
       {/* Avatar area */}
       <div className="flex items-center gap-3 border-b border-border px-5 py-4">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
@@ -50,23 +70,24 @@ export function WriterCard({ writer, hideFeaturedBadge }: WriterCardProps) {
       {/* Bio */}
       <div className="flex-1 px-5 py-4 flex flex-col">
         {writer.bio ? (
-          <p className="text-sm text-muted-foreground line-clamp-4 leading-relaxed break-words">{writer.bio}</p>
+          <div>
+            <p 
+              ref={bioRef}
+              className={`text-sm text-muted-foreground leading-relaxed break-words ${isBioExpanded ? "" : "line-clamp-4"}`}
+            >
+              {writer.bio}
+            </p>
+            {showBioToggle && (
+              <button
+                onClick={() => setIsBioExpanded(!isBioExpanded)}
+                className="mt-2 text-[11px] font-semibold text-primary hover:underline focus:outline-none"
+              >
+                {isBioExpanded ? "Show less" : "Read more"}
+              </button>
+            )}
+          </div>
         ) : (
           <p className="text-sm text-muted-foreground/50 italic">No bio available.</p>
-        )}
-        
-        {writer.social_media_link && (
-          <div className="mt-auto pt-4">
-            <a
-              href={writer.social_media_link.includes('://') ? writer.social_media_link : `https://${writer.social_media_link}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
-            >
-              <ExternalLink className="h-3.5 w-3.5" />
-              Social Media Profile
-            </a>
-          </div>
         )}
       </div>
 
@@ -77,7 +98,7 @@ export function WriterCard({ writer, hideFeaturedBadge }: WriterCardProps) {
             Published Novels
           </p>
           <ul className="space-y-1.5">
-            {novels.map((novel) => (
+            {displayedNovels.map((novel) => (
               <li key={novel.id} className="flex items-start gap-2 text-sm">
                 <BookOpen className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
                 <span className="flex-1 leading-snug">
@@ -101,6 +122,29 @@ export function WriterCard({ writer, hideFeaturedBadge }: WriterCardProps) {
               </li>
             ))}
           </ul>
+          {hiddenNovelsCount > 0 && (
+            <button
+              onClick={() => setIsNovelsExpanded(!isNovelsExpanded)}
+              className="mt-2.5 text-[11px] font-semibold text-primary hover:underline focus:outline-none"
+            >
+              {isNovelsExpanded ? "Show less" : `+${hiddenNovelsCount} more`}
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Social Media Footer */}
+      {writer.social_media_link && (
+        <div className="border-t border-border/50 px-5 py-3 mt-auto bg-muted/10">
+          <a
+            href={writer.social_media_link.includes('://') ? writer.social_media_link : `https://${writer.social_media_link}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+            Social Media Profile
+          </a>
         </div>
       )}
     </article>
