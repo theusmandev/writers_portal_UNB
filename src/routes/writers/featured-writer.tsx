@@ -7,6 +7,8 @@ import {
   BookOpen,
   ExternalLink,
   UserRound,
+  Share2,
+  Check,
 } from "lucide-react";
 import { getFeaturedWriterBySlug } from "@/services/portalApi";
 import type { FeaturedWriterPublic } from "@/lib/supabase.types";
@@ -26,6 +28,7 @@ export default function FeaturedWriterPage() {
   const [notFound, setNotFound] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [sanitizedBio, setSanitizedBio] = useState("");
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -136,6 +139,33 @@ export default function FeaturedWriterPage() {
       ? `https://${socialLink}`
       : socialLink;
 
+  const handleShare = async () => {
+    const url = window.location.href;
+    const title = `${displayName} — Urdu Novel Bank`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title,
+          url,
+        });
+      } catch (err) {
+        // User cancelled or share failed
+        console.error("Error sharing:", err);
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(url);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch (err) {
+        console.error("Failed to copy:", err);
+      }
+    }
+  };
+
+  const isUrdu = /[\u0600-\u06FF]/.test(sanitizedBio || "");
+
   return (
     <div>
       <SEO
@@ -156,21 +186,53 @@ export default function FeaturedWriterPage() {
       {/* ── Body ── */}
       <div className="mx-auto max-w-3xl px-5 py-12 md:py-16 space-y-12">
 
-        {/* Back link */}
-        <Link
-          to="/writers"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          All writers
-        </Link>
+        {/* Top bar: Back link & Share */}
+        <div className="flex items-center justify-between">
+          <Link
+            to="/writers"
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            All writers
+          </Link>
+
+          <button
+            onClick={handleShare}
+            className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors rounded-md px-3 py-1.5 hover:bg-muted/50"
+          >
+            {copied ? (
+              <>
+                <Check className="h-4 w-4 text-green-600 dark:text-green-500" />
+                <span className="text-green-600 dark:text-green-500">Link copied!</span>
+              </>
+            ) : (
+              <>
+                <Share2 className="h-4 w-4" />
+                Share profile
+              </>
+            )}
+          </button>
+        </div>
 
         {/* ── Featured bio ── */}
         {sanitizedBio ? (
-          <section aria-label="Writer biography">
+          <section aria-label="Writer biography" className="relative mt-8">
             <h2 className="sr-only">Biography</h2>
+            
+            {/* Decorative quote mark */}
+            <div 
+              className={`absolute -top-10 text-[10rem] text-primary/10 font-serif select-none pointer-events-none leading-none ${isUrdu ? '-right-4' : '-left-6'}`}
+              aria-hidden="true"
+            >
+              &ldquo;
+            </div>
+
             <div
-              className="urdu prose prose-lg prose-stone dark:prose-invert max-w-none prose-headings:font-urdu prose-a:text-primary hover:prose-a:text-primary/80 prose-p:leading-loose prose-headings:leading-[1.8] leading-loose"
+              className={`relative z-10 urdu prose prose-lg prose-stone dark:prose-invert max-w-none prose-headings:font-urdu prose-a:text-primary hover:prose-a:text-primary/80 prose-p:leading-loose prose-headings:leading-[1.8] leading-loose ${
+                !isUrdu
+                  ? "[&>p:first-of-type::first-letter]:text-7xl [&>p:first-of-type::first-letter]:font-serif [&>p:first-of-type::first-letter]:text-primary [&>p:first-of-type::first-letter]:float-left [&>p:first-of-type::first-letter]:mr-4 [&>p:first-of-type::first-letter]:leading-[0.8] [&>p:first-of-type::first-letter]:mt-2"
+                  : "border-r-4 border-primary/40 pr-6"
+              }`}
               dir="auto"
               dangerouslySetInnerHTML={{ __html: sanitizedBio }}
             />
