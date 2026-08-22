@@ -63,9 +63,9 @@ function fmt(iso: string) {
 function InfoRow({ label, value }: { label: string; value?: string | number | null | undefined }) {
   if (!value && value !== 0) return null;
   return (
-    <div>
-      <dt className="text-xs text-muted-foreground uppercase tracking-wide">{label}</dt>
-      <dd className="mt-0.5 text-sm font-medium">{value}</dd>
+    <div className="min-w-0">
+      <dt className="text-xs text-muted-foreground uppercase tracking-wide truncate">{label}</dt>
+      <dd className="mt-0.5 text-sm font-medium break-words break-all">{value}</dd>
     </div>
   );
 }
