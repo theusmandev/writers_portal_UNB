@@ -1033,7 +1033,6 @@ export default function TrackPage() {
         missingFiles.push("cover");
       }
     }
-    }
   }
 
   // ── Optimistic Reveal Logic ──
