@@ -174,7 +174,7 @@ export default function AdminWriters() {
                   >
                     <td className="px-4 py-3 font-medium">{w.full_name}</td>
                     <td className="px-4 py-3 text-muted-foreground">{w.pen_name ?? "—"}</td>
-                    <td className="px-4 py-3 text-muted-foreground text-xs">{w.email}</td>
+                    <td className="px-4 py-3 text-muted-foreground text-xs break-all max-w-[150px] sm:max-w-[250px]">{w.email}</td>
                     <td className="px-4 py-3 text-center tabular-nums">{w.submission_count}</td>
                     <td className="px-4 py-3 text-muted-foreground text-xs">{formatDate(w.registration_date)}</td>
                     <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
