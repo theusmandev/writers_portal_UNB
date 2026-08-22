@@ -826,13 +826,14 @@ function ProgressTimeline({ activeIndex }: { activeIndex: number }) {
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 const SHOW_COUNTDOWN_STATUSES = ["Approved", "Formatting", "Scheduled for Publication"];
+const AUTO_PUBLISH_CHECK_BUFFER_MS = 5 * 60 * 1000;
 
 function PublishCountdown({ estimatedPublishAt, isSmall = false }: { estimatedPublishAt: string; isSmall?: boolean }) {
   const [timeLeft, setTimeLeft] = useState<{ days: number; hours: number; minutes: number; seconds: number } | null>(null);
   const [isPast, setIsPast] = useState(false);
 
   useEffect(() => {
-    const targetDate = new Date(estimatedPublishAt).getTime();
+    const targetDate = new Date(estimatedPublishAt).getTime() - AUTO_PUBLISH_CHECK_BUFFER_MS;
 
     function update() {
       const now = new Date().getTime();
