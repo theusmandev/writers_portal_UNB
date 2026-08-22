@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { supabase } from "@/lib/supabase";
-import { getWriterWithSubmissions, setFeaturedWriter, type WriterDetailWithSubmissions } from "@/services/portalApi";
+import { getWriterWithSubmissions, setFeaturedWriter, toggleWriterPublic, type WriterDetailWithSubmissions } from "@/services/portalApi";
 
 const statusColors: Record<string, string> = {
   Received: "bg-blue-500/10 text-blue-600",
@@ -58,6 +58,7 @@ export default function AdminWriterDetail() {
   const [bio, setBio] = useState("");
   const [socialMediaLink, setSocialMediaLink] = useState("");
   const [isPublic, setIsPublic] = useState(false);
+  const [togglingPublic, setTogglingPublic] = useState(false);
 
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
@@ -114,6 +115,23 @@ export default function AdminWriterDetail() {
       if (w.is_featured) setFeaturedOpen(true);
     }
     setLoading(false);
+  }
+
+  async function handleTogglePublic() {
+    if (!writer || !id) return;
+    setTogglingPublic(true);
+    const newStatus = !isPublic;
+    
+    const res = await toggleWriterPublic(id, newStatus);
+    
+    if (res.success) {
+      setIsPublic(newStatus);
+      setWriter({ ...writer, is_public: newStatus });
+    } else {
+      console.error("Failed to toggle public status:", res.error);
+      // We don't optimistically update, so no need to revert, just clear loading
+    }
+    setTogglingPublic(false);
   }
 
   // ── Profile save ─────────────────────────────────────────────────────────────
@@ -249,14 +267,17 @@ export default function AdminWriterDetail() {
             )}
           </div>
           <button
-            onClick={() => setIsPublic(!isPublic)}
-            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+            onClick={() => void handleTogglePublic()}
+            disabled={togglingPublic}
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50 ${
               isPublic
                 ? "bg-green-500/10 text-green-600 hover:bg-green-500/20"
                 : "bg-muted text-muted-foreground hover:bg-muted/80"
             }`}
           >
-            {isPublic ? (
+            {togglingPublic ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : isPublic ? (
               <>
                 <Globe className="h-3.5 w-3.5" /> Public on /writers
               </>
