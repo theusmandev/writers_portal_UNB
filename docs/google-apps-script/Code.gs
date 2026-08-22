@@ -54,17 +54,6 @@ function jsonResponse(obj) {
 }
 
 // ── PART 1: FILE UPLOAD TO DRIVE ─────────────────────────────
-/**
- * Expected body:
- * {
- *   action: 'uploadFile',
- *   submissionCode: 'UNB-2026-0001' | 'uuid-token-for-posts',
- *   fileType: 'manuscript' | 'cover' | 'image',
- *   fileName: 'my-novel.pdf',
- *   mimeType: 'application/pdf',
- *   base64Data: '...'
- * }
- */
 function handleFileUpload(body) {
   const { submissionCode, fileType, fileName, mimeType, base64Data, episodeNumber } = body;
 
@@ -77,11 +66,10 @@ function handleFileUpload(body) {
 
   const lock = LockService.getScriptLock();
   try {
-    lock.waitLock(30000); // wait up to 30 seconds for the lock
+    lock.waitLock(30000);
     
     rootFolder = getOrCreateFolder(CONFIG.ROOT_FOLDER_NAME, DriveApp.getRootFolder());
 
-    // Handle post image uploads specifically
     if (fileType === 'image') {
       const postsRoot = getOrCreateFolder(CONFIG.POSTS_ROOT_FOLDER, rootFolder);
       const shortToken = submissionCode.substring(0, 8);
@@ -103,7 +91,6 @@ function handleFileUpload(body) {
         targetFolder = postsRoot.createFolder(prefix);
       }
     } else {
-      // Manuscript, cover, and episode submissions logic
       const year = submissionCode.match(/UNB-(\d{4})-/)
         ? submissionCode.match(/UNB-(\d{4})-/)[1]
         : new Date().getFullYear().toString();
@@ -137,8 +124,6 @@ function handleFileUpload(body) {
   }
 
   const file = targetFolder.createFile(blob);
-
-  // Make file viewable via link (not publicly searchable/indexed)
   file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
 
   return {
@@ -158,14 +143,6 @@ function getOrCreateFolder(name, parentFolder) {
 }
 
 // ── PART 1B: RENAME POST FOLDER ──────────────────────────────
-/**
- * Expected body:
- * {
- *   action: 'renamePostFolder',
- *   token: 'uuid-token-for-posts',
- *   title: 'The Post Title'
- * }
- */
 function handleRenamePostFolder(body) {
   const { token, title } = body;
   
@@ -201,7 +178,6 @@ function handleRenamePostFolder(body) {
       
       const newName = `${prefix} - ${safeTitle}`;
       
-      // Only rename if it's different to save API calls
       if (targetFolder.getName() !== newName) {
         targetFolder.setName(newName);
       }
@@ -212,19 +188,10 @@ function handleRenamePostFolder(body) {
     lock.releaseLock();
   }
 
-  // We return success even if no folder was found, because it's valid for a post
-  // to be saved without ever having uploaded any images.
   return { success: true };
 }
 
 // ── PART 1C: DELETE SUBMISSION FOLDER (TRASH) ────────────────
-/**
- * Expected body:
- * {
- *   action: 'deleteSubmissionFolder',
- *   submissionCode: 'UNB-2026-0001'
- * }
- */
 function handleDeleteSubmissionFolder(body) {
   const { submissionCode } = body;
   
@@ -238,7 +205,6 @@ function handleDeleteSubmissionFolder(body) {
     
     const rootFolder = getOrCreateFolder(CONFIG.ROOT_FOLDER_NAME, DriveApp.getRootFolder());
     
-    // Extract year from submission code (e.g., 'UNB-2026-0001' -> '2026')
     const year = submissionCode.match(/UNB-(\d{4})-/)
         ? submissionCode.match(/UNB-(\d{4})-/)[1]
         : new Date().getFullYear().toString();
@@ -251,7 +217,6 @@ function handleDeleteSubmissionFolder(body) {
       const submissionFolder = existing.next();
       submissionFolder.setTrashed(true);
     }
-    // If the folder doesn't exist, we just return success gracefully
     
   } catch (err) {
     return { success: false, error: 'Failed to delete folder: ' + err.message };
@@ -264,22 +229,6 @@ function handleDeleteSubmissionFolder(body) {
 
 
 // ── PART 2: EMAIL NOTIFICATIONS ──────────────────────────────
-/**
- * Expected body:
- * {
- *   action: 'sendEmail',
- *   emailType: 'received' | 'action_required' | 'rejected' | 'published' | 'episodes_added' | 'episodes_published',
- *   writerEmail: 'writer@example.com',
- *   writerName: 'Ahmad Ali',
- *   novelTitle: 'Mera Safar',
- *   submissionCode: 'UNB-2026-0001',
- *   statusNote: '...' (optional, for action_required / rejected),
- *   publishedUrl: '...' (optional, for published),
- *   missingFiles: '...' (optional, for received — e.g. 'manuscript', 'cover', 
- *                 or 'manuscript and cover' — only set when a file upload 
- *                 permanently failed)
- * }
- */
 function handleSendEmail(body) {
   const {
     emailType, writerEmail, writerName, novelTitle, submissionCode,
@@ -329,7 +278,7 @@ function handleSendEmail(body) {
           ${missingFilesNote}
           <p>Please save this ID — you'll need it to track your submission's progress.</p>
         `,
-        bodyUrdu: 'براہِ کرم اپنی سب کچھ محفوظ کریں، آپ اپنی تحریر کی صورتحال ٹریک کرنے کے لیے اسے استعمال کر سکتے ہیں۔',
+        bodyUrdu: 'براہِ کرم اپنی سبمیشن آئی ڈی محفوظ کریں، آپ اپنی تحریر کی صورتحال ٹریک کرنے کے لیے اسے استعمال کر سکتے ہیں۔',
         ctaText: 'Track Your Submission',
         ctaLink: trackLink
       });
@@ -381,7 +330,8 @@ function handleSendEmail(body) {
       break;
 
     case 'published':
-      subject = `🎉 Your Novel is Published! — ${submissionCode}`;
+      // Subject now includes the novel title
+      subject = `🎉 Your Novel "${novelTitle || 'Untitled'}" is Published! — ${submissionCode}`;
       html = buildEmailTemplate({
         heading: '🎉 Congratulations! Your Novel is Published',
         headingUrdu: 'مبارک ہو! آپ کا ناول شائع ہو گیا',
@@ -391,8 +341,9 @@ function handleSendEmail(body) {
           is now published on Urdu Novel Bank!</p>
         `,
         bodyUrdu: 'ہمیں خوشی ہے کہ آپ کا ناول اردو ناول بینک پر شائع ہو گیا ہے۔',
-        ctaText: publishedUrl ? 'View Your Novel' : 'Track Submission',
-        ctaLink: publishedUrl || trackLink
+        // Button always says "Track Submission" now, and always links to the tracking page
+        ctaText: 'Track Submission',
+        ctaLink: trackLink
       });
       break;
 
@@ -417,10 +368,12 @@ function handleSendEmail(body) {
       const epNumsStr = body.episodeNumbers || "";
       const epCount = epNumsStr.split(',').length;
       const isSingular = epCount === 1;
+      const titleForSubject = novelTitle || 'Untitled';
 
+      // Subject now includes the novel title
       subject = isSingular 
-        ? `🎉 New Episode Published! — ${submissionCode}` 
-        : `🎉 New Episodes Published! — ${submissionCode}`;
+        ? `🎉 New Episode of "${titleForSubject}" Published! — ${submissionCode}` 
+        : `🎉 New Episodes of "${titleForSubject}" Published! — ${submissionCode}`;
 
       html = buildEmailTemplate({
         heading: isSingular ? '🎉 New Episode Is Live' : '🎉 New Episodes Are Live',
@@ -500,4 +453,85 @@ function buildEmailTemplate({ heading, headingUrdu, body, bodyUrdu, ctaText, cta
     </div>
   </div>
   `;
+}
+
+// ── PART 3: AUTO-PUBLISH CHECKER ──────────────────────────────
+function checkAndSendAutoPublishNotifications() {
+  const props = PropertiesService.getScriptProperties();
+  const supabaseUrl = props.getProperty('SUPABASE_URL');
+  const supabaseAnonKey = props.getProperty('SUPABASE_ANON_KEY');
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error('Missing SUPABASE_URL or SUPABASE_ANON_KEY in Script Properties. Aborting auto-publish check.');
+    return;
+  }
+
+  const endpoint = `${supabaseUrl}/rest/v1/rpc/auto_publish_due_submissions`;
+  const options = {
+    method: 'post',
+    headers: {
+      'apikey': supabaseAnonKey,
+      'Authorization': `Bearer ${supabaseAnonKey}`,
+      'Content-Type': 'application/json'
+    },
+    payload: JSON.stringify({}),
+    muteHttpExceptions: true
+  };
+
+  let response;
+  try {
+    response = UrlFetchApp.fetch(endpoint, options);
+  } catch (err) {
+    console.error('Failed to call Supabase RPC:', err);
+    return;
+  }
+
+  if (response.getResponseCode() !== 200) {
+    console.error(`Supabase RPC error (${response.getResponseCode()}): ${response.getContentText()}`);
+    return;
+  }
+
+  let publishedSubmissions = [];
+  try {
+    publishedSubmissions = JSON.parse(response.getContentText());
+  } catch (err) {
+    console.error('Failed to parse Supabase JSON response:', err);
+    return;
+  }
+
+  if (!Array.isArray(publishedSubmissions) || publishedSubmissions.length === 0) {
+    console.log('No due submissions found for auto-publishing.');
+    return;
+  }
+
+  let successCount = 0;
+  let failCount = 0;
+
+  for (const sub of publishedSubmissions) {
+    try {
+      const emailBody = {
+        emailType: 'published',
+        writerEmail: sub.writer_email,
+        writerName: sub.writer_name,
+        novelTitle: sub.novel_title,
+        submissionCode: sub.submission_code,
+        publishedUrl: sub.published_url
+      };
+      
+      const emailResult = handleSendEmail(emailBody);
+      
+      if (emailResult.success) {
+        successCount++;
+        console.log(`Successfully sent published email for ${sub.submission_code}`);
+      } else {
+        failCount++;
+        console.error(`Failed to send published email for ${sub.submission_code}: ${emailResult.error}`);
+      }
+    } catch (err) {
+      failCount++;
+      console.error(`Exception while sending email for ${sub.submission_code}:`, err);
+    }
+  }
+
+  console.log(`Auto-publish summary: Found ${publishedSubmissions.length}, Sent ${successCount}, Failed ${failCount}`);
 }
