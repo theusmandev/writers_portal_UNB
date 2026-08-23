@@ -60,6 +60,7 @@ export interface Database {
           /** Admin-written note visible to writer on the tracking page */
           status_note: string | null;
           published_url: string | null;
+          public_cover_image_url: string | null;
           episode_count: number | null;
           estimated_publish_at: string | null;
         };
@@ -247,6 +248,7 @@ export interface Database {
             novel_title: string;
             genre: string | null;
             published_url: string | null;
+            public_cover_image_url: string | null;
           }>;
           // NOTE: dashboard_token and looker_studio_embed_url are
           // deliberately NOT in this return type — they are excluded
@@ -289,5 +291,6 @@ export type FeaturedWriterPublic = {
     novel_title: string;
     genre: string | null;
     published_url: string | null;
+    public_cover_image_url: string | null;
   }>;
 };

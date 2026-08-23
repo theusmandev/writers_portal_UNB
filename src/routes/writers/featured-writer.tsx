@@ -100,6 +100,56 @@ function extractHandle(url: string, platformName: string): string | null {
   }
 }
 
+function NovelCoverCard({ novel }: { novel: Novel }) {
+  const [imageError, setImageError] = useState(false);
+
+  return (
+    <div className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-soft transition-all hover:-translate-y-1 hover:shadow-md">
+      <div className="relative aspect-[2/3] w-full overflow-hidden bg-muted/40">
+        {!imageError && novel.public_cover_image_url ? (
+          <img
+            src={novel.public_cover_image_url}
+            alt={`Cover of ${novel.novel_title}`}
+            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+            onError={() => setImageError(true)}
+          />
+        ) : (
+          <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-muted/20">
+            <BookOpen className="mb-3 h-8 w-8 text-muted-foreground/30" />
+            <span className="font-serif text-sm font-medium text-muted-foreground line-clamp-3">{novel.novel_title}</span>
+          </div>
+        )}
+      </div>
+      <div className="flex flex-1 flex-col p-4 sm:p-5">
+        <h3 className="font-serif text-lg font-semibold leading-snug text-foreground line-clamp-2">
+          {novel.novel_title}
+        </h3>
+        {novel.genre && (
+          <p className="mt-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+            {novel.genre}
+          </p>
+        )}
+        <div className="mt-auto pt-5">
+          {novel.published_url ? (
+            <a
+              href={novel.published_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-primary/10 px-4 py-2.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/20"
+            >
+              Read Novel <ExternalLink className="h-3.5 w-3.5" />
+            </a>
+          ) : (
+            <span className="inline-flex w-full items-center justify-center rounded-xl bg-muted px-4 py-2.5 text-xs font-semibold text-muted-foreground">
+              Coming Soon
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function FeaturedWriterPage() {
@@ -214,6 +264,9 @@ export default function FeaturedWriterPage() {
 
   // ── Found ─────────────────────────────────────────────────────────────────
   const novels = (writer.published_novels ?? []) as Novel[];
+  const novelsWithCovers = novels.filter((n) => n.public_cover_image_url);
+  const novelsWithoutCovers = novels.filter((n) => !n.public_cover_image_url);
+
   const socialLink = writer.social_media_link?.trim() || null;
   const socialHref =
     socialLink && !socialLink.includes("://")
@@ -329,39 +382,50 @@ export default function FeaturedWriterPage() {
         {/* ── Published novels ── */}
         {novels.length > 0 && (
           <section aria-label="Published novels">
-            <h2 className="mb-5 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+            <h2 className="mb-6 text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
               Published Novels
             </h2>
-            <ul className="space-y-3">
-              {novels.map((novel, idx) => (
-                <li
-                  key={idx}
-                  className="flex items-start gap-3 rounded-xl border border-border bg-card px-5 py-4 shadow-soft"
-                >
-                  <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                  <div className="flex-1 min-w-0">
-                    {novel.published_url ? (
-                      <a
-                        href={novel.published_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="font-semibold text-primary hover:underline underline-offset-2 inline-flex items-center gap-1"
-                      >
-                        {novel.novel_title}
-                        <ExternalLink className="h-3.5 w-3.5 shrink-0" />
-                      </a>
-                    ) : (
-                      <span className="font-semibold">{novel.novel_title}</span>
-                    )}
-                    {novel.genre && (
-                      <span className="ml-2 text-xs text-muted-foreground">
-                        · {novel.genre}
-                      </span>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
+            
+            {novelsWithCovers.length > 0 && (
+              <div className="mb-6 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
+                {novelsWithCovers.map((novel, idx) => (
+                  <NovelCoverCard key={`cover-${idx}`} novel={novel} />
+                ))}
+              </div>
+            )}
+
+            {novelsWithoutCovers.length > 0 && (
+              <ul className="space-y-3">
+                {novelsWithoutCovers.map((novel, idx) => (
+                  <li
+                    key={`list-${idx}`}
+                    className="flex items-start gap-3 rounded-xl border border-border bg-card px-5 py-4 shadow-soft"
+                  >
+                    <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    <div className="flex-1 min-w-0">
+                      {novel.published_url ? (
+                        <a
+                          href={novel.published_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-semibold text-primary hover:underline underline-offset-2 inline-flex items-center gap-1"
+                        >
+                          {novel.novel_title}
+                          <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+                        </a>
+                      ) : (
+                        <span className="font-semibold">{novel.novel_title}</span>
+                      )}
+                      {novel.genre && (
+                        <span className="ml-2 text-xs text-muted-foreground">
+                          · {novel.genre}
+                        </span>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </section>
         )}
 

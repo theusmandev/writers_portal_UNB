@@ -102,6 +102,7 @@ export default function AdminSubmissionDetail() {
   const [notes, setNotes] = useState("");          // admin_notes (internal / writer-facing update)
   const [statusNote, setStatusNote] = useState(""); // status_note (visible on Rejected / Action Required cards)
   const [publishedUrl, setPublishedUrl] = useState(""); // published_url (visible on Published card)
+  const [publicCoverImageUrl, setPublicCoverImageUrl] = useState(""); // public_cover_image_url
   const [estimatedPublishAt, setEstimatedPublishAt] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
@@ -169,6 +170,7 @@ export default function AdminSubmissionDetail() {
         setNotes(d.admin_notes ?? "");
         setStatusNote(d.status_note ?? "");
         setPublishedUrl(d.published_url ?? "");
+        setPublicCoverImageUrl(d.public_cover_image_url ?? "");
         setEstimatedPublishAt(d.estimated_publish_at ? formatToDatetimeLocal(d.estimated_publish_at) : "");
       }
       setHistory((historyRes.data ?? []) as StatusHistoryRow[]);
@@ -197,6 +199,14 @@ export default function AdminSubmissionDetail() {
       }
     }
 
+    if ((isEarlyPublishEligible || isPublishedOnly) && publicCoverImageUrl.trim()) {
+      if (!/^https?:\/\/.+\..+/.test(publicCoverImageUrl.trim())) {
+        setSaveMsg("❌ Public Cover Image URL must start with https://");
+        setSaving(false);
+        return;
+      }
+    }
+
     const updates: Partial<SubmissionRow> = { admin_notes: notes };
 
     if (newStatus !== detail.current_status) {
@@ -213,6 +223,7 @@ export default function AdminSubmissionDetail() {
     }
     if (isEarlyPublishEligible || isPublishedOnly) {
       updates.published_url = publishedUrl.trim() || null;
+      updates.public_cover_image_url = publicCoverImageUrl.trim() || null;
     }
     updates.estimated_publish_at = estimatedPublishAt ? new Date(estimatedPublishAt).toISOString() : null;
 
@@ -756,25 +767,43 @@ export default function AdminSubmissionDetail() {
               if (!isEarlyPublishEligible && !isPublishedOnly) return null;
 
               return (
-                <div className="space-y-1.5">
-                  <Label htmlFor="published-url">
-                    Published novel URL{" "}
-                    <span className="text-muted-foreground font-normal">
-                      {isPublishedOnly ? "(shown on tracking page)" : "(early publish link)"}
-                    </span>
-                  </Label>
-                  <Input
-                    id="published-url"
-                    type="url"
-                    value={publishedUrl}
-                    onChange={(e) => setPublishedUrl(e.target.value)}
-                    placeholder="https://urdunovelbanks.com/novel/..."
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    {isPublishedOnly 
-                      ? "A \"View Your Novel\" button appears on the writer's tracking page linking here."
-                      : "Add this early to have the novel auto-publish when its Estimated Publish Date arrives. Leave blank if not ready yet."}
-                  </p>
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="published-url">
+                      Published novel URL{" "}
+                      <span className="text-muted-foreground font-normal">
+                        {isPublishedOnly ? "(shown on tracking page)" : "(early publish link)"}
+                      </span>
+                    </Label>
+                    <Input
+                      id="published-url"
+                      type="url"
+                      value={publishedUrl}
+                      onChange={(e) => setPublishedUrl(e.target.value)}
+                      placeholder="https://urdunovelbanks.com/novel/..."
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {isPublishedOnly 
+                        ? "A \"View Your Novel\" button appears on the writer's tracking page linking here."
+                        : "Add this early to have the novel auto-publish when its Estimated Publish Date arrives. Leave blank if not ready yet."}
+                    </p>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="public-cover-image-url">
+                      Public Cover Image URL
+                    </Label>
+                    <Input
+                      id="public-cover-image-url"
+                      type="url"
+                      value={publicCoverImageUrl}
+                      onChange={(e) => setPublicCoverImageUrl(e.target.value)}
+                      placeholder="https://i.imgur.com/..."
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      A direct image URL (e.g. hosted on Blogger, Imgur, or similar) shown as the novel's cover on the writer's featured page. Leave blank to show the simple list style instead.
+                    </p>
+                  </div>
                 </div>
               );
             })()}
