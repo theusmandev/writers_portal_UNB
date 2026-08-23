@@ -69,7 +69,7 @@ export function NotificationBar() {
                 href={linkUrl}
                 target={linkUrl.startsWith("/") ? "_self" : "_blank"}
                 rel={linkUrl.startsWith("/") ? "" : "noopener noreferrer"}
-                className="inline-flex items-center rounded-full bg-[#FFFCF5] px-3 py-1 sm:px-4 sm:py-1.5 text-xs sm:text-sm font-semibold text-[#9F5405] hover:bg-[#FFFCF5]/90 shadow-sm transition-colors whitespace-nowrap"
+                className="notification-pulse inline-flex items-center rounded-full bg-[#FFFCF5] px-3 py-1 sm:px-4 sm:py-1.5 text-xs sm:text-sm font-semibold text-[#9F5405] hover:bg-[#FFFCF5]/90 shadow-sm transition-colors whitespace-nowrap"
               >
                 {linkText}
               </a>
