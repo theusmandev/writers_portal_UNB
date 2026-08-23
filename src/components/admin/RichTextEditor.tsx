@@ -5,13 +5,80 @@ import Underline from '@tiptap/extension-underline';
 import Link from '@tiptap/extension-link';
 import { ResizableImage } from './ResizableImage';
 import TextAlign from '@tiptap/extension-text-align';
+import { Extension, Mark, mergeAttributes } from '@tiptap/core';
+
+// Custom Text Direction Extension
+const TextDirection = Extension.create({
+  name: 'textDirection',
+  addGlobalAttributes() {
+    return [
+      {
+        types: ['heading', 'paragraph'],
+        attributes: {
+          dir: {
+            default: null,
+            parseHTML: element => element.dir || null,
+            renderHTML: attributes => {
+              if (!attributes.dir) return {};
+              return { dir: attributes.dir };
+            },
+          },
+        },
+      },
+    ];
+  },
+  addCommands() {
+    return {
+      setDir: (dir: string) => ({ commands }: any) => {
+        return ['heading', 'paragraph'].map(type => commands.updateAttributes(type, { dir })).some(res => res);
+      },
+    };
+  },
+} as any);
+
+// Custom Font Size Mark
+const FontSize = Mark.create({
+  name: 'fontSize',
+  addAttributes() {
+    return {
+      size: {
+        default: null,
+        parseHTML: element => element.style.fontSize?.replace(/['"]+/g, ''),
+        renderHTML: attributes => {
+          if (!attributes.size) return {}
+          return { style: `font-size: ${attributes.size}` }
+        },
+      },
+    }
+  },
+  parseHTML() {
+    return [
+      {
+        style: 'font-size',
+      },
+    ]
+  },
+  renderHTML({ HTMLAttributes }) {
+    return ['span', mergeAttributes(HTMLAttributes), 0]
+  },
+  addCommands() {
+    return {
+      setFontSize: (size: string) => ({ commands }: any) => {
+        return commands.setMark('fontSize', { size })
+      },
+      unsetFontSize: () => ({ commands }: any) => {
+        return commands.unsetMark('fontSize')
+      },
+    }
+  },
+} as any);
 import { 
-  Bold, Italic, Underline as UnderlineIcon, Strikethrough, 
+  Bold, Italic, Underline as UnderlineIcon, Strikethrough, Eraser,
   Heading1, Heading2, Heading3, 
   List, ListOrdered, Quote, 
   Link as LinkIcon, Image as ImageIcon, 
   AlignLeft, AlignCenter, AlignRight,
-  Undo, Redo, Loader2, Code2
+  Undo, Redo, Loader2, Code2, WrapText
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -19,6 +86,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { uploadFileToScript } from '@/services/portalApi';
 
 interface RichTextEditorProps {
@@ -65,6 +133,8 @@ export function RichTextEditor({ content, onChange, postFolderToken, size = 'def
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
+      TextDirection,
+      FontSize,
     ],
     content,
     editorProps: {
@@ -186,6 +256,33 @@ export function RichTextEditor({ content, onChange, postFolderToken, size = 'def
           <ToolbarButton onClick={() => editor.chain().focus().toggleStrike().run()} active={editor.isActive('strike')} title="Strikethrough">
             <Strikethrough className="w-4 h-4" />
           </ToolbarButton>
+          <ToolbarButton onClick={() => editor.chain().focus().clearNodes().unsetAllMarks().run()} title="Clear Formatting">
+            <Eraser className="w-4 h-4" />
+          </ToolbarButton>
+        </div>
+
+        {/* Font Size */}
+        <div className="flex items-center gap-1 px-2 border-r border-border">
+          <Select 
+            value={editor.getAttributes('fontSize').size || 'default'} 
+            onValueChange={(val) => {
+              if (val === 'default') {
+                (editor.chain().focus() as any).unsetFontSize().run();
+              } else {
+                (editor.chain().focus() as any).setFontSize(val).run();
+              }
+            }}
+          >
+            <SelectTrigger className="w-[100px] h-8 text-xs bg-transparent border-0 shadow-none focus:ring-0 focus-visible:ring-0 text-muted-foreground hover:bg-muted hover:text-foreground">
+              <SelectValue placeholder="Font Size" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="default">Normal</SelectItem>
+              <SelectItem value="14px">Small</SelectItem>
+              <SelectItem value="20px">Large</SelectItem>
+              <SelectItem value="24px">Extra Large</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Headings */}
@@ -201,7 +298,7 @@ export function RichTextEditor({ content, onChange, postFolderToken, size = 'def
           </ToolbarButton>
         </div>
 
-        {/* Lists & Quotes */}
+        {/* Lists & Quotes & Break */}
         <div className="flex items-center gap-1 px-2 border-r border-border">
           <ToolbarButton onClick={() => editor.chain().focus().toggleBulletList().run()} active={editor.isActive('bulletList')} title="Bullet List">
             <List className="w-4 h-4" />
@@ -212,9 +309,12 @@ export function RichTextEditor({ content, onChange, postFolderToken, size = 'def
           <ToolbarButton onClick={() => editor.chain().focus().toggleBlockquote().run()} active={editor.isActive('blockquote')} title="Blockquote">
             <Quote className="w-4 h-4" />
           </ToolbarButton>
+          <ToolbarButton onClick={() => editor.chain().focus().setHardBreak().run()} title="Line Break">
+            <WrapText className="w-4 h-4" />
+          </ToolbarButton>
         </div>
 
-        {/* Alignment */}
+        {/* Alignment & Direction */}
         <div className="flex items-center gap-1 px-2 border-r border-border">
           <ToolbarButton onClick={() => editor.chain().focus().setTextAlign('left').run()} active={editor.isActive({ textAlign: 'left' })} title="Align Left">
             <AlignLeft className="w-4 h-4" />
@@ -224,6 +324,12 @@ export function RichTextEditor({ content, onChange, postFolderToken, size = 'def
           </ToolbarButton>
           <ToolbarButton onClick={() => editor.chain().focus().setTextAlign('right').run()} active={editor.isActive({ textAlign: 'right' })} title="Align Right">
             <AlignRight className="w-4 h-4" />
+          </ToolbarButton>
+          <ToolbarButton onClick={() => (editor.chain().focus() as any).setDir('ltr').run()} active={editor.isActive({ dir: 'ltr' })} title="Left-to-Right">
+            <span className="text-xs font-bold leading-none tracking-tighter">LTR</span>
+          </ToolbarButton>
+          <ToolbarButton onClick={() => (editor.chain().focus() as any).setDir('rtl').run()} active={editor.isActive({ dir: 'rtl' })} title="Right-to-Left">
+            <span className="text-xs font-bold leading-none tracking-tighter">RTL</span>
           </ToolbarButton>
         </div>
 
