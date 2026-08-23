@@ -372,7 +372,7 @@ export default function FeaturedWriterPage() {
 
           return (
             <section aria-label="Social media">
-              <div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-soft max-w-md">
+              <div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-soft w-full">
                 <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${accentClass}`} />
                 
                 <div className="p-6 pl-8">
