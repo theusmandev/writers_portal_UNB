@@ -29,12 +29,75 @@ type Novel = FeaturedWriterPublic["published_novels"][number];
 
 function getSocialPlatform(url: string) {
   const lowerUrl = url.toLowerCase();
-  if (lowerUrl.includes("instagram.com")) return { name: "Instagram", Icon: Instagram };
-  if (lowerUrl.includes("facebook.com")) return { name: "Facebook", Icon: Facebook };
-  if (lowerUrl.includes("twitter.com") || lowerUrl.includes("x.com")) return { name: "Twitter/X", Icon: Twitter };
-  if (lowerUrl.includes("youtube.com")) return { name: "YouTube", Icon: Youtube };
-  if (lowerUrl.includes("tiktok.com")) return { name: "TikTok", Icon: Video };
-  return { name: "Social Media Profile", Icon: LinkIcon };
+  if (lowerUrl.includes("instagram.com")) return { 
+    name: "Instagram", 
+    Icon: Instagram, 
+    actionText: "Follow on Instagram", 
+    colorClass: "bg-gradient-to-tr from-amber-500 via-pink-500 to-purple-600 text-white",
+    accentClass: "bg-gradient-to-b from-amber-500 via-pink-500 to-purple-600"
+  };
+  if (lowerUrl.includes("facebook.com")) return { 
+    name: "Facebook", 
+    Icon: Facebook, 
+    actionText: "Follow on Facebook", 
+    colorClass: "bg-[#1877F2] text-white hover:bg-[#1877F2]/90",
+    accentClass: "bg-[#1877F2]"
+  };
+  if (lowerUrl.includes("twitter.com") || lowerUrl.includes("x.com")) return { 
+    name: "Twitter/X", 
+    Icon: Twitter, 
+    actionText: "Follow on X", 
+    colorClass: "bg-black text-white dark:bg-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90",
+    accentClass: "bg-black dark:bg-white"
+  };
+  if (lowerUrl.includes("youtube.com")) return { 
+    name: "YouTube", 
+    Icon: Youtube, 
+    actionText: "Subscribe on YouTube", 
+    colorClass: "bg-[#FF0000] text-white hover:bg-[#FF0000]/90",
+    accentClass: "bg-[#FF0000]"
+  };
+  if (lowerUrl.includes("tiktok.com")) return { 
+    name: "TikTok", 
+    Icon: Video, 
+    actionText: "Follow on TikTok", 
+    colorClass: "bg-black text-white dark:bg-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90",
+    accentClass: "bg-black dark:bg-white"
+  };
+  return { 
+    name: "Social Media Profile", 
+    Icon: LinkIcon, 
+    actionText: "Visit Profile", 
+    colorClass: "bg-primary text-primary-foreground hover:bg-primary/90",
+    accentClass: "bg-primary"
+  };
+}
+
+function extractHandle(url: string, platformName: string): string | null {
+  try {
+    const urlObj = new URL(url.startsWith('http') ? url : `https://${url}`);
+    let pathname = urlObj.pathname;
+    if (pathname.endsWith('/')) pathname = pathname.slice(0, -1);
+    const parts = pathname.split('/').filter(Boolean);
+    const lastPart = parts[parts.length - 1];
+    
+    if (!lastPart) return null;
+    
+    if (platformName === 'YouTube' || platformName === 'TikTok') {
+      const username = parts.find(p => p.startsWith('@'));
+      if (username) return username;
+      if (platformName === 'YouTube' && parts[0] === 'c') return `@${lastPart}`;
+      return `@${lastPart}`;
+    }
+    
+    if (['Instagram', 'Twitter/X', 'Facebook'].includes(platformName)) {
+      if (lastPart.toLowerCase() === 'profile.php' || lastPart.toLowerCase() === 'pages') return null;
+      return lastPart.startsWith('@') ? lastPart : `@${lastPart}`;
+    }
+    return null;
+  } catch(e) {
+    return null;
+  }
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
@@ -304,21 +367,46 @@ export default function FeaturedWriterPage() {
 
         {/* ── Social media link ── */}
         {socialHref && (() => {
-          const { name, Icon } = getSocialPlatform(socialHref);
+          const { name, Icon, actionText, colorClass, accentClass } = getSocialPlatform(socialHref);
+          const handle = extractHandle(socialHref, name);
+
           return (
             <section aria-label="Social media">
-              <a
-                href={socialHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group block rounded-xl border border-border bg-card p-5 shadow-soft transition-all hover:shadow-md hover:border-primary/30 w-full sm:w-72"
-              >
-                <Icon className="h-6 w-6 text-primary mb-3" />
-                <p className="text-sm font-semibold">{name}</p>
-                <p className="mt-1 text-xs text-muted-foreground group-hover:text-primary transition-colors">
-                  Visit Profile
-                </p>
-              </a>
+              <div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-soft max-w-md">
+                <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${accentClass}`} />
+                
+                <div className="p-6 pl-8">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Icon className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                      Connect With
+                    </span>
+                  </div>
+
+                  <h3 className="font-serif italic text-3xl font-medium text-foreground mb-1">
+                    {displayName}
+                  </h3>
+
+                  {handle && (
+                    <p className="text-sm font-medium text-primary mb-4">
+                      {handle}
+                    </p>
+                  )}
+
+                  <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+                    Stay in touch with the writer for exclusive novel updates and new releases.
+                  </p>
+
+                  <a
+                    href={socialHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`block w-full rounded-xl px-4 py-3 text-center text-sm font-semibold transition-transform hover:scale-[1.02] active:scale-[0.98] ${colorClass}`}
+                  >
+                    {actionText}
+                  </a>
+                </div>
+              </div>
             </section>
           );
         })()}
