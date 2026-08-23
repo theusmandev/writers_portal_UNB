@@ -837,7 +837,7 @@ export default function SubmitPage() {
               <Field id="email" label={<>Email address <span className="text-red-500">*</span></>} error={errors["email"]}>
                 <Input id="email" type="email" value={form.email} onChange={(e) => set("email", e.target.value)} />
               </Field>
-              <Field id="whatsapp" label={<>WhatsApp number <span className="text-red-500">*</span></>} error={errors["whatsapp"]}>
+              <Field id="whatsapp" label={<>WhatsApp number <span className="text-red-500">*</span></>} hint="Kept private — visible only to our team" error={errors["whatsapp"]}>
                 <Input id="whatsapp" inputMode="tel" placeholder="+92 300 0000000" value={form.whatsapp} onChange={(e) => set("whatsapp", e.target.value)} />
               </Field>
               <Field id="location" label="City / country (optional)" error={errors["location"]}>
