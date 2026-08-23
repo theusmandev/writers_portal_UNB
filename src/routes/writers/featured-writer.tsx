@@ -9,6 +9,12 @@ import {
   UserRound,
   Share2,
   Check,
+  Facebook,
+  Twitter,
+  Youtube,
+  Instagram,
+  Video,
+  Link as LinkIcon,
 } from "lucide-react";
 import { getFeaturedWriterBySlug } from "@/services/portalApi";
 import type { FeaturedWriterPublic } from "@/lib/supabase.types";
@@ -18,6 +24,18 @@ import { SEO } from "@/components/SEO";
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type Novel = FeaturedWriterPublic["published_novels"][number];
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function getSocialPlatform(url: string) {
+  const lowerUrl = url.toLowerCase();
+  if (lowerUrl.includes("instagram.com")) return { name: "Instagram", Icon: Instagram };
+  if (lowerUrl.includes("facebook.com")) return { name: "Facebook", Icon: Facebook };
+  if (lowerUrl.includes("twitter.com") || lowerUrl.includes("x.com")) return { name: "Twitter/X", Icon: Twitter };
+  if (lowerUrl.includes("youtube.com")) return { name: "YouTube", Icon: Youtube };
+  if (lowerUrl.includes("tiktok.com")) return { name: "TikTok", Icon: Video };
+  return { name: "Social Media Profile", Icon: LinkIcon };
+}
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
@@ -65,7 +83,7 @@ export default function FeaturedWriterPage() {
         });
         setSanitizedBio(
           DOMPurify.sanitize(res.data.featured_bio, {
-            ADD_ATTR: ["target", "style", "data-align"],
+            ADD_ATTR: ["target", "style", "data-align", "dir"],
           })
         );
       }
@@ -285,19 +303,25 @@ export default function FeaturedWriterPage() {
         )}
 
         {/* ── Social media link ── */}
-        {socialHref && (
-          <section aria-label="Social media">
-            <a
-              href={socialHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline underline-offset-4 transition-colors"
-            >
-              <ExternalLink className="h-4 w-4" />
-              Social Media Profile
-            </a>
-          </section>
-        )}
+        {socialHref && (() => {
+          const { name, Icon } = getSocialPlatform(socialHref);
+          return (
+            <section aria-label="Social media">
+              <a
+                href={socialHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group block rounded-xl border border-border bg-card p-5 shadow-soft transition-all hover:shadow-md hover:border-primary/30 w-full sm:w-72"
+              >
+                <Icon className="h-6 w-6 text-primary mb-3" />
+                <p className="text-sm font-semibold">{name}</p>
+                <p className="mt-1 text-xs text-muted-foreground group-hover:text-primary transition-colors">
+                  Visit Profile
+                </p>
+              </a>
+            </section>
+          );
+        })()}
       </div>
     </div>
   );
