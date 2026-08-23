@@ -14,6 +14,8 @@ export function WriterCard({ writer, hideFeaturedBadge }: WriterCardProps) {
     novel_title: string;
     genre: string | null;
     published_url: string | null;
+    novel_status: string | null;
+    published_episode_count: number;
   }>;
 
   // Bio Truncation State
@@ -115,8 +117,13 @@ export function WriterCard({ writer, hideFeaturedBadge }: WriterCardProps) {
                   ) : (
                     <span className="font-medium">{novel.novel_title}</span>
                   )}
+                  {novel.novel_status === 'Ongoing' && (
+                    <span className="ml-2 inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary align-middle">
+                      Ongoing • {novel.published_episode_count} {novel.published_episode_count === 1 ? 'episode' : 'episodes'}
+                    </span>
+                  )}
                   {novel.genre && (
-                    <span className="ml-1.5 text-xs text-muted-foreground">· {novel.genre}</span>
+                    <span className="ml-1.5 text-xs text-muted-foreground align-middle">· {novel.genre}</span>
                   )}
                 </span>
               </li>
