@@ -307,12 +307,23 @@ export default function FeaturedWriterPage() {
 
   const isUrdu = /[\u0600-\u06FF]/.test(sanitizedBio || "");
 
+  let seoDescription = `Read the featured writer profile of ${displayName} on Urdu Novel Bank — discover their published novels and biography.`;
+  if (writer.featured_bio) {
+    const plainText = writer.featured_bio.replace(/<[^>]+>/g, '').trim();
+    if (plainText) {
+      seoDescription = plainText.length > 155 ? plainText.substring(0, 155).trim() + "..." : plainText;
+    }
+  }
+
+  const seoImage = novelsWithCovers.length > 0 ? novelsWithCovers[0].public_cover_image_url || undefined : undefined;
+
   return (
     <div>
       <SEO
         title={`${displayName} — Urdu Novel Bank`}
-        description={`Read the featured writer profile of ${displayName} on Urdu Novel Bank — discover their published novels and biography.`}
+        description={seoDescription}
         type="website"
+        image={seoImage}
       />
 
       {/* ── Hero ── */}
