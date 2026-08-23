@@ -186,7 +186,7 @@ export default function AdminSubmissionDetail() {
     setSaving(true);
     setSaveMsg(null);
 
-    const isEarlyPublishEligible = detail.novel_status === "Complete" && 
+    const isEarlyPublishEligible = 
       ["Approved", "Formatting", "Scheduled for Publication"].includes(newStatus);
     const isPublishedOnly = newStatus === "Published";
 
@@ -760,7 +760,7 @@ export default function AdminSubmissionDetail() {
 
             {/* Conditional: Published URL */}
             {(() => {
-              const isEarlyPublishEligible = detail.novel_status === "Complete" && 
+              const isEarlyPublishEligible = 
                 ["Approved", "Formatting", "Scheduled for Publication"].includes(newStatus);
               const isPublishedOnly = newStatus === "Published";
               
@@ -785,7 +785,7 @@ export default function AdminSubmissionDetail() {
                     <p className="text-xs text-muted-foreground">
                       {isPublishedOnly 
                         ? "A \"View Your Novel\" button appears on the writer's tracking page linking here."
-                        : "Add this early to have the novel auto-publish when its Estimated Publish Date arrives. Leave blank if not ready yet."}
+                        : "Add this early to enable auto-publishing when the Estimated Publish Date arrives. Leave blank if not ready yet."}
                     </p>
                   </div>
 
