@@ -381,7 +381,7 @@ export async function publishEpisodes(
   try {
     const { error } = await supabase
       .from("episodes")
-      .update({ published: true })
+      .update({ published: true, published_at: new Date().toISOString() })
       .in("episode_number", episodeNumbers)
       .eq("submission_id", submissionId);
 

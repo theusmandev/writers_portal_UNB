@@ -218,6 +218,7 @@ export interface Database {
             published_url: string | null;
             novel_status: string | null;
             published_episode_count: number;
+            novel_published_at: string | null;
           }>;
           /** Added by migration 022. dashboard_token and looker_studio_embed_url
            *  are intentionally NOT present here. */
@@ -253,6 +254,7 @@ export interface Database {
             public_cover_image_url: string | null;
             novel_status: string | null;
             published_episode_count: number;
+            novel_published_at: string | null;
           }>;
           // NOTE: dashboard_token and looker_studio_embed_url are
           // deliberately NOT in this return type — they are excluded
@@ -298,5 +300,6 @@ export type FeaturedWriterPublic = {
     public_cover_image_url: string | null;
     novel_status: string | null;
     published_episode_count: number;
+    novel_published_at: string | null;
   }>;
 };
