@@ -7,6 +7,37 @@ import { ResizableImage } from './ResizableImage';
 import TextAlign from '@tiptap/extension-text-align';
 import { Extension, Mark, mergeAttributes } from '@tiptap/core';
 
+// Custom ID and Class Global Attributes Extension
+const CustomAttributes = Extension.create({
+  name: 'customAttributes',
+  addGlobalAttributes() {
+    return [
+      {
+        // Apply to all standard block and inline elements
+        types: ['textStyle', 'paragraph', 'heading', 'span', 'link', 'image', 'blockquote', 'bulletList', 'orderedList', 'listItem'],
+        attributes: {
+          id: {
+            default: null,
+            parseHTML: element => element.getAttribute('id'),
+            renderHTML: attributes => {
+              if (!attributes.id) return {};
+              return { id: attributes.id };
+            },
+          },
+          class: {
+            default: null,
+            parseHTML: element => element.getAttribute('class'),
+            renderHTML: attributes => {
+              if (!attributes.class) return {};
+              return { class: attributes.class };
+            },
+          },
+        },
+      },
+    ];
+  },
+} as any);
+
 // Custom Text Direction Extension
 const TextDirection = Extension.create({
   name: 'textDirection',
@@ -134,6 +165,7 @@ export function RichTextEditor({ content, onChange, postFolderToken, size = 'def
         types: ['heading', 'paragraph'],
       }),
       TextDirection,
+      CustomAttributes,
       FontSize,
     ],
     content,

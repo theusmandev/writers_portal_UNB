@@ -57,7 +57,7 @@ export function NotificationBar() {
                 className="urdu prose prose-sm [&_p]:!m-0 max-w-none text-[#1F1206] prose-a:text-[#1F1206] prose-a:underline hover:prose-a:text-[#1F1206]/80 prose-strong:text-[#1F1206] leading-tight sm:leading-snug text-xs sm:text-sm"
                 dir="auto"
                 dangerouslySetInnerHTML={{ 
-                  __html: DOMPurify.sanitize(message, { ADD_ATTR: ['target', 'style', 'data-align', 'dir'] }) 
+                  __html: DOMPurify.sanitize(message, { ADD_ATTR: ['target', 'style', 'data-align', 'dir', 'class', 'id'] }) 
                 }}
               />
             </div>

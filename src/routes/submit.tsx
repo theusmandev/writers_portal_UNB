@@ -735,7 +735,7 @@ export default function SubmitPage() {
               className="prose prose-stone prose-lg max-w-none dark:prose-invert mx-auto mt-4 text-left leading-loose text-muted-foreground urdu"
               dir="auto"
               dangerouslySetInnerHTML={{ 
-                __html: DOMPurify.sanitize(pauseMessage, { ADD_ATTR: ['target', 'style', 'data-align', 'dir'] }) 
+                __html: DOMPurify.sanitize(pauseMessage, { ADD_ATTR: ['target', 'style', 'data-align', 'dir', 'class', 'id'] }) 
               }}
             />
             <div className="mt-8 flex flex-wrap justify-center gap-3">

@@ -209,7 +209,7 @@ export default function FeaturedWriterPage() {
         });
         setSanitizedBio(
           DOMPurify.sanitize(res.data.featured_bio, {
-            ADD_ATTR: ["target", "style", "data-align", "dir"],
+            ADD_ATTR: ["target", "style", "data-align", "dir", "class", "id"],
           })
         );
       }
