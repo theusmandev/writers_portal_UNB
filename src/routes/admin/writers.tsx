@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, AlertCircle, Globe, EyeOff } from "lucide-react";
+import { Search, AlertCircle, Globe, EyeOff, Star } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { AdminPagination } from "@/components/admin/AdminPagination";
 import { supabase } from "@/lib/supabase";
 import type { WriterRow } from "@/lib/supabase.types";
@@ -23,12 +24,14 @@ export default function AdminWriters() {
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [toggling, setToggling] = useState<string | null>(null);
+  const [publicFilter, setPublicFilter] = useState("All");
+  const [featuredFilter, setFeaturedFilter] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Reset to page 1 when search changes
+  // Reset to page 1 when search or filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [search]);
+  }, [search, publicFilter, featuredFilter]);
 
   useEffect(() => {
     void load();
@@ -86,12 +89,21 @@ export default function AdminWriters() {
 
   const filtered = writers.filter((w) => {
     const q = search.toLowerCase().trim();
-    return (
+    const matchesSearch =
       !q ||
       w.full_name.toLowerCase().includes(q) ||
       (w.pen_name ?? "").toLowerCase().includes(q) ||
-      w.email.toLowerCase().includes(q)
-    );
+      w.email.toLowerCase().includes(q);
+
+    let matchesPublic = true;
+    if (publicFilter === "Public only") matchesPublic = w.is_public;
+    if (publicFilter === "Private only") matchesPublic = !w.is_public;
+
+    let matchesFeatured = true;
+    if (featuredFilter === "Featured only") matchesFeatured = w.is_featured;
+    if (featuredFilter === "Not Featured") matchesFeatured = !w.is_featured;
+
+    return matchesSearch && matchesPublic && matchesFeatured;
   });
 
   const itemsPerPage = 20;
@@ -106,7 +118,7 @@ export default function AdminWriters() {
   const startItem = filtered.length === 0 ? 0 : (safePage - 1) * itemsPerPage + 1;
   const endItem = Math.min(safePage * itemsPerPage, filtered.length);
 
-  const hasFilters = search.trim() !== "";
+  const hasFilters = search.trim() !== "" || publicFilter !== "All" || featuredFilter !== "All";
   const countText = hasFilters 
     ? `Showing ${startItem}–${endItem} of ${filtered.length} writers (filtered from ${writers.length} total)`
     : `Showing ${startItem}–${endItem} of ${writers.length} writers`;
@@ -123,16 +135,57 @@ export default function AdminWriters() {
         </p>
       </div>
 
-      {/* Search */}
-      <div className="relative max-w-xs">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-        <Input
-          id="writers-search"
-          placeholder="Search name, pen name, email…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-9"
-        />
+      {/* Filters */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative flex-1 min-w-[200px] max-w-xs">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <Input
+            id="writers-search"
+            placeholder="Search name, pen name, email…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+
+        <select
+          id="public-filter"
+          value={publicFilter}
+          onChange={(e) => setPublicFilter(e.target.value)}
+          className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
+        >
+          <option value="All">All Statuses</option>
+          <option value="Public only">Public only</option>
+          <option value="Private only">Private only</option>
+        </select>
+
+        <select
+          id="featured-filter"
+          value={featuredFilter}
+          onChange={(e) => setFeaturedFilter(e.target.value)}
+          className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
+        >
+          <option value="All">All Features</option>
+          <option value="Featured only">Featured only</option>
+          <option value="Not Featured">Not Featured</option>
+        </select>
+
+        {hasFilters && (
+          <div className="w-full flex justify-center mt-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                setSearch("");
+                setPublicFilter("All");
+                setFeaturedFilter("All");
+              }}
+              className="h-9 min-w-[120px]"
+            >
+              Clear Filters
+            </Button>
+          </div>
+        )}
       </div>
 
       {error && (
@@ -172,7 +225,17 @@ export default function AdminWriters() {
                     className="border-b border-border/50 last:border-0 hover:bg-muted/20 transition-colors cursor-pointer"
                     onClick={() => navigate(`/admin/writers/${w.id}`)}
                   >
-                    <td className="px-4 py-3 font-medium">{w.full_name}</td>
+                    <td className="px-4 py-3 font-medium">
+                      <div className="flex items-center gap-2">
+                        {w.full_name}
+                        {w.is_featured && (
+                          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-600">
+                            <Star className="h-2.5 w-2.5 fill-amber-500 text-amber-500" />
+                            Featured
+                          </span>
+                        )}
+                      </div>
+                    </td>
                     <td className="px-4 py-3 text-muted-foreground">{w.pen_name ?? "—"}</td>
                     <td className="px-4 py-3 text-muted-foreground text-xs break-all max-w-[150px] sm:max-w-[250px]">{w.email}</td>
                     <td className="px-4 py-3 text-center tabular-nums">{w.submission_count}</td>
