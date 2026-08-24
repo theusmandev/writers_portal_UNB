@@ -102,6 +102,7 @@ function extractHandle(url: string, platformName: string): string | null {
 
 function NovelCoverCard({ novel }: { novel: Novel }) {
   const [imageError, setImageError] = useState(false);
+  const isNew = novel.novel_status === 'Ongoing' || (novel.novel_status === 'Complete' && novel.novel_published_at ? (new Date().getTime() - new Date(novel.novel_published_at).getTime()) <= 7 * 24 * 60 * 60 * 1000 : false);
 
   return (
     <div className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-soft transition-all hover:-translate-y-1 hover:shadow-md">
@@ -125,6 +126,11 @@ function NovelCoverCard({ novel }: { novel: Novel }) {
           {novel.novel_title}
         </h3>
         <div className="mt-1.5 flex flex-wrap items-center gap-1 sm:gap-2">
+          {isNew && (
+            <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-1.5 sm:px-2 py-0.5 text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-emerald-600">
+              New
+            </span>
+          )}
           {novel.novel_status === 'Ongoing' && (
             <span className="inline-flex items-center rounded-full bg-primary/10 px-1.5 sm:px-2 py-0.5 text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-primary">
               Ongoing • {novel.published_episode_count} {novel.published_episode_count === 1 ? 'ep' : 'eps'}
@@ -414,7 +420,9 @@ export default function FeaturedWriterPage() {
 
             {novelsWithoutCovers.length > 0 && (
               <ul className="space-y-3">
-                {novelsWithoutCovers.map((novel, idx) => (
+                {novelsWithoutCovers.map((novel, idx) => {
+                  const isNew = novel.novel_status === 'Ongoing' || (novel.novel_status === 'Complete' && novel.novel_published_at ? (new Date().getTime() - new Date(novel.novel_published_at).getTime()) <= 7 * 24 * 60 * 60 * 1000 : false);
+                  return (
                   <li
                     key={`list-${idx}`}
                     className="flex items-start gap-3 rounded-xl border border-border bg-card px-5 py-4 shadow-soft"
@@ -434,6 +442,11 @@ export default function FeaturedWriterPage() {
                       ) : (
                         <span className="font-semibold">{novel.novel_title}</span>
                       )}
+                      {isNew && (
+                        <span className="ml-2 inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-600 align-middle">
+                          New
+                        </span>
+                      )}
                       {novel.novel_status === 'Ongoing' && (
                         <span className="ml-2 inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary align-middle">
                           Ongoing • {novel.published_episode_count} {novel.published_episode_count === 1 ? 'episode' : 'episodes'}
@@ -446,7 +459,7 @@ export default function FeaturedWriterPage() {
                       )}
                     </div>
                   </li>
-                ))}
+                )})}
               </ul>
             )}
           </section>

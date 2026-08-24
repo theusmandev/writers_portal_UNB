@@ -100,7 +100,9 @@ export function WriterCard({ writer, hideFeaturedBadge }: WriterCardProps) {
             Published Novels
           </p>
           <ul className="space-y-1.5">
-            {displayedNovels.map((novel) => (
+            {displayedNovels.map((novel) => {
+              const isNew = novel.novel_status === 'Ongoing' || (novel.novel_status === 'Complete' && novel.novel_published_at ? (new Date().getTime() - new Date(novel.novel_published_at).getTime()) <= 7 * 24 * 60 * 60 * 1000 : false);
+              return (
               <li key={novel.id} className="flex items-start gap-2 text-sm">
                 <BookOpen className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
                 <span className="flex-1 leading-snug">
@@ -117,6 +119,11 @@ export function WriterCard({ writer, hideFeaturedBadge }: WriterCardProps) {
                   ) : (
                     <span className="font-medium">{novel.novel_title}</span>
                   )}
+                  {isNew && (
+                    <span className="ml-2 inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-600 align-middle">
+                      New
+                    </span>
+                  )}
                   {novel.novel_status === 'Ongoing' && (
                     <span className="ml-2 inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary align-middle">
                       Ongoing • {novel.published_episode_count} {novel.published_episode_count === 1 ? 'episode' : 'episodes'}
@@ -127,7 +134,7 @@ export function WriterCard({ writer, hideFeaturedBadge }: WriterCardProps) {
                   )}
                 </span>
               </li>
-            ))}
+            )})}
           </ul>
           {hiddenNovelsCount > 0 && (
             <button
