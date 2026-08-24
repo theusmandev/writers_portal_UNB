@@ -27,7 +27,7 @@ export default function Index() {
         description="Submit your Urdu novel to Urdu Novel Bank. Our writer portal offers an easy submission process, real-time tracking, and a transparent publication journey." 
       />
       <section className="bg-hero text-primary-foreground">
-        <div className="mx-auto max-w-6xl px-5 pt-6 pb-10 sm:pt-10 sm:pb-12">
+        <div className="mx-auto max-w-6xl px-5 pt-8 pb-10 sm:pt-12 sm:pb-12">
           <p className="text-xs font-semibold tracking-[0.25em] text-primary-foreground/70 uppercase">
             {site.portalName}
           </p>
@@ -42,10 +42,10 @@ export default function Index() {
             from screening to publication — no messages lost, no guessing.
           </p>
           <div className="mt-5 sm:mt-6 flex gap-3">
-            <Button asChild className="bg-foreground text-background hover:bg-foreground/90 h-[40px] px-4 text-[11px] sm:h-10 sm:px-8 sm:text-sm shadow-elegant border-transparent">
+            <Button asChild className="bg-foreground text-background hover:bg-foreground/90 h-9 px-4 text-[11px] sm:h-9 sm:px-6 sm:text-[13px] shadow-elegant border-transparent">
               <Link to="/submit">Submit Your Novel</Link>
             </Button>
-            <Button asChild variant="outline" className="border-transparent bg-card/95 text-foreground hover:bg-card hover:text-foreground h-[40px] px-4 text-[11px] sm:h-10 sm:px-8 sm:text-sm shadow-soft font-semibold">
+            <Button asChild variant="outline" className="border-transparent bg-card/95 text-foreground hover:bg-card hover:text-foreground h-9 px-4 text-[11px] sm:h-9 sm:px-6 sm:text-[13px] shadow-soft font-semibold">
               <Link to="/track">Track Submission</Link>
             </Button>
           </div>
