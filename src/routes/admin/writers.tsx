@@ -26,12 +26,13 @@ export default function AdminWriters() {
   const [toggling, setToggling] = useState<string | null>(null);
   const [publicFilter, setPublicFilter] = useState("All");
   const [featuredFilter, setFeaturedFilter] = useState("All");
+  const [minSubmissions, setMinSubmissions] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
   // Reset to page 1 when search or filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, publicFilter, featuredFilter]);
+  }, [search, publicFilter, featuredFilter, minSubmissions]);
 
   useEffect(() => {
     void load();
@@ -103,7 +104,15 @@ export default function AdminWriters() {
     if (featuredFilter === "Featured only") matchesFeatured = w.is_featured;
     if (featuredFilter === "Not Featured") matchesFeatured = !w.is_featured;
 
-    return matchesSearch && matchesPublic && matchesFeatured;
+    let matchesMinSubs = true;
+    if (minSubmissions.trim() !== "") {
+      const num = parseInt(minSubmissions, 10);
+      if (!isNaN(num) && num >= 0) {
+        matchesMinSubs = w.submission_count > num;
+      }
+    }
+
+    return matchesSearch && matchesPublic && matchesFeatured && matchesMinSubs;
   });
 
   const itemsPerPage = 20;
@@ -118,7 +127,7 @@ export default function AdminWriters() {
   const startItem = filtered.length === 0 ? 0 : (safePage - 1) * itemsPerPage + 1;
   const endItem = Math.min(safePage * itemsPerPage, filtered.length);
 
-  const hasFilters = search.trim() !== "" || publicFilter !== "All" || featuredFilter !== "All";
+  const hasFilters = search.trim() !== "" || publicFilter !== "All" || featuredFilter !== "All" || minSubmissions.trim() !== "";
   const countText = hasFilters 
     ? `Showing ${startItem}–${endItem} of ${filtered.length} writers (filtered from ${writers.length} total)`
     : `Showing ${startItem}–${endItem} of ${writers.length} writers`;
@@ -170,6 +179,18 @@ export default function AdminWriters() {
           <option value="Not Featured">Not Featured</option>
         </select>
 
+        <div className="relative w-[110px]">
+          <Input
+            id="min-submissions-filter"
+            type="number"
+            min="0"
+            placeholder="Subs >"
+            value={minSubmissions}
+            onChange={(e) => setMinSubmissions(e.target.value)}
+            className="h-9"
+          />
+        </div>
+
         {hasFilters && (
           <div className="w-full flex justify-center mt-2">
             <Button
@@ -179,6 +200,7 @@ export default function AdminWriters() {
                 setSearch("");
                 setPublicFilter("All");
                 setFeaturedFilter("All");
+                setMinSubmissions("");
               }}
               className="h-9 min-w-[120px]"
             >
