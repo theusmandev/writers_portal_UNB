@@ -27,21 +27,21 @@ export default function Index() {
         description="Submit your Urdu novel to Urdu Novel Bank. Our writer portal offers an easy submission process, real-time tracking, and a transparent publication journey." 
       />
       <section className="bg-hero text-primary-foreground">
-        <div className="mx-auto max-w-6xl px-5 pt-12 pb-20 sm:pt-16 sm:pb-28">
+        <div className="mx-auto max-w-6xl px-5 pt-8 pb-12 sm:pt-12 sm:pb-16">
           <p className="text-xs font-semibold tracking-[0.25em] text-primary-foreground/70 uppercase">
             {site.portalName}
           </p>
-          <h1 className="mt-5 max-w-3xl text-4xl leading-tight font-semibold text-balance sm:text-5xl">
+          <h1 className="mt-3 sm:mt-4 max-w-3xl text-4xl leading-tight font-semibold text-balance sm:text-5xl">
             Your novel deserves a clear, professional path to publication.
           </h1>
-          <p className="urdu mt-5 max-w-2xl text-2xl text-primary-foreground/85">
+          <p className="urdu mt-3 sm:mt-4 max-w-2xl text-2xl text-primary-foreground/85">
             اردو ناول بینک — لکھنے والوں کے لیے ایک منظم اشاعتی پورٹل
           </p>
-          <p className="mt-5 max-w-2xl leading-relaxed text-primary-foreground/80">
+          <p className="mt-3 sm:mt-4 max-w-2xl leading-relaxed text-primary-foreground/80">
             Submit your Urdu novel, know exactly how it will be reviewed, and follow its progress
             from screening to publication — no messages lost, no guessing.
           </p>
-          <div className="mt-9 flex gap-3">
+          <div className="mt-6 sm:mt-7 flex gap-3">
             <Button asChild className="bg-foreground text-background hover:bg-foreground/90 h-[40px] px-4 text-[11px] sm:h-10 sm:px-8 sm:text-sm shadow-elegant border-transparent">
               <Link to="/submit">Submit Your Novel</Link>
             </Button>
@@ -49,7 +49,7 @@ export default function Index() {
               <Link to="/track">Track Submission</Link>
             </Button>
           </div>
-          <div className="mt-12 grid max-w-3xl gap-6 border-t border-primary-foreground/20 pt-8 sm:grid-cols-3">
+          <div className="mt-8 sm:mt-10 grid max-w-3xl gap-6 border-t border-primary-foreground/20 pt-6 sm:grid-cols-3">
             {[
               { label: "Cost to writers", value: "Free" },
               { label: "Typical review", value: site.reviewWindow },
