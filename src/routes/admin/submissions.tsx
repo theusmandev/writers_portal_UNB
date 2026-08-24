@@ -12,6 +12,7 @@ import { deleteSubmission } from "@/services/portalApi";
 
 type SubmissionWithWriter = SubmissionRow & {
   writers: { full_name: string; pen_name: string | null } | null;
+  episodes?: { id: string }[];
 };
 
 const statusColors: Record<string, string> = {
@@ -64,7 +65,11 @@ export default function AdminSubmissions() {
       try {
         let q = supabase
           .from("submissions")
-          .select("*, writers(full_name, pen_name)")
+          .select("*, writers(full_name, pen_name), episodes(id)")
+          .eq("episodes.published", false)
+          .eq("episodes.upload_failed", false)
+          .not("episodes.drive_url", "is", null)
+          .limit(1, { foreignTable: "episodes" })
           .order("submission_date", { ascending: !sortDesc });
 
         const { data, error: err } = await q;
@@ -292,6 +297,12 @@ export default function AdminSubmissions() {
                         {s.novel_status === "Ongoing" && (
                           <span className="rounded bg-muted/60 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground flex items-center gap-1">
                             Ongoing • {s.episode_count || 0} episodes
+                          </span>
+                        )}
+                        {s.novel_status === "Ongoing" && s.episodes && s.episodes.length > 0 && (
+                          <span className="rounded bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-600 flex items-center gap-1 border border-amber-500/20 shadow-sm">
+                            <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+                            New Episode Pending
                           </span>
                         )}
                       </div>
