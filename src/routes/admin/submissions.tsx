@@ -45,6 +45,7 @@ export default function AdminSubmissions() {
   const [genreFilter, setGenreFilter] = useState("");
   const [dateFilter, setDateFilter] = useState("All time");
   const [sortDesc, setSortDesc] = useState(true);
+  const [showPendingOnly, setShowPendingOnly] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -56,7 +57,7 @@ export default function AdminSubmissions() {
   // Reset to page 1 when any filter or sort changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, statusFilter, genreFilter, dateFilter, sortDesc]);
+  }, [search, statusFilter, genreFilter, dateFilter, sortDesc, showPendingOnly]);
 
   useEffect(() => {
     async function load() {
@@ -139,11 +140,14 @@ export default function AdminSubmissions() {
         }
       }
 
-      return matchesSearch && matchesStatus && matchesGenre && matchesDate;
-    });
-  }, [rows, search, statusFilter, genreFilter, dateFilter]);
+      const hasPendingEpisode = r.novel_status === "Ongoing" && r.episodes && r.episodes.length > 0;
+      const matchesPending = !showPendingOnly || hasPendingEpisode;
 
-  const hasFilters = search || statusFilter || genreFilter || dateFilter !== "All time";
+      return matchesSearch && matchesStatus && matchesGenre && matchesDate && matchesPending;
+    });
+  }, [rows, search, statusFilter, genreFilter, dateFilter, showPendingOnly]);
+
+  const hasFilters = search || statusFilter || genreFilter || dateFilter !== "All time" || showPendingOnly;
 
   const itemsPerPage = 20;
   const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
@@ -226,6 +230,14 @@ export default function AdminSubmissions() {
           <SlidersHorizontal className="h-4 w-4" />
           {sortDesc ? "Newest first" : "Oldest first"}
         </Button>
+        <Button
+          variant={showPendingOnly ? "default" : "outline"}
+          size="sm"
+          onClick={() => setShowPendingOnly((v) => !v)}
+          className={`h-9 gap-1.5 ${showPendingOnly ? "bg-amber-500 hover:bg-amber-600 text-white border-transparent" : "border-amber-500/30 text-amber-600 hover:bg-amber-500/10"}`}
+        >
+          ⚡ Pending Episodes Only
+        </Button>
 
         {hasFilters && (
           <div className="w-full flex justify-center mt-2">
@@ -237,6 +249,7 @@ export default function AdminSubmissions() {
                 setStatusFilter("");
                 setGenreFilter("");
                 setDateFilter("All time");
+                setShowPendingOnly(false);
               }}
               className="h-9 min-w-[120px]"
             >
