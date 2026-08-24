@@ -46,6 +46,7 @@ export default function AdminSubmissions() {
   const [dateFilter, setDateFilter] = useState("All time");
   const [sortDesc, setSortDesc] = useState(true);
   const [showPendingOnly, setShowPendingOnly] = useState(false);
+  const [showPendingReview, setShowPendingReview] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -57,7 +58,7 @@ export default function AdminSubmissions() {
   // Reset to page 1 when any filter or sort changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, statusFilter, genreFilter, dateFilter, sortDesc, showPendingOnly]);
+  }, [search, statusFilter, genreFilter, dateFilter, sortDesc, showPendingOnly, showPendingReview]);
 
   useEffect(() => {
     async function load() {
@@ -143,11 +144,19 @@ export default function AdminSubmissions() {
       const hasPendingEpisode = r.novel_status === "Ongoing" && r.episodes && r.episodes.length > 0;
       const matchesPending = !showPendingOnly || hasPendingEpisode;
 
-      return matchesSearch && matchesStatus && matchesGenre && matchesDate && matchesPending;
-    });
-  }, [rows, search, statusFilter, genreFilter, dateFilter, showPendingOnly]);
+      const PENDING_REVIEW_STATUSES = [
+        "Received",
+        "Under Initial Review",
+        "Under Editorial Review",
+        "Action Required",
+      ];
+      const matchesPendingReview = !showPendingReview || PENDING_REVIEW_STATUSES.includes(r.current_status);
 
-  const hasFilters = search || statusFilter || genreFilter || dateFilter !== "All time" || showPendingOnly;
+      return matchesSearch && matchesStatus && matchesGenre && matchesDate && matchesPending && matchesPendingReview;
+    });
+  }, [rows, search, statusFilter, genreFilter, dateFilter, showPendingOnly, showPendingReview]);
+
+  const hasFilters = search || statusFilter || genreFilter || dateFilter !== "All time" || showPendingOnly || showPendingReview;
 
   const itemsPerPage = 20;
   const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
@@ -189,7 +198,12 @@ export default function AdminSubmissions() {
         <select
           id="status-filter"
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
+          onChange={(e) => {
+            setStatusFilter(e.target.value);
+            if (e.target.value) {
+              setShowPendingReview(false);
+            }
+          }}
           className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
         >
           <option value="">All statuses</option>
@@ -238,6 +252,20 @@ export default function AdminSubmissions() {
         >
           ⚡ Pending Episodes Only
         </Button>
+        <Button
+          variant={showPendingReview ? "default" : "outline"}
+          size="sm"
+          onClick={() => {
+            const next = !showPendingReview;
+            setShowPendingReview(next);
+            if (next) {
+              setStatusFilter("");
+            }
+          }}
+          className={`h-9 gap-1.5 ${showPendingReview ? "bg-blue-500 hover:bg-blue-600 text-white border-transparent" : "border-blue-500/30 text-blue-600 hover:bg-blue-500/10"}`}
+        >
+          📋 Pending Review Only
+        </Button>
 
         {hasFilters && (
           <div className="w-full flex justify-center mt-2">
@@ -250,6 +278,7 @@ export default function AdminSubmissions() {
                 setGenreFilter("");
                 setDateFilter("All time");
                 setShowPendingOnly(false);
+                setShowPendingReview(false);
               }}
               className="h-9 min-w-[120px]"
             >
