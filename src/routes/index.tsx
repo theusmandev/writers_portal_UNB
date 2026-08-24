@@ -31,10 +31,10 @@ export default function Index() {
           <p className="text-xs font-semibold tracking-[0.25em] text-primary-foreground/70 uppercase">
             {site.portalName}
           </p>
-          <h1 className="mt-2 sm:mt-3 max-w-3xl text-3xl leading-tight font-semibold text-balance sm:text-4xl">
+          <h1 className="mt-2 sm:mt-3 max-w-3xl text-2xl leading-tight font-semibold text-balance sm:text-4xl">
             Your novel deserves a clear, professional path to publication.
           </h1>
-          <p className="urdu mt-2 max-w-2xl text-2xl text-primary-foreground/85">
+          <p className="urdu mt-3 sm:mt-2 max-w-2xl text-2xl text-primary-foreground/85">
             اردو ناول بینک — لکھنے والوں کے لیے ایک منظم اشاعتی پورٹل
           </p>
           <p className="mt-2 max-w-2xl leading-relaxed text-primary-foreground/80">
