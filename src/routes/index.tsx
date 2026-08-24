@@ -27,7 +27,7 @@ export default function Index() {
         description="Submit your Urdu novel to Urdu Novel Bank. Our writer portal offers an easy submission process, real-time tracking, and a transparent publication journey." 
       />
       <section className="bg-hero text-primary-foreground">
-        <div className="mx-auto max-w-6xl px-5 pt-8 pb-10 sm:pt-12 sm:pb-12">
+        <div className="mx-auto max-w-6xl px-5 pt-7 pb-10 sm:pt-11 sm:pb-12">
           <p className="text-xs font-semibold tracking-[0.25em] text-primary-foreground/70 uppercase">
             {site.portalName}
           </p>
