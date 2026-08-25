@@ -128,7 +128,7 @@ export const guidelines: GuidelineSection[] = [
     title: "File formats",
     items: [
       "Preferred: .docx (Microsoft Word) or .doc",
-      "Also accepted: .pdf, .txt, .rtf",
+      "Also accepted: .pdf, .txt, .rtf, and InPage (.inp, .ipf)",
       "Maximum file size: 25 MB per file.",
       "Scanned images of handwritten pages are not accepted.",
     ],

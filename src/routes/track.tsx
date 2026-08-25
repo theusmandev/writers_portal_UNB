@@ -83,7 +83,7 @@ const CONFETTI_PIECES: Array<{
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
 const MAX_FILE_MB = 25;
-const ALLOWED_DOC = [".doc", ".docx", ".pdf", ".txt", ".rtf"];
+const ALLOWED_DOC = [".doc", ".docx", ".pdf", ".txt", ".rtf", ".inp", ".ipf"];
 
 function formatBytes(bytes: number, decimals = 1) {
   if (!+bytes) return '0 Bytes';
@@ -383,7 +383,7 @@ function AddNewEpisodesSection({
         <div>
           <h3 className="font-semibold text-primary">Add New Episodes</h3>
           <p className="text-sm text-muted-foreground mt-1">
-            Attach your newly completed episodes below. Max {MAX_FILE_MB} MB per file.
+            Attach your newly completed episodes below. Formats: .docx, .pdf, .txt, InPage. Max {MAX_FILE_MB} MB per file.
           </p>
         </div>
         <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="text-muted-foreground" disabled={submitting}>

@@ -16,7 +16,7 @@ import { SEO } from "@/components/SEO";
 
 
 const MAX_FILE_MB = 25;
-const ALLOWED_DOC = [".doc", ".docx", ".pdf", ".txt", ".rtf"];
+const ALLOWED_DOC = [".doc", ".docx", ".pdf", ".txt", ".rtf", ".inp", ".ipf"];
 const ALLOWED_IMG = [".jpg", ".jpeg", ".png"];
 
 function formatBytes(bytes: number, decimals = 1) {
@@ -919,7 +919,7 @@ export default function SubmitPage() {
                 <Field
                   id="manuscript"
                   label={<>Manuscript <span className="text-red-500">*</span></>}
-                  hint={`Preferred formats: .doc or .docx (editable) — .pdf and .txt also accepted. Max ${MAX_FILE_MB} MB.`}
+                  hint={`Preferred formats: .doc or .docx (editable) — .pdf, .txt, and InPage (.inp/.ipf) also accepted. Max ${MAX_FILE_MB} MB.`}
                   error={errors["manuscript"]}
                 >
                   <div className="space-y-2">
@@ -946,7 +946,7 @@ export default function SubmitPage() {
                       {minEpisodes === 1 
                         ? "You're approved to submit with 1 or more episodes. Attach each episode as a separate file below." 
                         : `At least ${minEpisodes} episodes are required to submit an ongoing novel. Attach each episode as a separate file below.`}
-                      {" "}Max {MAX_FILE_MB} MB per file.
+                      {" "}Formats: .docx, .pdf, .txt, InPage. Max {MAX_FILE_MB} MB per file.
                     </p>
                     {errors["episodes"] && <p className="text-xs text-destructive">{errors["episodes"]}</p>}
                   </div>
