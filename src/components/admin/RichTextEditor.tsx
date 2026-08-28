@@ -14,7 +14,7 @@ const CustomAttributes = Extension.create({
     return [
       {
         // Apply to all standard block and inline elements
-        types: ['textStyle', 'paragraph', 'heading', 'span', 'link', 'image', 'blockquote', 'bulletList', 'orderedList', 'listItem'],
+        types: ['paragraph', 'heading', 'link', 'image', 'blockquote', 'bulletList', 'orderedList', 'listItem'],
         attributes: {
           id: {
             default: null,
