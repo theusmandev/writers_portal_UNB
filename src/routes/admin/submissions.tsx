@@ -43,6 +43,7 @@ export default function AdminSubmissions() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [genreFilter, setGenreFilter] = useState("");
+  const [novelTypeFilter, setNovelTypeFilter] = useState("");
   const [dateFilter, setDateFilter] = useState("All time");
   const [sortDesc, setSortDesc] = useState(true);
   const [showPendingOnly, setShowPendingOnly] = useState(false);
@@ -58,7 +59,7 @@ export default function AdminSubmissions() {
   // Reset to page 1 when any filter or sort changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, statusFilter, genreFilter, dateFilter, sortDesc, showPendingOnly, showPendingReview]);
+  }, [search, statusFilter, genreFilter, dateFilter, sortDesc, showPendingOnly, showPendingReview, novelTypeFilter]);
 
   useEffect(() => {
     async function load() {
@@ -124,6 +125,7 @@ export default function AdminSubmissions() {
         r.submission_code.toLowerCase().includes(q);
       const matchesStatus = !statusFilter || r.current_status === statusFilter;
       const matchesGenre = !genreFilter || r.genre === genreFilter;
+      const matchesNovelType = !novelTypeFilter || r.novel_status === novelTypeFilter;
       
       let matchesDate = true;
       if (dateFilter !== "All time") {
@@ -152,11 +154,11 @@ export default function AdminSubmissions() {
       ];
       const matchesPendingReview = !showPendingReview || PENDING_REVIEW_STATUSES.includes(r.current_status);
 
-      return matchesSearch && matchesStatus && matchesGenre && matchesDate && matchesPending && matchesPendingReview;
+      return matchesSearch && matchesStatus && matchesGenre && matchesNovelType && matchesDate && matchesPending && matchesPendingReview;
     });
-  }, [rows, search, statusFilter, genreFilter, dateFilter, showPendingOnly, showPendingReview]);
+  }, [rows, search, statusFilter, genreFilter, novelTypeFilter, dateFilter, showPendingOnly, showPendingReview]);
 
-  const hasFilters = search || statusFilter || genreFilter || dateFilter !== "All time" || showPendingOnly || showPendingReview;
+  const hasFilters = search || statusFilter || genreFilter || novelTypeFilter || dateFilter !== "All time" || showPendingOnly || showPendingReview;
 
   const itemsPerPage = 20;
   const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
@@ -221,6 +223,16 @@ export default function AdminSubmissions() {
           {genres.map((g) => (
             <option key={g} value={g}>{g}</option>
           ))}
+        </select>
+        <select
+          id="novel-type-filter"
+          value={novelTypeFilter}
+          onChange={(e) => setNovelTypeFilter(e.target.value)}
+          className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
+        >
+          <option value="">All novel types</option>
+          <option value="Complete">Complete</option>
+          <option value="Ongoing">Ongoing</option>
         </select>
         <select
           id="date-filter"
