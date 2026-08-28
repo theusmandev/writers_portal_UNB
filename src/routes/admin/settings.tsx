@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Save, AlertCircle, CheckCircle2 } from "lucide-react";
-import { getSubmissionSettings, updateSubmissionSettings, getNotificationSettings, updateNotificationSettings, getEpisodeMinimumExceptions, addEpisodeMinimumException, removeEpisodeMinimumException, type EpisodeMinimumException } from "@/services/portalApi";
+import { getSubmissionSettings, updateSubmissionSettings, getNotificationSettings, updateNotificationSettings, getEpisodeMinimumExceptions, addEpisodeMinimumException, removeEpisodeMinimumException, updateCustomHeadCode, type EpisodeMinimumException } from "@/services/portalApi";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,7 @@ export default function AdminSettings() {
   const [notificationMessage, setNotificationMessage] = useState("");
   const [notificationLinkUrl, setNotificationLinkUrl] = useState("");
   const [notificationLinkText, setNotificationLinkText] = useState("");
+  const [customHeadCode, setCustomHeadCode] = useState("");
 
   const [exceptions, setExceptions] = useState<EpisodeMinimumException[]>([]);
   const [loadingExceptions, setLoadingExceptions] = useState(false);
@@ -50,6 +51,7 @@ export default function AdminSettings() {
       setNotificationMessage(notifResult.data.notification_message || "");
       setNotificationLinkUrl(notifResult.data.notification_link_url || "");
       setNotificationLinkText(notifResult.data.notification_link_text || "");
+      setCustomHeadCode(notifResult.data.custom_head_code || "");
     }
     
     setLoadingExceptions(true);
@@ -112,16 +114,17 @@ export default function AdminSettings() {
     setSaving(true);
     setError(null);
     setSuccess(null);
-    const [result, notifResultSave] = await Promise.all([
+    const [result, notifResultSave, headCodeSaveResult] = await Promise.all([
       updateSubmissionSettings(paused, message),
-      updateNotificationSettings(notificationEnabled, notificationMessage, notificationLinkUrl, notificationLinkText)
+      updateNotificationSettings(notificationEnabled, notificationMessage, notificationLinkUrl, notificationLinkText),
+      updateCustomHeadCode(customHeadCode)
     ]);
 
-    if (result.success && notifResultSave.success) {
+    if (result.success && notifResultSave.success && headCodeSaveResult.success) {
       setSuccess("Settings saved successfully.");
       setTimeout(() => setSuccess(null), 3000);
     } else {
-      setError(result.error || notifResultSave.error || "Failed to save settings.");
+      setError(result.error || notifResultSave.error || headCodeSaveResult.error || "Failed to save settings.");
     }
     setSaving(false);
   }
@@ -251,6 +254,38 @@ export default function AdminSettings() {
             <RichTextEditor
               content={message}
               onChange={setMessage}
+            />
+          </div>
+          
+          <Button onClick={handleSave} disabled={loading || saving} className="w-full sm:w-auto">
+            <Save className="mr-2 h-4 w-4" />
+            {saving ? "Saving..." : "Save Settings"}
+          </Button>
+        </div>
+      </div>
+
+      <div className="rounded-xl border bg-card p-6 shadow-sm">
+        <h2 className="text-lg font-semibold mb-4">Custom Head Code</h2>
+        
+        <div className="space-y-6">
+          <div className="rounded-md bg-amber-500/10 p-4 text-amber-700 dark:text-amber-400">
+            <div className="flex gap-2">
+              <AlertCircle className="h-5 w-5 shrink-0" />
+              <p className="text-sm font-medium">
+                Advanced: paste tracking scripts or verification tags here (e.g. Google Analytics). This code runs unmodified on every public page — only paste code from sources you trust. Invalid code can break the site for visitors.
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <textarea
+              className="min-h-[200px] w-full resize-y rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm font-mono placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+              placeholder="<!-- Paste Google Analytics, Meta Pixel, etc. here -->"
+              value={customHeadCode}
+              onChange={(e) => setCustomHeadCode(e.target.value)}
+              disabled={loading || saving}
+              spellCheck={false}
+              dir="ltr"
             />
           </div>
           

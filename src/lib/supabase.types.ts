@@ -197,6 +197,7 @@ export interface Database {
           notification_link_url: string | null;
           notification_link_text: string | null;
           notification_version: number;
+          custom_head_code: string | null;
         };
         Insert: Omit<Database["public"]["Tables"]["site_settings"]["Row"], "id"> & { id?: number };
         Update: Partial<Database["public"]["Tables"]["site_settings"]["Insert"]>;

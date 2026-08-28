@@ -100,6 +100,7 @@ export type NotificationSettings = {
   notification_link_url: string | null;
   notification_link_text: string | null;
   notification_version: number;
+  custom_head_code?: string | null;
 };
 
 // ── Internal: demo-mode store ─────────────────────────────────────────────────
@@ -928,19 +929,19 @@ export async function updateSubmissionSettings(
 
 export async function getNotificationSettings(): Promise<ApiResult<NotificationSettings>> {
   if (!isSupabaseConfigured) {
-    return { success: true, data: { notification_enabled: false, notification_message: null, notification_link_url: null, notification_link_text: null, notification_version: 1 } };
+    return { success: true, data: { notification_enabled: false, notification_message: null, notification_link_url: null, notification_link_text: null, notification_version: 1, custom_head_code: null } };
   }
 
   try {
     const { data, error } = await supabase
       .from("site_settings")
-      .select("notification_enabled, notification_message, notification_link_url, notification_link_text, notification_version")
+      .select("notification_enabled, notification_message, notification_link_url, notification_link_text, notification_version, custom_head_code")
       .eq("id", 1)
       .single();
 
     if (error) {
       if (error.code === 'PGRST116') {
-        return { success: true, data: { notification_enabled: false, notification_message: null, notification_link_url: null, notification_link_text: null, notification_version: 1 } };
+        return { success: true, data: { notification_enabled: false, notification_message: null, notification_link_url: null, notification_link_text: null, notification_version: 1, custom_head_code: null } };
       }
       return { success: false, error: error.message };
     }
@@ -991,6 +992,29 @@ export async function updateNotificationSettings(
     return { success: true, data: null };
   } catch (err: any) {
     return { success: false, error: err?.message || "Failed to save notification settings." };
+  }
+}
+
+export async function updateCustomHeadCode(
+  customHeadCode: string
+): Promise<ApiResult<null>> {
+  if (!isSupabaseConfigured) {
+    await new Promise((r) => setTimeout(r, 400));
+    return { success: true, data: null };
+  }
+
+  try {
+    const { error } = await supabase
+      .from("site_settings")
+      .update({ 
+        custom_head_code: customHeadCode || null,
+      })
+      .eq("id", 1);
+
+    if (error) return { success: false, error: error.message };
+    return { success: true, data: null };
+  } catch (err: any) {
+    return { success: false, error: err?.message || "Failed to save custom head code." };
   }
 }
 

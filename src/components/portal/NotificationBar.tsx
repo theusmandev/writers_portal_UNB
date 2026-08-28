@@ -3,6 +3,8 @@ import { X, Megaphone } from "lucide-react";
 import DOMPurify from "dompurify";
 import { getNotificationSettings } from "@/services/portalApi";
 
+let customHeadCodeInjected = false;
+
 export function NotificationBar() {
   const [loading, setLoading] = useState(true);
   const [show, setShow] = useState(false);
@@ -15,16 +17,55 @@ export function NotificationBar() {
   useEffect(() => {
     async function init() {
       const res = await getNotificationSettings();
-      if (res.success && res.data.notification_enabled && res.data.notification_message) {
-        const currentVersion = res.data.notification_version || 1;
-        const dismissalKey = `unb_notification_dismissed_v${currentVersion}`;
-        
-        if (localStorage.getItem(dismissalKey) !== "true") {
-          setMessage(res.data.notification_message);
-          setLinkUrl(res.data.notification_link_url);
-          setLinkText(res.data.notification_link_text);
-          setVersion(currentVersion);
-          setShow(true);
+      if (res.success) {
+        // --- Custom Head Code Injection ---
+        if (
+          res.data.custom_head_code &&
+          !customHeadCodeInjected &&
+          !window.location.pathname.startsWith("/admin")
+        ) {
+          customHeadCodeInjected = true;
+          try {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(res.data.custom_head_code, "text/html");
+            const nodesToInject = [
+              ...Array.from(doc.head.childNodes),
+              ...Array.from(doc.body.childNodes)
+            ];
+
+            nodesToInject.forEach((node) => {
+              if (node.nodeType === Node.ELEMENT_NODE) {
+                const el = node as Element;
+                const newEl = document.createElement(el.tagName);
+                
+                // Copy all attributes
+                Array.from(el.attributes).forEach((attr) => {
+                  newEl.setAttribute(attr.name, attr.value);
+                });
+                
+                // Copy inner content (works for scripts, styles, etc.)
+                newEl.innerHTML = el.innerHTML;
+                
+                document.head.appendChild(newEl);
+              }
+            });
+          } catch (err) {
+            console.error("Failed to inject custom head code:", err);
+          }
+        }
+
+        // --- Notification Bar Logic ---
+        if (res.data.notification_enabled && res.data.notification_message) {
+          const currentVersion = res.data.notification_version || 1;
+          const dismissalKey = `unb_notification_dismissed_v${currentVersion}`;
+          
+          if (localStorage.getItem(dismissalKey) !== "true") {
+            setMessage(res.data.notification_message);
+            setLinkUrl(res.data.notification_link_url);
+            setLinkText(res.data.notification_link_text);
+            setVersion(currentVersion);
+            setShow(true);
+          }
         }
       }
       setLoading(false);
