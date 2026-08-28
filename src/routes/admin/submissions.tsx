@@ -314,9 +314,80 @@ export default function AdminSubmissions() {
             <div className="h-6 w-6 animate-spin rounded-full border-4 border-primary border-t-transparent" />
           </div>
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border bg-muted/30">
+          <>
+            {/* Mobile View */}
+            <div className="md:hidden flex flex-col divide-y divide-border">
+              {filtered.length === 0 ? (
+                <div className="p-10 text-center text-muted-foreground">
+                  No submissions found
+                </div>
+              ) : (
+                paginatedRows.map((s) => (
+                  <div key={s.id} className="flex flex-col gap-3 p-4 hover:bg-muted/20 transition-colors">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex flex-col gap-1">
+                        <span className="font-mono text-xs text-primary">{s.submission_code}</span>
+                        <span className="font-medium leading-tight">{s.novel_title}</span>
+                      </div>
+                      <div className="flex flex-col gap-1.5 items-end">
+                        <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusColors[s.current_status] ?? "bg-muted text-muted-foreground"}`}>
+                          {s.current_status}
+                        </span>
+                        {s.novel_status === "Ongoing" && (
+                          <span className="rounded bg-muted/60 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground flex items-center gap-1">
+                            Ongoing • {s.episode_count || 0} eps
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {s.novel_status === "Ongoing" && s.episodes && s.episodes.length > 0 && (
+                      <div className="flex">
+                        <span className="rounded bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-600 flex items-center gap-1 border border-amber-500/20 shadow-sm">
+                          <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+                          New Episode Pending
+                        </span>
+                      </div>
+                    )}
+
+                    <div className="text-xs text-muted-foreground flex items-center justify-between">
+                      <span>By {s.writers?.full_name ?? "—"}</span>
+                      <span>{s.genre ?? "—"}</span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between pt-2 border-t border-border/50">
+                      <span className="text-xs text-muted-foreground">{formatDate(s.submission_date)}</span>
+                      <div className="flex items-center gap-3">
+                        <Link
+                          to={`/admin/submissions/${s.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                        >
+                          View <ExternalLink className="h-3 w-3" />
+                        </Link>
+                        <button
+                          onClick={() => {
+                            setSubmissionToDelete(s);
+                            setDeleteCodeInput("");
+                            setDeleteError(null);
+                            setDeleteModalOpen(true);
+                          }}
+                          className="text-muted-foreground hover:text-destructive transition-colors p-1"
+                          title="Delete Submission"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+            {/* Desktop View */}
+            <table className="hidden md:table w-full text-sm">
+              <thead>
+                <tr className="border-b border-border bg-muted/30">
                 <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Code</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Novel Title</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Writer</th>
@@ -391,6 +462,7 @@ export default function AdminSubmissions() {
               )}
             </tbody>
           </table>
+          </>
         )}
       </div>
 

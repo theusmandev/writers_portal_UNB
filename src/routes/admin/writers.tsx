@@ -222,9 +222,71 @@ export default function AdminWriters() {
             <div className="h-6 w-6 animate-spin rounded-full border-4 border-primary border-t-transparent" />
           </div>
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border bg-muted/30">
+          <>
+            {/* Mobile View */}
+            <div className="md:hidden flex flex-col divide-y divide-border">
+              {filtered.length === 0 ? (
+                <div className="p-10 text-center text-muted-foreground">
+                  No writers found
+                </div>
+              ) : (
+                paginatedWriters.map((w) => (
+                  <div 
+                    key={w.id} 
+                    className="flex flex-col gap-3 p-4 hover:bg-muted/20 transition-colors cursor-pointer"
+                    onClick={() => navigate(`/admin/writers/${w.id}`)}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2 font-medium">
+                          {w.full_name}
+                          {w.is_featured && (
+                            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-600">
+                              <Star className="h-2.5 w-2.5 fill-amber-500 text-amber-500" />
+                              Featured
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-0.5">{w.pen_name ? `Pen Name: ${w.pen_name}` : "No pen name"}</div>
+                      </div>
+                      <button
+                        id={`toggle-public-mobile-${w.id}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          void togglePublic(w);
+                        }}
+                        disabled={toggling === w.id}
+                        title={w.is_public ? "Remove from public directory" : "Add to public directory"}
+                        className={`shrink-0 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-colors disabled:opacity-50 ${
+                          w.is_public
+                            ? "bg-green-500/10 text-green-600 hover:bg-green-500/20"
+                            : "bg-muted text-muted-foreground hover:bg-muted/80"
+                        }`}
+                      >
+                        {w.is_public ? (
+                          <>
+                            <Globe className="h-3 w-3" /> Public
+                          </>
+                        ) : (
+                          <>
+                            <EyeOff className="h-3 w-3" /> Private
+                          </>
+                        )}
+                      </button>
+                    </div>
+                    <div className="text-xs text-muted-foreground break-all">{w.email}</div>
+                    <div className="flex items-center justify-between text-xs text-muted-foreground pt-1 border-t border-border/50">
+                      <span>{w.submission_count} {w.submission_count === 1 ? 'Submission' : 'Submissions'}</span>
+                      <span>Reg: {formatDate(w.registration_date)}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+            {/* Desktop View */}
+            <table className="hidden md:table w-full text-sm">
+              <thead>
+                <tr className="border-b border-border bg-muted/30">
                 <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Name</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Pen Name</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Email</th>
@@ -290,6 +352,7 @@ export default function AdminWriters() {
               )}
             </tbody>
           </table>
+          </>
         )}
       </div>
 

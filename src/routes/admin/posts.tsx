@@ -64,7 +64,50 @@ export default function AdminPosts() {
       ) : (
         <>
           <div className="rounded-xl border border-border bg-card overflow-hidden">
-            <table className="w-full text-left text-sm relative">
+            {/* Mobile View */}
+            <div className="md:hidden flex flex-col divide-y divide-border">
+              {posts.slice((currentPage - 1) * 20, currentPage * 20).map((post) => (
+                <div key={post.id} className="flex flex-col gap-3 p-4 hover:bg-muted/30 transition-colors">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="font-medium leading-tight">{post.title}</div>
+                    <span className={`shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${post.published ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
+                      {post.published ? "Published" : "Draft"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="text-xs text-muted-foreground">{formatDate(post.created_at)}</div>
+                    <div className="flex items-center gap-1">
+                      {post.published ? (
+                        <Button variant="ghost" size="icon" className="h-8 w-8" asChild title="View live post">
+                          <a href={`/updates/${post.slug}`} target="_blank" rel="noopener noreferrer">
+                            <Eye className="h-4 w-4" />
+                          </a>
+                        </Button>
+                      ) : (
+                        <Button variant="ghost" size="icon" className="h-8 w-8 opacity-50" title="Cannot view draft post" disabled>
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      )}
+                      <Button variant="ghost" size="icon" className="h-8 w-8" asChild title="Edit post">
+                        <Link to={`/admin/posts/${post.id}/edit`}>
+                          <Pencil className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => void handleDelete(post.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {/* Desktop View */}
+            <table className="hidden md:table w-full text-left text-sm relative">
               <thead className="bg-muted text-muted-foreground border-b border-border shadow-sm">
               <tr>
                 <th className="px-4 py-3 font-medium">Title</th>

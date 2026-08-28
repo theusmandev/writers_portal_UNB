@@ -159,7 +159,34 @@ export default function AdminDashboard() {
           </Link>
         </div>
         <div className="rounded-xl border border-border bg-card overflow-hidden">
-          <table className="w-full text-sm">
+          {/* Mobile View */}
+          <div className="md:hidden flex flex-col divide-y divide-border">
+            {stats.recentSubmissions.length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground">
+                No submissions yet
+              </div>
+            ) : (
+              stats.recentSubmissions.map((s) => (
+                <div key={s.id} className="flex flex-col gap-2 p-4 hover:bg-muted/20 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <Link to={`/admin/submissions/${s.id}`} className="font-mono text-xs text-primary hover:underline">
+                      {s.submission_code}
+                    </Link>
+                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${statusColors[s.current_status] ?? "bg-muted text-muted-foreground"}`}>
+                      {s.current_status}
+                    </span>
+                  </div>
+                  <div className="font-medium">{s.novel_title}</div>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>{s.writers?.full_name ?? "—"}</span>
+                    <span>{formatDate(s.submission_date)}</span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+          {/* Desktop View */}
+          <table className="hidden md:table w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/30">
                 <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Code</th>
