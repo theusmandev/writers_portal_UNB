@@ -546,18 +546,18 @@ export default function AdminWriterDetail() {
                           href={publicPageUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                          className="p-2 sm:p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
                           title="Open in new tab"
                         >
-                          <ExternalLink className="h-3.5 w-3.5" />
+                          <ExternalLink className="h-4 w-4" />
                         </a>
                         <button
                           type="button"
                           onClick={() => void navigator.clipboard.writeText(publicPageUrl)}
-                          className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                          className="p-2 sm:p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
                           title="Copy URL"
                         >
-                          <Copy className="h-3.5 w-3.5" />
+                          <Copy className="h-4 w-4" />
                         </button>
                       </div>
                     </div>
@@ -576,18 +576,18 @@ export default function AdminWriterDetail() {
                             href={`${origin}/writer-stats/${writer.dashboard_token}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                            className="p-2 sm:p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
                             title="Open in new tab"
                           >
-                            <ExternalLink className="h-3.5 w-3.5" />
+                            <ExternalLink className="h-4 w-4" />
                           </a>
                           <button
                             type="button"
                             onClick={() => void navigator.clipboard.writeText(`${origin}/writer-stats/${writer.dashboard_token}`)}
-                            className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                            className="p-2 sm:p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
                             title="Copy URL"
                           >
-                            <Copy className="h-3.5 w-3.5" />
+                            <Copy className="h-4 w-4" />
                           </button>
                         </div>
                         <p className="text-xs text-amber-600 font-medium mt-1">
@@ -612,7 +612,38 @@ export default function AdminWriterDetail() {
               <p className="text-sm text-muted-foreground italic py-4">No submissions found for this writer.</p>
             ) : (
               <div className="border border-border/50 rounded-lg overflow-hidden">
-                <table className="w-full text-sm text-left">
+                {/* Mobile View */}
+                <div className="md:hidden flex flex-col divide-y divide-border">
+                  {writer.submissions.map((sub) => (
+                    <div key={sub.id} className="flex flex-col gap-3 p-4 hover:bg-muted/20 transition-colors">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex flex-col gap-1">
+                          <span className="font-mono text-xs text-primary">{sub.submission_code}</span>
+                          <span className="font-medium leading-tight">
+                            <Link to={`/admin/submissions/${sub.id}`} className="hover:underline">{sub.novel_title}</Link>
+                          </span>
+                        </div>
+                        <div className="flex flex-col gap-1.5 items-end">
+                          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusColors[sub.current_status] ?? "bg-muted text-muted-foreground"}`}>
+                            {sub.current_status}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between pt-2 border-t border-border/50">
+                        <span className="text-xs text-muted-foreground">Submitted: {formatDate(sub.submission_date)}</span>
+                        <Link
+                          to={`/admin/submissions/${sub.id}`}
+                          className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                        >
+                          View <ChevronRight className="h-3 w-3" />
+                        </Link>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {/* Desktop View */}
+                <table className="hidden md:table w-full text-sm text-left">
                   <thead>
                     <tr className="border-b border-border bg-muted/30 text-xs font-semibold text-muted-foreground">
                       <th className="px-4 py-2.5">Code</th>

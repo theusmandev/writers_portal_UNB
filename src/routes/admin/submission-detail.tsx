@@ -385,25 +385,25 @@ export default function AdminSubmissionDetail() {
             <h1 className="text-xl font-semibold">{detail.novel_title}</h1>
             <p className="text-sm text-muted-foreground mt-1 font-mono">{detail.submission_code}</p>
             {trackingUrl && (
-              <div className="mt-3 flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-1.5 text-xs w-max">
-                <span className="text-muted-foreground font-medium">Tracking Link:</span>
-                <span className="font-mono text-muted-foreground truncate max-w-[200px] sm:max-w-sm">{trackingUrl}</span>
-                <div className="flex items-center gap-1 ml-2 pl-3 border-l border-border/50">
+              <div className="mt-3 flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-1.5 text-xs w-full sm:w-max overflow-hidden">
+                <span className="text-muted-foreground font-medium shrink-0">Tracking Link:</span>
+                <span className="font-mono text-muted-foreground truncate flex-1 sm:flex-none sm:max-w-sm">{trackingUrl}</span>
+                <div className="flex items-center gap-1 ml-2 pl-3 border-l border-border/50 shrink-0">
                   <button
                     onClick={copyTrackingUrl}
                     title="Copy Link"
-                    className="p-1 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground"
+                    className="p-2 sm:p-1.5 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground"
                   >
-                    {copiedTracking ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
+                    {copiedTracking ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
                   </button>
                   <a
                     href={trackingUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     title="Open in new tab"
-                    className="p-1 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground"
+                    className="p-2 sm:p-1.5 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground"
                   >
-                    <ExternalLink className="h-3.5 w-3.5" />
+                    <ExternalLink className="h-4 w-4" />
                   </a>
                 </div>
               </div>
@@ -423,7 +423,7 @@ export default function AdminSubmissionDetail() {
           {/* Writer info */}
           <section className="rounded-xl border border-border bg-card p-5 space-y-3">
             <h2 className="text-sm font-semibold">Writer Information</h2>
-            <dl className="grid grid-cols-2 gap-3">
+            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <InfoRow label="Full name" value={w?.full_name} />
               <InfoRow label="Pen name" value={w?.pen_name} />
               <InfoRow label="Email" value={w?.email} />
@@ -467,7 +467,7 @@ export default function AdminSubmissionDetail() {
           {/* Novel info */}
           <section className="rounded-xl border border-border bg-card p-5 space-y-3">
             <h2 className="text-sm font-semibold">Novel Information</h2>
-            <dl className="grid grid-cols-2 gap-3">
+            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <InfoRow label="Genre" value={detail.genre} />
               <InfoRow label="Novel status" value={detail.novel_status} />
               <InfoRow label="Submitted" value={fmt(detail.submission_date)} />
@@ -492,10 +492,10 @@ export default function AdminSubmissionDetail() {
                       <AlertCircle className="h-4 w-4 shrink-0" />
                       <span><strong>Missing File:</strong> {getMissingFileMessage(["manuscript"], detail.submission_code)}</span>
                     </div>
-                    <div className="flex items-center gap-2 mt-1">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-1 w-full">
                       <Input 
                         placeholder="Paste Drive URL (optional)" 
-                        className="h-7 text-xs bg-background w-48 px-2"
+                        className="h-7 text-xs bg-background w-full sm:w-48 px-2"
                         value={manuscriptResolveUrl}
                         onChange={(e) => setManuscriptResolveUrl(e.target.value)}
                       />
@@ -531,10 +531,10 @@ export default function AdminSubmissionDetail() {
                     <AlertCircle className="h-4 w-4 shrink-0" />
                     <span><strong>Missing File:</strong> {getMissingFileMessage(["cover"], detail.submission_code)}</span>
                   </div>
-                  <div className="flex items-center gap-2 mt-1">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-1 w-full">
                     <Input 
                       placeholder="Paste Drive URL (optional)" 
-                      className="h-7 text-xs bg-background w-48 px-2"
+                      className="h-7 text-xs bg-background w-full sm:w-48 px-2"
                       value={coverResolveUrl}
                       onChange={(e) => setCoverResolveUrl(e.target.value)}
                     />
