@@ -50,6 +50,7 @@ export type SubmissionRecord = {
   note?: string | undefined;        // admin_notes — internal update message
   statusNote?: string | undefined;  // status_note — reason for Rejected / Action Required
   publishedUrl?: string | undefined;
+  resolvedPublishedUrl?: string | undefined;
   hasResponse?: boolean;            // whether writer has already submitted a response
   manuscriptUrl?: string | null;
   coverUrl?: string | null;
@@ -72,6 +73,7 @@ export type WriterSubmissionSummary = {
   submission_date: string;
   last_updated: string;
   published_url: string | null;
+  resolved_published_url: string | null;
   manuscript_drive_url: string | null;
   cover_drive_url: string | null;
   manuscript_upload_failed: boolean;
@@ -617,6 +619,7 @@ export async function trackSubmission(
         note: row.admin_notes ?? undefined,
         statusNote: row.status_note ?? undefined,
         publishedUrl: row.published_url ?? undefined,
+        resolvedPublishedUrl: row.resolved_published_url ?? undefined,
         hasResponse: row.has_response,
         manuscriptUrl: row.manuscript_drive_url,
         coverUrl: row.cover_drive_url,
@@ -748,6 +751,7 @@ export async function getSubmissionsByEmail(
         submission_date: r.submittedAt,
         last_updated: r.lastUpdated,
         published_url: r.publishedUrl || null,
+        resolved_published_url: r.resolvedPublishedUrl || null,
         manuscript_drive_url: r.manuscriptUrl || null,
         cover_drive_url: r.coverUrl || null,
         manuscript_upload_failed: r.manuscriptUploadFailed || false,

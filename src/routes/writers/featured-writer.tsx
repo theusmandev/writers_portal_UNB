@@ -143,9 +143,9 @@ function NovelCoverCard({ novel }: { novel: Novel }) {
           )}
         </div>
         <div className="mt-auto pt-3 sm:pt-4">
-          {novel.published_url ? (
+          {novel.resolved_published_url ? (
             <a
-              href={novel.published_url}
+              href={novel.resolved_published_url}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex w-full items-center justify-center gap-1 sm:gap-1.5 rounded-lg sm:rounded-xl bg-primary/10 px-2 py-1.5 sm:px-3 sm:py-2 text-[9px] sm:text-[10px] font-semibold text-primary transition-colors hover:bg-primary/20"
@@ -429,9 +429,9 @@ export default function FeaturedWriterPage() {
                   >
                     <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                     <div className="flex-1 min-w-0">
-                      {novel.published_url ? (
+                      {novel.resolved_published_url ? (
                         <a
-                          href={novel.published_url}
+                          href={novel.resolved_published_url}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="font-semibold text-primary hover:underline underline-offset-2 inline-flex items-center gap-1"

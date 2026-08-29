@@ -14,6 +14,7 @@ export function WriterCard({ writer, hideFeaturedBadge }: WriterCardProps) {
     novel_title: string;
     genre: string | null;
     published_url: string | null;
+    resolved_published_url: string | null;
     novel_status: string | null;
     published_episode_count: number;
   }>;
@@ -106,9 +107,9 @@ export function WriterCard({ writer, hideFeaturedBadge }: WriterCardProps) {
               <li key={novel.id} className="flex items-start gap-2 text-sm">
                 <BookOpen className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
                 <span className="flex-1 leading-snug">
-                  {novel.published_url ? (
+                  {novel.resolved_published_url ? (
                     <a
-                      href={novel.published_url}
+                      href={novel.resolved_published_url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="font-medium text-primary hover:underline underline-offset-2 inline-flex items-center gap-1"

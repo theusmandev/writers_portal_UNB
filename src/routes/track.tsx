@@ -513,7 +513,7 @@ function PublishedCard({ record }: { record: SubmissionRecord }) {
   const isEpisodeAware = record.novelStatus === "Ongoing" && publishedEpisodes.length > 0;
   
   const [copied, setCopied] = useState(false);
-  const url = record.publishedUrl || "";
+  const url = record.resolvedPublishedUrl || "";
   const novelTitle = record.novelTitle || "a novel";
 
   const handleCopy = () => {
@@ -592,11 +592,11 @@ function PublishedCard({ record }: { record: SubmissionRecord }) {
           }
         </p>
 
-        {record.publishedUrl && (
+        {record.resolvedPublishedUrl && (
           <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
             <a
               id="view-your-novel-btn"
-              href={record.publishedUrl}
+              href={record.resolvedPublishedUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 hover:shadow-md active:scale-95"
@@ -1069,7 +1069,7 @@ export default function TrackPage() {
   }, [record?.estimatedPublishAt]);
 
   const isStatusEligible = record ? SHOW_COUNTDOWN_STATUSES.includes(record.status) : false;
-  const showOptimisticReveal = isStatusEligible && isOptimisticPast && !!record?.publishedUrl;
+  const showOptimisticReveal = isStatusEligible && isOptimisticPast && !!record?.resolvedPublishedUrl;
 
   const { displayRecord, isOptimisticallyPublished } = useMemo(() => {
     if (!record) return { displayRecord: null, isOptimisticallyPublished: false };
