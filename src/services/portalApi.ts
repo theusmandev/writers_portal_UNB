@@ -92,6 +92,7 @@ export type AdminSubmission = SubmissionRow & {
 export type SiteSettings = {
   submissions_paused: boolean;
   pause_message: string | null;
+  preferred_publish_site?: "unb" | "ufb";
 };
 
 export type NotificationSettings = {
@@ -881,20 +882,20 @@ export async function updateSubmissionStatus(
 
 export async function getSubmissionSettings(): Promise<ApiResult<SiteSettings>> {
   if (!isSupabaseConfigured) {
-    return { success: true, data: { submissions_paused: false, pause_message: null } };
+    return { success: true, data: { submissions_paused: false, pause_message: null, preferred_publish_site: "unb" } };
   }
 
   try {
     const { data, error } = await supabase
       .from("site_settings")
-      .select("submissions_paused, pause_message")
+      .select("submissions_paused, pause_message, preferred_publish_site")
       .eq("id", 1)
       .single();
 
     if (error) {
       if (error.code === 'PGRST116') {
         // No row found, default to false
-        return { success: true, data: { submissions_paused: false, pause_message: null } };
+        return { success: true, data: { submissions_paused: false, pause_message: null, preferred_publish_site: "unb" } };
       }
       return { success: false, error: error.message };
     }
@@ -907,7 +908,8 @@ export async function getSubmissionSettings(): Promise<ApiResult<SiteSettings>> 
 
 export async function updateSubmissionSettings(
   paused: boolean,
-  message: string
+  message: string,
+  preferredPublishSite: "unb" | "ufb"
 ): Promise<ApiResult<null>> {
   if (!isSupabaseConfigured) {
     await new Promise((r) => setTimeout(r, 400));
@@ -917,7 +919,7 @@ export async function updateSubmissionSettings(
   try {
     const { error } = await supabase
       .from("site_settings")
-      .update({ submissions_paused: paused, pause_message: message || null })
+      .update({ submissions_paused: paused, pause_message: message || null, preferred_publish_site: preferredPublishSite })
       .eq("id", 1);
 
     if (error) return { success: false, error: error.message };

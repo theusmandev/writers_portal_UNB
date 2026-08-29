@@ -102,6 +102,7 @@ export default function AdminSubmissionDetail() {
   const [notes, setNotes] = useState("");          // admin_notes (internal / writer-facing update)
   const [statusNote, setStatusNote] = useState(""); // status_note (visible on Rejected / Action Required cards)
   const [publishedUrl, setPublishedUrl] = useState(""); // published_url (visible on Published card)
+  const [publishedUrlUfb, setPublishedUrlUfb] = useState(""); // published_url_ufb (visible on Published card)
   const [publicCoverImageUrl, setPublicCoverImageUrl] = useState(""); // public_cover_image_url
   const [estimatedPublishAt, setEstimatedPublishAt] = useState("");
   const [saving, setSaving] = useState(false);
@@ -170,6 +171,7 @@ export default function AdminSubmissionDetail() {
         setNotes(d.admin_notes ?? "");
         setStatusNote(d.status_note ?? "");
         setPublishedUrl(d.published_url ?? "");
+        setPublishedUrlUfb(d.published_url_ufb ?? "");
         setPublicCoverImageUrl(d.public_cover_image_url ?? "");
         setEstimatedPublishAt(d.estimated_publish_at ? formatToDatetimeLocal(d.estimated_publish_at) : "");
       }
@@ -199,6 +201,14 @@ export default function AdminSubmissionDetail() {
       }
     }
 
+    if ((isEarlyPublishEligible || isPublishedOnly) && publishedUrlUfb.trim()) {
+      if (!/^https?:\/\/.+\..+/.test(publishedUrlUfb.trim())) {
+        setSaveMsg("❌ Published URL (UFB) must start with https://");
+        setSaving(false);
+        return;
+      }
+    }
+
     if ((isEarlyPublishEligible || isPublishedOnly) && publicCoverImageUrl.trim()) {
       if (!/^https?:\/\/.+\..+/.test(publicCoverImageUrl.trim())) {
         setSaveMsg("❌ Public Cover Image URL must start with https://");
@@ -223,6 +233,7 @@ export default function AdminSubmissionDetail() {
     }
     if (isEarlyPublishEligible || isPublishedOnly) {
       updates.published_url = publishedUrl.trim() || null;
+      updates.published_url_ufb = publishedUrlUfb.trim() || null;
       updates.public_cover_image_url = publicCoverImageUrl.trim() || null;
     }
     updates.estimated_publish_at = estimatedPublishAt ? new Date(estimatedPublishAt).toISOString() : null;
@@ -786,6 +797,22 @@ export default function AdminSubmissionDetail() {
                       {isPublishedOnly 
                         ? "A \"View Your Novel\" button appears on the writer's tracking page linking here."
                         : "Add this early to enable auto-publishing when the Estimated Publish Date arrives. Leave blank if not ready yet."}
+                    </p>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="published-url-ufb">
+                      Published URL (Urdu Fiction Bank){" "}
+                    </Label>
+                    <Input
+                      id="published-url-ufb"
+                      type="url"
+                      value={publishedUrlUfb}
+                      onChange={(e) => setPublishedUrlUfb(e.target.value)}
+                      placeholder="https://urdufictionbank.com/novel/..."
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Backup link on Urdu Fiction Bank (WordPress). Used as a fallback if the Urdu Novel Bank link is unavailable, or as the primary link if Urdu Fiction Bank is set as preferred in Settings.
                     </p>
                   </div>
 

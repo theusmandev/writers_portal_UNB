@@ -16,6 +16,7 @@ export default function AdminSettings() {
   
   const [paused, setPaused] = useState(false);
   const [message, setMessage] = useState("");
+  const [preferredPublishSite, setPreferredPublishSite] = useState<"unb" | "ufb">("unb");
 
   const [notificationEnabled, setNotificationEnabled] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState("");
@@ -41,6 +42,7 @@ export default function AdminSettings() {
     if (result.success) {
       setPaused(result.data.submissions_paused);
       setMessage(result.data.pause_message || "");
+      setPreferredPublishSite(result.data.preferred_publish_site ?? "unb");
     } else {
       setError(result.error);
     }
@@ -115,7 +117,7 @@ export default function AdminSettings() {
     setError(null);
     setSuccess(null);
     const [result, notifResultSave, headCodeSaveResult] = await Promise.all([
-      updateSubmissionSettings(paused, message),
+      updateSubmissionSettings(paused, message, preferredPublishSite),
       updateNotificationSettings(notificationEnabled, notificationMessage, notificationLinkUrl, notificationLinkText),
       updateCustomHeadCode(customHeadCode)
     ]);
@@ -255,6 +257,49 @@ export default function AdminSettings() {
               content={message}
               onChange={setMessage}
             />
+          </div>
+          
+          <Button onClick={handleSave} disabled={loading || saving} className="w-full sm:w-auto">
+            <Save className="mr-2 h-4 w-4" />
+            {saving ? "Saving..." : "Save Settings"}
+          </Button>
+        </div>
+      </div>
+
+      <div className="rounded-xl border bg-card p-6 shadow-sm">
+        <h2 className="text-lg font-semibold mb-4">Preferred Publish Site</h2>
+        
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">
+              When a novel is available on both sites, which one should readers be sent to? If your preferred site's link is missing for a novel, the other one is used automatically.
+            </p>
+            <div className="flex gap-4 items-center pt-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="preferred-site"
+                  value="unb"
+                  checked={preferredPublishSite === "unb"}
+                  onChange={() => setPreferredPublishSite("unb")}
+                  disabled={loading || saving}
+                  className="accent-primary"
+                />
+                <span className="text-sm font-medium">Urdu Novel Bank</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="preferred-site"
+                  value="ufb"
+                  checked={preferredPublishSite === "ufb"}
+                  onChange={() => setPreferredPublishSite("ufb")}
+                  disabled={loading || saving}
+                  className="accent-primary"
+                />
+                <span className="text-sm font-medium">Urdu Fiction Bank</span>
+              </label>
+            </div>
           </div>
           
           <Button onClick={handleSave} disabled={loading || saving} className="w-full sm:w-auto">
