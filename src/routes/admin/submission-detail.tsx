@@ -381,13 +381,13 @@ export default function AdminSubmissionDetail() {
           <ArrowLeft className="h-4 w-4" /> Back to submissions
         </Link>
         <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h1 className="text-xl font-semibold">{detail.novel_title}</h1>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl font-semibold break-words">{detail.novel_title}</h1>
             <p className="text-sm text-muted-foreground mt-1 font-mono">{detail.submission_code}</p>
             {trackingUrl && (
               <div className="mt-3 flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-1.5 text-xs w-full sm:w-max overflow-hidden">
                 <span className="text-muted-foreground font-medium shrink-0">Tracking Link:</span>
-                <span className="font-mono text-muted-foreground truncate flex-1 sm:flex-none sm:max-w-sm">{trackingUrl}</span>
+                <span className="font-mono text-muted-foreground truncate min-w-0 flex-1 sm:flex-none sm:max-w-sm">{trackingUrl}</span>
                 <div className="flex items-center gap-1 ml-2 pl-3 border-l border-border/50 shrink-0">
                   <button
                     onClick={copyTrackingUrl}
@@ -410,7 +410,7 @@ export default function AdminSubmissionDetail() {
             )}
           </div>
           <span
-            className={`rounded-full px-3 py-1 text-xs font-medium ${statusColors[detail.current_status] ?? "bg-muted text-muted-foreground"}`}
+            className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ${statusColors[detail.current_status] ?? "bg-muted text-muted-foreground"}`}
           >
             {detail.current_status}
           </span>

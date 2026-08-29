@@ -351,15 +351,15 @@ export default function AdminSettings() {
           ) : (
             <div className="divide-y">
               {paginatedExceptions.map(exc => (
-                <div key={exc.id} className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">
-                  <div>
-                    <p className="font-medium">{exc.email}</p>
-                    {exc.note && <p className="text-sm text-muted-foreground">{exc.note}</p>}
+                <div key={exc.id} className="flex items-center justify-between gap-4 p-4 hover:bg-muted/50 transition-colors">
+                  <div className="min-w-0">
+                    <p className="font-medium break-all">{exc.email}</p>
+                    {exc.note && <p className="text-sm text-muted-foreground break-words">{exc.note}</p>}
                   </div>
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="text-muted-foreground hover:text-destructive"
+                    className="shrink-0 text-muted-foreground hover:text-destructive"
                     onClick={() => handleRemoveException(exc.id)}
                     title="Remove exception"
                   >
