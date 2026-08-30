@@ -12,6 +12,7 @@ import { PageHero } from "@/components/portal/PageHero";
 import { genres, site, getMissingFileMessage } from "@/data/content";
 import { isDemoMode, submitNovel, uploadFileToScript, updateSubmissionFiles, sendNotificationEmail, getWriterInfoByEmail, uploadEpisodeFile, saveEpisodeRecord, getSubmissionSettings, checkEpisodeMinimumException, type SubmissionRecord } from "@/services/portalApi";
 import { SEO } from "@/components/SEO";
+import { supabase } from "@/lib/supabase";
 
 
 
@@ -220,6 +221,11 @@ export default function SubmitPage() {
   const [isPaused, setIsPaused] = useState(false);
   const [pauseMessage, setPauseMessage] = useState("");
 
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [gateEmail, setGateEmail] = useState("");
+  const [gateLoading, setGateLoading] = useState(false);
+  const [gateMessage, setGateMessage] = useState<{text: string, type: "error"|"success"} | null>(null);
+
   useEffect(() => {
     async function loadSettings() {
       const res = await getSubmissionSettings();
@@ -260,6 +266,32 @@ export default function SubmitPage() {
       });
     }
     setAutoFillLoading(false);
+  }
+
+  async function handleGateCheck() {
+    if (!gateEmail || !/^\S+@\S+\.\S+$/.test(gateEmail)) {
+      setGateMessage({ text: "Please enter a valid email address.", type: "error" });
+      return;
+    }
+    setGateLoading(true);
+    setGateMessage(null);
+    try {
+      const { data, error } = await supabase.rpc("is_existing_writer", { p_email: gateEmail.trim() });
+      if (error) throw error;
+      if (data) {
+        setAutoFillEmail(gateEmail.trim());
+        setIsUnlocked(true);
+      } else {
+        setGateMessage({ 
+          text: "We couldn't find a prior submission under this email. New submissions are currently paused — please check back later.", 
+          type: "error" 
+        });
+      }
+    } catch (err: any) {
+      setGateMessage({ text: "Failed to check email. Please try again.", type: "error" });
+    } finally {
+      setGateLoading(false);
+    }
   }
 
 
@@ -714,7 +746,7 @@ export default function SubmitPage() {
     );
   }
 
-  if (isPaused) {
+  if (isPaused && !isUnlocked) {
     return (
       <div>
         <SEO 
@@ -748,6 +780,34 @@ export default function SubmitPage() {
               <Button asChild variant="outline">
                 <Link to="/updates">Check Updates</Link>
               </Button>
+            </div>
+
+            <div className="mt-12 pt-8 border-t border-border text-left">
+              <h3 className="text-lg font-medium mb-2">Already submitted with us before?</h3>
+              <p className="text-sm text-muted-foreground mb-4">Enter your email to continue submitting.</p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Input
+                  type="email"
+                  placeholder="Your email address"
+                  value={gateEmail}
+                  onChange={(e) => setGateEmail(e.target.value)}
+                  className="bg-background max-w-sm"
+                  onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleGateCheck())}
+                />
+                <Button 
+                  onClick={handleGateCheck}
+                  disabled={gateLoading}
+                  className="sm:w-auto"
+                >
+                  {gateLoading && <Loader2 className="mr-2 size-4 animate-spin" />}
+                  Check
+                </Button>
+              </div>
+              {gateMessage && (
+                <p className={`mt-3 text-sm font-medium ${gateMessage.type === "error" ? "text-destructive" : "text-primary"}`}>
+                  {gateMessage.text}
+                </p>
+              )}
             </div>
           </div>
         </div>
