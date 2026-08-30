@@ -254,13 +254,28 @@ export default function AdminSubmissionDetail() {
             newStatus === "Action Required" ? "action_required" :
             newStatus === "Rejected" ? "rejected" : "published";
 
+          let finalPublishedUrl = publishedUrl.trim() || undefined;
+
+          if (newStatus === "Published") {
+            try {
+              const { data, error: rpcErr } = await supabase.rpc("resolve_published_url", {
+                p_unb: publishedUrl.trim() || null,
+                p_ufb: publishedUrlUfb.trim() || null
+              });
+              if (rpcErr) throw rpcErr;
+              if (data) finalPublishedUrl = data;
+            } catch (err) {
+              console.error("Failed to resolve published URL via RPC, falling back to raw UNB url:", err);
+            }
+          }
+
           const emailPayload: any = {
             writerEmail: w.email,
             writerName: w.pen_name || w.full_name,
             novelTitle: detail.novel_title,
             submissionCode: detail.submission_code,
             statusNote: statusNote.trim() || undefined,
-            publishedUrl: publishedUrl.trim() || undefined,
+            publishedUrl: finalPublishedUrl,
           };
 
           sendNotificationEmail(emailType as any, emailPayload)
@@ -307,13 +322,25 @@ export default function AdminSubmissionDetail() {
 
     // Send email notification
     if (detail.writers?.email) {
+      let finalPublishedUrl = detail.published_url || undefined;
+      try {
+        const { data, error: rpcErr } = await supabase.rpc("resolve_published_url", {
+          p_unb: detail.published_url || null,
+          p_ufb: detail.published_url_ufb || null
+        });
+        if (rpcErr) throw rpcErr;
+        if (data) finalPublishedUrl = data;
+      } catch (err) {
+        console.error("Failed to resolve published URL via RPC, falling back to raw UNB url:", err);
+      }
+
       const emailPayload = {
         writerEmail: detail.writers.email,
         writerName: detail.writers.pen_name || detail.writers.full_name,
         novelTitle: detail.novel_title,
         submissionCode: detail.submission_code,
         episodeNumbers: sortedToPublish.join(", "),
-        publishedUrl: detail.published_url || undefined,
+        publishedUrl: finalPublishedUrl,
       };
       
       const emailRes = await sendNotificationEmail("episodes_published", emailPayload);
