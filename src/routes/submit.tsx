@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import DOMPurify from "dompurify";
 import { z } from "zod";
@@ -225,6 +225,17 @@ export default function SubmitPage() {
   const [gateEmail, setGateEmail] = useState("");
   const [gateLoading, setGateLoading] = useState(false);
   const [gateMessage, setGateMessage] = useState<{text: string, type: "error"|"success"} | null>(null);
+
+  const formTopRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (isUnlocked && formTopRef.current) {
+      // Add a slight delay to ensure layout is fully updated before scrolling
+      setTimeout(() => {
+        formTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 50);
+    }
+  }, [isUnlocked]);
 
   useEffect(() => {
     async function loadSettings() {
@@ -844,7 +855,7 @@ export default function SubmitPage() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-8" noValidate>
-          <section className="rounded-xl border border-border bg-card p-4 sm:p-6 shadow-soft">
+          <section ref={formTopRef} className="rounded-xl border border-border bg-card p-4 sm:p-6 shadow-soft">
             <div className="flex items-center justify-between">
               <h2 className="font-display text-lg font-semibold">Writer Information</h2>
               <span className="text-xs text-muted-foreground"><span className="text-red-500">*</span> Required field</span>
