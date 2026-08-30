@@ -270,7 +270,7 @@ export default function SubmitPage() {
 
   async function handleGateCheck() {
     if (!gateEmail || !/^\S+@\S+\.\S+$/.test(gateEmail)) {
-      setGateMessage({ text: "Please enter a valid email address.", type: "error" });
+      setGateMessage({ text: "براہ کرم ایک درست ای میل ایڈریس درج کریں۔", type: "error" });
       return;
     }
     setGateLoading(true);
@@ -283,12 +283,12 @@ export default function SubmitPage() {
         setIsUnlocked(true);
       } else {
         setGateMessage({ 
-          text: "We couldn't find a prior submission under this email. New submissions are currently paused — please check back later.", 
+          text: "اس ای میل سے کوئی پرانا ریکارڈ نہیں ملا۔ نئی بھرتیاں فی الحال بند ہیں، براہ کرم بعد میں دوبارہ چیک کریں۔", 
           type: "error" 
         });
       }
     } catch (err: any) {
-      setGateMessage({ text: "Failed to check email. Please try again.", type: "error" });
+      setGateMessage({ text: "ای میل چیک کرنے میں مسئلہ ہوا۔ براہ کرم دوبارہ کوشش کریں۔", type: "error" });
     } finally {
       setGateLoading(false);
     }
@@ -782,29 +782,29 @@ export default function SubmitPage() {
               </Button>
             </div>
 
-            <div className="mt-12 pt-8 border-t border-border text-left">
-              <h3 className="text-lg font-medium mb-2">Already submitted with us before?</h3>
-              <p className="text-sm text-muted-foreground mb-4">Enter your email to continue submitting.</p>
-              <div className="flex flex-col sm:flex-row gap-3">
+            <div className="mt-12 pt-8 border-t border-border flex flex-col items-center text-center">
+              <h3 className="text-xl font-semibold mb-2 urdu" dir="rtl">کیا آپ پہلے بھی ناول جمع کروا چکے ہیں؟</h3>
+              <p className="text-base text-muted-foreground mb-5 urdu" dir="rtl">نیا ناول سبمٹ کرنے کے لئے نیچے اپنی ای میل درج کریں۔</p>
+              <div className="flex flex-col sm:flex-row justify-center items-center gap-3 w-full max-w-sm">
                 <Input
                   type="email"
                   placeholder="Your email address"
                   value={gateEmail}
                   onChange={(e) => setGateEmail(e.target.value)}
-                  className="bg-background max-w-sm"
+                  className="bg-background w-full"
                   onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleGateCheck())}
                 />
                 <Button 
                   onClick={handleGateCheck}
                   disabled={gateLoading}
-                  className="sm:w-auto"
+                  className="w-full sm:w-auto shrink-0"
                 >
                   {gateLoading && <Loader2 className="mr-2 size-4 animate-spin" />}
                   Check
                 </Button>
               </div>
               {gateMessage && (
-                <p className={`mt-3 text-sm font-medium ${gateMessage.type === "error" ? "text-destructive" : "text-primary"}`}>
+                <p className={`mt-4 text-base font-medium urdu ${gateMessage.type === "error" ? "text-destructive" : "text-primary"}`} dir="rtl">
                   {gateMessage.text}
                 </p>
               )}
