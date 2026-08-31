@@ -15,6 +15,7 @@ import {
   Instagram,
   Video,
   Link as LinkIcon,
+  Sparkles,
 } from "lucide-react";
 import { getSpotlightBySlug } from "@/services/portalApi";
 import { PageHero } from "@/components/portal/PageHero";
@@ -348,11 +349,37 @@ export default function SpotlightPage() {
         image={seoImage}
       />
 
-      {/* ── Hero ── */}
-      <PageHero
-        eyebrow={spotlight.spotlight_label || "Writer Spotlight"}
-        title={spotlight.display_name}
-      />
+      {/* ── Spotlight Hero ── */}
+      <div className="relative overflow-hidden bg-background py-20 sm:py-28 lg:py-32 border-b border-border">
+        {/* Spotlight Beam Visual */}
+        <div 
+          className="pointer-events-none absolute inset-x-0 top-0 h-full overflow-hidden"
+          aria-hidden="true"
+        >
+          {/* Main top radial glow */}
+          <div className="absolute -top-[30%] left-1/2 h-[160%] w-[150%] max-w-[900px] -translate-x-1/2 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-400/20 via-primary/5 to-transparent dark:from-amber-400/10 dark:via-primary/5" />
+          {/* Narrower beam overlay */}
+          <div 
+            className="absolute -top-[10%] left-1/2 h-[120%] w-[100%] max-w-[500px] -translate-x-1/2 opacity-30 dark:opacity-20"
+            style={{
+              background: "radial-gradient(circle at top, hsl(var(--primary) / 0.4) 0%, transparent 60%)"
+            }}
+          />
+        </div>
+
+        <div className="relative mx-auto max-w-4xl px-6 text-center">
+          <div className="mb-6 flex justify-center">
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-3.5 py-1.5 text-xs font-bold uppercase tracking-[0.15em] text-amber-700 dark:text-amber-400 shadow-sm backdrop-blur-sm">
+              <Sparkles className="h-4 w-4" />
+              {spotlight.spotlight_label || "Writer Spotlight"}
+            </div>
+          </div>
+          
+          <h1 className="font-serif text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl lg:text-7xl">
+            {spotlight.display_name}
+          </h1>
+        </div>
+      </div>
 
       {/* ── Body ── */}
       <div className="mx-auto max-w-3xl px-5 py-12 md:py-16 space-y-12">
