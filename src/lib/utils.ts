@@ -14,3 +14,13 @@ export function formatDate(iso: string) {
     year: "numeric",
   }).format(date);
 }
+
+/** Converts a display name to a URL-friendly slug */
+export function slugify(name: string): string {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, "")   // strip special chars
+    .replace(/\s+/g, "-")        // spaces → hyphens
+    .replace(/-+/g, "-");        // collapse consecutive hyphens
+}

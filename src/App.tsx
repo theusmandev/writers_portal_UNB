@@ -22,6 +22,8 @@ import FeaturedWritersList from "./routes/writers/featured-writers-list";
 import FeaturedWriterPage from "./routes/writers/featured-writer";
 import PostsPage from "./routes/posts";
 import PostDetailPage from "./routes/post-detail";
+import SpotlightsPage from "./routes/spotlights/index";
+import SpotlightPage from "./routes/spotlights/spotlight";
 
 // ── Admin pages ───────────────────────────────────────────────────────────────
 import AdminLoginPage from "./routes/admin/login";
@@ -32,6 +34,8 @@ import AdminWriters from "./routes/admin/writers";
 import AdminWriterDetail from "./routes/admin/writer-detail";
 import AdminPosts from "./routes/admin/posts";
 import AdminPostEdit from "./routes/admin/post-edit";
+import AdminSpotlights from "./routes/admin/spotlights";
+import AdminSpotlightEdit from "./routes/admin/spotlight-edit";
 import AdminSettings from "./routes/admin/settings";
 import NotFound from "./routes/not-found";
 import WriterStatsPage from "./routes/writer-stats";
@@ -79,6 +83,9 @@ export default function App() {
           <Route path="posts" element={<AdminPosts />} />
           <Route path="posts/new" element={<AdminPostEdit />} />
           <Route path="posts/:id/edit" element={<AdminPostEdit />} />
+          <Route path="spotlights" element={<AdminSpotlights />} />
+          <Route path="spotlights/new" element={<AdminSpotlightEdit />} />
+          <Route path="spotlights/:id/edit" element={<AdminSpotlightEdit />} />
           <Route path="settings" element={<AdminSettings />} />
           <Route path="*" element={<NotFound />} />
         </Route>
@@ -99,6 +106,8 @@ export default function App() {
           <Route path="/writers/featured/:slug" element={<FeaturedWriterPage />} />
           <Route path="/updates" element={<PostsPage />} />
           <Route path="/updates/:slug" element={<PostDetailPage />} />
+          <Route path="/spotlights" element={<SpotlightsPage />} />
+          <Route path="/spotlights/:slug" element={<SpotlightPage />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

@@ -11,7 +11,7 @@
  */
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import type { SubmissionStatus } from "@/data/content";
-import type { WriterRow, SubmissionRow, PublicWriterRow, SiteSettingsRow, FeaturedWriterPublic, WriterDashboardData } from "@/lib/supabase.types";
+import type { WriterRow, SubmissionRow, PublicWriterRow, SiteSettingsRow, FeaturedWriterPublic, WriterDashboardData, WriterSpotlightRow } from "@/lib/supabase.types";
 
 // ── Public Types ──────────────────────────────────────────────────────────────
 
@@ -1369,6 +1369,100 @@ export async function getFeaturedWriterBySlug(
       success: false,
       error: err?.message || "Could not load featured writer.",
     };
+  }
+}
+
+// ── Public: Writer Spotlights (Admin) ─────────────────────────────────────────
+
+export type AdminSpotlight = WriterSpotlightRow & {
+  writers: Pick<WriterRow, "id" | "full_name" | "pen_name" | "email"> | null;
+};
+
+export async function getAdminSpotlights(): Promise<ApiResult<AdminSpotlight[]>> {
+  if (!isSupabaseConfigured) return { success: true, data: [] };
+  try {
+    const { data, error } = await supabase
+      .from("writer_spotlights")
+      .select("*, writers(id, full_name, pen_name, email)")
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return { success: true, data: (data as any) as AdminSpotlight[] };
+  } catch (err: any) {
+    return { success: false, error: err?.message || "Could not load spotlights." };
+  }
+}
+
+export async function getAdminSpotlightById(id: string): Promise<ApiResult<AdminSpotlight>> {
+  if (!isSupabaseConfigured) return { success: false, error: "Demo mode" };
+  try {
+    const { data, error } = await supabase
+      .from("writer_spotlights")
+      .select("*, writers(id, full_name, pen_name, email)")
+      .eq("id", id)
+      .single();
+    if (error) throw error;
+    return { success: true, data: (data as any) as AdminSpotlight };
+  } catch (err: any) {
+    return { success: false, error: err?.message || "Could not load spotlight." };
+  }
+}
+
+export async function createSpotlight(data: Partial<WriterSpotlightRow>): Promise<ApiResult<null>> {
+  if (!isSupabaseConfigured) return { success: false, error: "Demo mode" };
+  try {
+    const { error } = await supabase.from("writer_spotlights").insert(data);
+    if (error) throw error;
+    return { success: true, data: null };
+  } catch (err: any) {
+    return { success: false, error: err?.message || "Failed to create spotlight." };
+  }
+}
+
+export async function updateSpotlight(id: string, data: Partial<WriterSpotlightRow>): Promise<ApiResult<null>> {
+  if (!isSupabaseConfigured) return { success: false, error: "Demo mode" };
+  try {
+    const { error } = await supabase.from("writer_spotlights").update(data).eq("id", id);
+    if (error) throw error;
+    return { success: true, data: null };
+  } catch (err: any) {
+    return { success: false, error: err?.message || "Failed to update spotlight." };
+  }
+}
+
+export async function deleteSpotlight(id: string): Promise<ApiResult<null>> {
+  if (!isSupabaseConfigured) return { success: false, error: "Demo mode" };
+  try {
+    const { error } = await supabase.from("writer_spotlights").delete().eq("id", id);
+    if (error) throw error;
+    return { success: true, data: null };
+  } catch (err: any) {
+    return { success: false, error: err?.message || "Failed to delete spotlight." };
+  }
+}
+
+// ── Public: Writer Spotlights (Public Pages) ──────────────────────────────────
+
+export async function getSpotlightsList() {
+  if (!isSupabaseConfigured) return { success: true, data: [] };
+  try {
+    const { data, error } = await supabase.rpc("get_spotlights_list");
+    if (error) throw error;
+    return { success: true, data: data || [] };
+  } catch (err: any) {
+    return { success: false, error: err?.message || "Could not load spotlights." };
+  }
+}
+
+export async function getSpotlightBySlug(slug: string) {
+  if (!isSupabaseConfigured) return { success: true, data: null };
+  try {
+    const { data, error } = await supabase.rpc("get_spotlight_by_slug", {
+      p_slug: slug,
+    });
+    if (error) throw error;
+    return { success: true, data: data && data.length > 0 ? data[0] : null };
+  } catch (err: any) {
+    return { success: false, error: err?.message || "Could not load spotlight." };
   }
 }
 

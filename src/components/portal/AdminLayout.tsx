@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
-import { LayoutDashboard, FileText, Users, Newspaper, LogOut, BookOpen, Settings, Menu } from "lucide-react";
+import { LayoutDashboard, FileText, Users, Newspaper, LogOut, BookOpen, Settings, Menu, Star } from "lucide-react";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { SEO } from "@/components/SEO";
 
@@ -9,6 +9,7 @@ const navItems = [
   { to: "/admin/submissions", label: "Submissions", icon: FileText, end: false },
   { to: "/admin/writers", label: "Writers", icon: Users, end: false },
   { to: "/admin/posts", label: "Posts", icon: Newspaper, end: false },
+  { to: "/admin/spotlights", label: "Spotlights", icon: Star, end: false },
   { to: "/admin/settings", label: "Settings", icon: Settings, end: false },
 ] as const;
 

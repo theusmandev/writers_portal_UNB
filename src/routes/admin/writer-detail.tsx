@@ -11,6 +11,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { supabase } from "@/lib/supabase";
+import { slugify } from "@/lib/utils";
+import type { 
+  WriterRow, 
+  PublicWriterRow, 
+  NovelSubmissionRow, 
+  WriterSpotlightRow 
+} from "@/lib/supabase.types";
 import { getWriterWithSubmissions, setFeaturedWriter, toggleWriterPublic, type WriterDetailWithSubmissions } from "@/services/portalApi";
 
 const statusColors: Record<string, string> = {
@@ -34,15 +41,7 @@ function formatDate(iso: string) {
   });
 }
 
-/** Converts a display name to a URL-friendly slug */
-function slugify(name: string): string {
-  return name
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, "")   // strip special chars
-    .replace(/\s+/g, "-")        // spaces → hyphens
-    .replace(/-+/g, "-");        // collapse consecutive hyphens
-}
+
 
 export default function AdminWriterDetail() {
   const { id } = useParams<{ id: string }>();

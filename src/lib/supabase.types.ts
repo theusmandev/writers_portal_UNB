@@ -203,6 +203,33 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["site_settings"]["Insert"]>;
         Relationships: any[];
       };
+      writer_spotlights: {
+        Row: {
+          id: string;
+          writer_id: string;
+          spotlight_content: string | null;
+          spotlight_label: string | null;
+          slug: string;
+          is_published: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["writer_spotlights"]["Row"], "id" | "created_at" | "updated_at"> & {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["writer_spotlights"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "writer_spotlights_writer_id_fkey";
+            columns: ["writer_id"];
+            isOneToOne: false;
+            referencedRelation: "writers";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
     };
     Views: {
       public_writers_view: {
@@ -262,6 +289,27 @@ export interface Database {
           // at the database level in 021_featured_writer_system.sql.
         }>;
       };
+      get_spotlights_list: {
+        Args: Record<PropertyKey, never>;
+        Returns: Array<{
+          id: string;
+          slug: string;
+          spotlight_label: string | null;
+          created_at: string;
+          display_name: string;
+        }>;
+      };
+      get_spotlight_by_slug: {
+        Args: { p_slug: string };
+        Returns: Array<{
+          spotlight_content: string | null;
+          spotlight_label: string | null;
+          created_at: string;
+          display_name: string;
+          social_media_link: string | null;
+          published_novels: Json;
+        }>;
+      };
     };
     Enums: Record<string, never>;
   };
@@ -275,6 +323,7 @@ export type EpisodeRow = Database["public"]["Tables"]["episodes"]["Row"];
 export type PostRow = Database["public"]["Tables"]["posts"]["Row"];
 export type PublicWriterRow = Database["public"]["Views"]["public_writers_view"]["Row"];
 export type SiteSettingsRow = Database["public"]["Tables"]["site_settings"]["Row"];
+export type WriterSpotlightRow = Database["public"]["Tables"]["writer_spotlights"]["Row"];
 
 /** Shape returned by get_writer_dashboard_by_token() RPC.
  *  Only returned when token matches an is_featured=true writer.
