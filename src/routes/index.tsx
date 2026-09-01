@@ -34,7 +34,12 @@ export default function Index() {
       ]);
       
       if (writersRes.success && writersRes.data.length > 0) {
-        setWriters(writersRes.data.slice(0, 8));
+        const shuffled = [...writersRes.data];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        setWriters(shuffled.slice(0, 8));
       }
       
       if (spotlightsRes.success && spotlightsRes.data.length > 0) {
