@@ -1,5 +1,8 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, BookOpen, FileText, ShieldCheck, Clock, Search } from "lucide-react";
+import { ArrowRight, BookOpen, FileText, ShieldCheck, Clock, Search, Star } from "lucide-react";
+import { useEffect, useState } from "react";
+import { getPublicWriters, getSpotlightsList } from "@/services/portalApi";
+import type { PublicWriterRow } from "@/lib/supabase.types";
 import { Button } from "@/components/ui/button";
 import {
   Accordion,
@@ -20,6 +23,27 @@ const steps = [
 ] as const;
 
 export default function Index() {
+  const [writers, setWriters] = useState<PublicWriterRow[]>([]);
+  const [latestSpotlight, setLatestSpotlight] = useState<any | null>(null);
+
+  useEffect(() => {
+    async function loadData() {
+      const [writersRes, spotlightsRes] = await Promise.all([
+        getPublicWriters(),
+        getSpotlightsList()
+      ]);
+      
+      if (writersRes.success && writersRes.data.length > 0) {
+        setWriters(writersRes.data.slice(0, 8));
+      }
+      
+      if (spotlightsRes.success && spotlightsRes.data.length > 0) {
+        setLatestSpotlight(spotlightsRes.data[0]);
+      }
+    }
+    void loadData();
+  }, []);
+
   return (
     <div>
       <SEO 
@@ -153,6 +177,81 @@ export default function Index() {
           ))}
         </div>
       </section>
+
+      {/* ── Writer Spotlight ── */}
+      {latestSpotlight && (
+        <section className="bg-muted/30 border-y border-border">
+          <div className="mx-auto max-w-6xl px-5 py-20">
+            <FadeIn className="flex flex-col md:flex-row items-center gap-10 lg:gap-16">
+              <div className="flex-1 space-y-6">
+                <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-3.5 py-1.5 text-xs font-bold tracking-[0.15em] text-amber-700 dark:text-amber-400 uppercase shadow-sm">
+                  <Star className="h-3.5 w-3.5" /> 
+                  {latestSpotlight.spotlight_label ? `${latestSpotlight.spotlight_label} Spotlight` : "Monthly Spotlight"}
+                </div>
+                <h2 className="text-3xl sm:text-4xl font-serif font-bold text-foreground">
+                  {latestSpotlight.display_name}
+                </h2>
+                <p className="text-muted-foreground text-lg leading-relaxed max-w-lg">
+                  Dive into the journey and works of our highlighted author. Read their story, discover their published novels, and connect with their writing.
+                </p>
+                <div className="flex flex-wrap items-center gap-6 pt-2">
+                  <Button asChild className="h-11 px-6 shadow-elegant bg-primary hover:bg-primary/90 text-primary-foreground">
+                    <Link to={`/spotlights/${latestSpotlight.slug}`}>
+                      Read the Spotlight <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <Link to="/spotlights" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors underline-offset-4 hover:underline">
+                    View All Spotlights &rarr;
+                  </Link>
+                </div>
+              </div>
+              <div className="w-full md:w-5/12 aspect-square md:aspect-auto md:h-80 bg-card rounded-2xl border border-border shadow-soft flex items-center justify-center relative overflow-hidden group">
+                <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 via-transparent to-primary/5 transition-opacity group-hover:opacity-70" />
+                <div className="relative text-center p-8 space-y-5">
+                   <div className="mx-auto h-24 w-24 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-4xl font-serif text-white shadow-md">
+                      {latestSpotlight.display_name.charAt(0).toUpperCase()}
+                   </div>
+                   <div>
+                     <div className="font-serif text-2xl font-semibold text-foreground">{latestSpotlight.display_name}</div>
+                     <div className="text-xs uppercase tracking-[0.2em] text-amber-600 dark:text-amber-500 font-bold mt-1">
+                       {latestSpotlight.spotlight_label || "Featured Writer"}
+                     </div>
+                   </div>
+                </div>
+              </div>
+            </FadeIn>
+          </div>
+        </section>
+      )}
+
+      {/* ── Meet Our Writers ── */}
+      {writers.length > 0 && (
+        <section className="mx-auto max-w-6xl px-5 py-24">
+          <FadeIn className="text-center mb-14">
+            <h2 className="text-3xl font-semibold text-foreground">Meet Our Writers</h2>
+            <p className="mt-3 text-muted-foreground max-w-xl mx-auto text-lg">
+              Meet the writers bringing their stories to Urdu Novel Bank.
+            </p>
+          </FadeIn>
+          
+          <div className="flex flex-wrap justify-center gap-8 md:gap-12">
+            {writers.map((w, i) => (
+              <FadeIn key={w.pen_name} delayMs={i * 50} className="flex flex-col items-center gap-3 group">
+                <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-full bg-muted border border-border flex items-center justify-center text-2xl sm:text-3xl font-serif text-muted-foreground shadow-sm transition-all duration-300 group-hover:scale-105 group-hover:shadow-md group-hover:border-primary/30 group-hover:bg-primary/5 group-hover:text-primary">
+                  {w.pen_name.charAt(0).toUpperCase()}
+                </div>
+                <span className="text-sm sm:text-base font-medium text-foreground transition-colors group-hover:text-primary">{w.pen_name}</span>
+              </FadeIn>
+            ))}
+          </div>
+          
+          <FadeIn delayMs={300} className="mt-14 text-center">
+            <Button asChild variant="outline" className="h-11 px-8 rounded-full shadow-soft hover:bg-card">
+              <Link to="/writers">Browse All Writers &rarr;</Link>
+            </Button>
+          </FadeIn>
+        </section>
+      )}
 
       <section>
         <div className="mx-auto grid max-w-6xl gap-10 px-5 py-20 lg:grid-cols-3">
