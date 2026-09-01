@@ -194,14 +194,15 @@ export default function Index() {
                 <p className="text-muted-foreground text-lg leading-relaxed max-w-lg">
                   Dive into the journey and works of our highlighted author. Read their story, discover their published novels, and connect with their writing.
                 </p>
-                <div className="flex flex-wrap items-center gap-6 pt-2">
-                  <Button asChild className="h-11 px-6 shadow-elegant bg-primary hover:bg-primary/90 text-primary-foreground">
+                <div className="flex flex-nowrap items-center gap-3 sm:gap-6 pt-2 overflow-hidden w-full">
+                  <Button asChild className="h-9 sm:h-11 px-4 sm:px-6 shadow-elegant bg-primary hover:bg-primary/90 text-primary-foreground text-xs sm:text-sm whitespace-nowrap shrink-0">
                     <Link to={`/spotlights/${latestSpotlight.slug}`}>
-                      Read the Spotlight <ArrowRight className="ml-2 h-4 w-4" />
+                      Read the Spotlight <ArrowRight className="ml-1.5 sm:ml-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     </Link>
                   </Button>
-                  <Link to="/spotlights" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors underline-offset-4 hover:underline">
-                    View All Spotlights &rarr;
+                  <Link to="/spotlights" className="text-xs sm:text-sm font-medium text-muted-foreground hover:text-primary transition-colors underline-offset-4 hover:underline whitespace-nowrap shrink-0 truncate">
+                    <span className="sm:hidden">View All &rarr;</span>
+                    <span className="hidden sm:inline">View All Spotlights &rarr;</span>
                   </Link>
                 </div>
               </div>
