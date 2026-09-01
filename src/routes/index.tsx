@@ -200,7 +200,7 @@ export default function Index() {
                   {latestSpotlight.display_name}
                 </h3>
                 <p className="text-muted-foreground text-lg leading-relaxed max-w-lg">
-                  Dive into the journey and works of our highlighted author. Read their story, discover their published novels, and connect with their writing.
+                  Dive into the journey and works of our New highlighted author. Read their story, discover their published novels, and connect with their writing.
                 </p>
                 <div className="flex flex-nowrap items-center gap-3 sm:gap-6 pt-2 overflow-hidden w-full">
                   <Button asChild className="h-9 sm:h-11 px-4 sm:px-6 shadow-elegant bg-primary hover:bg-primary/90 text-primary-foreground text-xs sm:text-sm whitespace-nowrap shrink-0">
