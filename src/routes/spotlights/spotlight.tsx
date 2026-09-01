@@ -377,22 +377,22 @@ export default function SpotlightPage() {
             </defs>
 
             {/* Ceiling bracket */}
-            <g transform="translate(460, 0)">
+            <g transform="translate(520, 0)">
               <rect x="-12" y="-5" width="24" height="15" rx="2" className="fill-primary" />
               <rect x="-3" y="10" width="6" height="25" className="fill-primary" />
               <circle cx="0" cy="35" r="5" className="fill-primary" />
             </g>
             
             {/* Lamp and Beam */}
-            <g transform="translate(460, 35) rotate(15)">
+            <g transform="translate(520, 35) rotate(15)">
               {/* Ambient beam */}
               <path 
-                d="M-25,27 L-250,600 L250,600 Z" 
+                d="M-22,27 L-400,600 L400,600 L22,27 Z" 
                 fill="url(#spotlight-beam)" 
               />
               {/* Bright center beam */}
               <path 
-                d="M-15,27 L-100,600 L100,600 Z" 
+                d="M-12,27 L-160,600 L160,600 L12,27 Z" 
                 fill="url(#spotlight-beam-core)" 
               />
               
