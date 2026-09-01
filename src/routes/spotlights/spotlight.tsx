@@ -416,6 +416,14 @@ export default function SpotlightPage() {
         </div>
 
         <div className="relative mx-auto max-w-4xl px-6 text-center">
+          <div className="mb-4 flex justify-center">
+            <a 
+              href="https://portal.urdunovelbanks.com/updates/initial-push-new-writers-monthly-spotlight" 
+              className="text-[11px] font-medium text-muted-foreground hover:text-foreground underline underline-offset-4 transition-colors"
+            >
+              Why this Spotlight?
+            </a>
+          </div>
           <div className="mb-6 flex justify-center">
             <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-3.5 py-1.5 text-xs font-bold tracking-[0.15em] text-amber-700 dark:text-amber-400 shadow-sm backdrop-blur-sm uppercase">
               <Sparkles className="h-4 w-4" />
