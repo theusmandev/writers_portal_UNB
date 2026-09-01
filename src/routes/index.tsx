@@ -182,8 +182,8 @@ export default function Index() {
       {latestSpotlight && (
         <section className="bg-muted/30 border-y border-border">
           <div className="mx-auto max-w-6xl px-5 py-20">
-            <FadeIn className="flex flex-col md:flex-row items-center gap-10 lg:gap-16">
-              <div className="flex-1 space-y-6">
+            <FadeIn className="flex flex-col md:flex-row items-center gap-8 md:gap-10 lg:gap-16">
+              <div className="w-full md:flex-1 space-y-6">
                 <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-3.5 py-1.5 text-xs font-bold tracking-[0.15em] text-amber-700 dark:text-amber-400 uppercase shadow-sm">
                   <Star className="h-3.5 w-3.5" /> 
                   {latestSpotlight.spotlight_label ? `${latestSpotlight.spotlight_label} Spotlight` : "Monthly Spotlight"}
