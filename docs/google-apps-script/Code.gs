@@ -390,18 +390,24 @@ function handleSendEmail(body) {
     }
 
     case 'episodes_added': {
-      // Subject now includes novel title
-      subject = `New Episodes of "${safeTitle}" Added — ${submissionCode}`;
+      const newCount = body.newEpisodesCount || 1;
+      const totalCount = body.episodeCount || newCount;
+      const isSingularNew = newCount === 1;
+
+      subject = `New Episode${isSingularNew ? '' : 's'} of "${safeTitle}" Added — ${submissionCode}`;
+
       html = buildEmailTemplate({
-        heading: 'New Episodes Received',
-        headingUrdu: 'نئی اقساط موصول ہو گئیں',
+        heading: isSingularNew ? 'New Episode Received' : 'New Episodes Received',
+        headingUrdu: isSingularNew ? 'نئی قسط موصول ہو گئی' : 'نئی اقساط موصول ہو گئیں',
         body: `
           <p>Dear ${escapeHtml(writerName || 'Writer')},</p>
-          <p>Thank you for submitting new episodes for your ongoing novel <strong>${escapeHtml(safeTitle)}</strong>.</p>
-          <p>We have successfully received the new episodes. Your submission now has a total of <strong>${body.episodeCount || ''}</strong> episodes.</p>
+          <p>Thank you for submitting ${isSingularNew ? 'a new episode' : `${newCount} new episodes`} for your ongoing novel <strong>${escapeHtml(safeTitle)}</strong>.</p>
+          <p>We have successfully received ${isSingularNew ? 'the new episode' : 'the new episodes'}. Your submission now has a total of <strong>${totalCount}</strong> episode${totalCount === 1 ? '' : 's'}.</p>
           <p>You can track the status of your submission using your Submission ID: <strong>${escapeHtml(submissionCode)}</strong>.</p>
         `,
-        bodyUrdu: 'آپ کی نئی اقساط ہمیں موصول ہو گئی ہیں، شکریہ۔',
+        bodyUrdu: isSingularNew
+          ? 'آپ کی نئی قسط ہمیں موصول ہو گئی ہے، شکریہ۔'
+          : 'آپ کی نئی اقساط ہمیں موصول ہو گئی ہیں، شکریہ۔',
         duaUrdu: getRandomDua(DUAS_EPISODES),
         ctaText: 'Track Your Submission',
         ctaLink: trackLink

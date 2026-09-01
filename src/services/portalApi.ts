@@ -410,6 +410,7 @@ export interface EmailPayload {
   publishedUrl?: string;
   missingFiles?: string;
   episodeCount?: number;
+  newEpisodesCount?: number;
   episodeNumbers?: string;
 }
 

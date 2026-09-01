@@ -356,6 +356,7 @@ function AddNewEpisodesSection({
         novelTitle: record.novelTitle,
         submissionCode: submissionCode,
         episodeCount: record.episodeCount ? record.episodeCount + episodes.length : episodes.length,
+        newEpisodesCount: episodes.length,
       };
       await sendNotificationEmail("episodes_added", emailPayload);
     }
