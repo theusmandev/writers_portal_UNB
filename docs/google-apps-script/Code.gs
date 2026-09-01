@@ -27,6 +27,35 @@ const CONFIG = {
   }
 };
 
+// ── DUA POOLS (randomly selected per email) ──────────────────
+const DUAS_PUBLISHED = [
+  'دعا ہے کہ اللہ تعالیٰ آپ کے قلم میں ہمیشہ برکت عطا فرمائے، آپ کی تخلیق کو زیادہ سے زیادہ دلوں تک پہنچائے اور آپ کو لکھنے کی مسلسل توفیق، خوشی اور کامیابی نصیب فرمائے۔ آمین۔',
+  'اللہ تعالیٰ آپ کی اس محنت اور کاوش کو قبول فرمائے، آپ کے ناول کو قارئین کے دلوں میں جگہ دے اور اسے آپ کے لیے عزت و خوشی کا ذریعہ بنائے۔ آمین۔',
+  'دعا ہے کہ یہ کامیابی آپ کے تخلیقی سفر میں ایک خوبصورت سنگِ میل ثابت ہو اور اللہ تعالیٰ آپ کو اس سے بھی بڑی کامیابیاں، بلندیاں اور نئی منزلیں عطا فرمائے۔ آمین۔',
+  'دعا ہے کہ اللہ تعالیٰ آپ کو صحت، ہمت، حوصلہ اور قلم کی روانی عطا فرمائے، آپ کے خیالات کو خوبصورت الفاظ کا روپ دے اور آپ کی ہر اگلی تخلیق پہلے سے زیادہ نکھری ہوئی ہو۔ آمین۔',
+  'دعا ہے کہ آپ کی یہ تخلیق آپ کے لیے عزت، پہچان، خوشی اور مزید کامیابیوں کا وسیلہ بنے، اور اللہ تعالیٰ آپ کے ہر قدم پر آسانیاں اور برکتیں عطا فرمائے۔ آمین',
+  'دعا ہے کہ اللہ تعالیٰ آپ کے تخیل کو وسعت، آپ کے الفاظ کو اثر اور آپ کے قلم کو ایسی طاقت عطا فرمائے کہ آپ کی تحریریں پڑھنے والوں کے دلوں میں دیر تک زندہ رہیں۔ آمین۔',
+  'اللہ تعالیٰ آپ کے تخلیقی سفر کو آسان فرمائے، ہر نئی تحریر میں آپ کے لیے خیر، برکت اور کامیابی رکھے اور آپ کو اپنے خوابوں کو حقیقت میں بدلنے کی توفیق عطا فرمائے۔ آمین۔',
+  'دعا ہے کہ آپ کی یہ تخلیق آپ کے لیے ایک خوبصورت یاد بنے، آپ کے قارئین کے لیے ایک حسین تجربہ ثابت ہو اور آپ کے آنے والے سفر کے لیے نئی امیدوں کے دروازے کھولے۔ آمین',
+  'دعا ہے کہ اللہ تعالیٰ آپ کے اندر کے تخلیق کار کو ہمیشہ زندہ رکھے، آپ کے شوق کو قائم رکھے اور آپ کو کبھی اپنے خوابوں سے مایوس نہ ہونے دے۔ آمین۔'
+];
+
+const DUAS_EPISODES = [
+  'اللہ تعالیٰ آپ کے قلم میں ہمیشہ تسلسل، روانی اور برکت عطا فرمائے، اور آپ کی کہانی ہر نئی قسط کے ساتھ مزید خوبصورت اور دلچسپ ہوتی جائے۔ آمین۔',
+  'دعا ہے کہ ہر نئی قسط قارئین کے لیے پہلے سے زیادہ دلچسپ ثابت ہو، ان کا انتظار خوبصورت لمحوں میں بدلے اور آپ کی کہانی انہیں آخر تک اپنے ساتھ جوڑے رکھے۔ آمین۔',
+  'اللہ کرے آپ کو اپنی تحریر کے لیے مناسب وقت، سکونِ قلب اور تخلیقی توانائی میسر رہے، تاکہ آپ کا یہ خوبصورت سفر بغیر کسی رکاوٹ کے جاری رہے۔ آمین۔',
+  'اللہ تعالیٰ آپ کی ہر نئی قسط میں برکت، آپ کے ہر لفظ میں تاثیر اور آپ کی محنت میں کامیابی عطا فرمائے، اور آپ کے قارئین کی تعداد دن بہ دن بڑھتی رہے۔ آمین۔',
+  'دعا ہے کہ آپ کے قلم کا یہ سفر یونہی رواں دواں رہے، ہر قسط آپ کے لیے ایک نئی کامیابی لے کر آئے اور اللہ تعالیٰ ہر مرحلے پر آپ کی رہنمائی فرمائے۔ آمین۔',
+  'اللہ کرے آپ کی کہانی کا ہر نیا موڑ قارئین کے شوق کو مزید بڑھائے، اور آپ کا قلم انہیں ہر قسط کے ساتھ ایک نئی دنیا سے روشناس کراتا رہے۔ آمین۔',
+  'اللہ کرے آپ کا ناول ہر قسط کے ساتھ مزید نکھرتا جائے، کہانی اپنی خوبصورتی برقرار رکھے اور آپ کو اسے بہترین انداز میں اختتام تک پہنچانے کی توفیق ملے۔ آمین۔',
+  'دعا ہے کہ ہر قسط آپ کے لیے خوشی، حوصلے اور کامیابی کا سبب بنے، اور آپ کی کہانی اپنے اختتام تک قارئین کی محبت اسی طرح سمیٹتی رہے۔ آمین۔',
+  'اللہ کرے آپ کا قلم اسی جوش و جذبے کے ساتھ چلتا رہے، آپ کی تخلیقی صلاحیتیں مزید نکھرتی رہیں اور آپ کا یہ سفر ایک خوبصورت اور یادگار کامیابی پر مکمل ہو۔ آمین۔'
+];
+
+function getRandomDua(pool) {
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
 // ── ENTRY POINTS ──────────────────────────────────────────────
 function doGet(e) {
   return jsonResponse({ success: true, message: 'UNB Portal Backend is running.' });
@@ -253,7 +282,6 @@ function handleSendEmail(body) {
 
   switch (emailType) {
     case 'received': {
-      // New subject format: title-first, code kept for reference
       subject = `Your Submission of "${safeTitle}" Received — ${submissionCode}`;
 
       const missingFilesNote = missingFiles
@@ -319,7 +347,8 @@ function handleSendEmail(body) {
       break;
 
     case 'rejected':
-      subject = `Update on Your Submission — ${submissionCode}`;
+      // Subject now just: Update on "Novel Name" (code removed per request)
+      subject = `Update on "${safeTitle}"`;
       html = buildEmailTemplate({
         heading: 'Submission Update',
         headingUrdu: 'آپ کی تحریر سے متعلق اپڈیٹ',
@@ -341,7 +370,7 @@ function handleSendEmail(body) {
       });
       break;
 
-    case 'published':
+    case 'published': {
       subject = `🎉 Your Novel "${safeTitle}" is Published! — ${submissionCode}`;
       html = buildEmailTemplate({
         heading: '🎉 Congratulations! Your Novel is Published',
@@ -352,14 +381,17 @@ function handleSendEmail(body) {
           is now published on Urdu Novel Bank!</p>
         `,
         bodyUrdu: 'ہمیں خوشی ہے کہ آپ کا ناول اردو ناول بینک پر شائع ہو گیا ہے۔',
-        duaUrdu: 'دعا ہے کہ اللہ تعالیٰ آپ کے قلم میں مزید برکت دے، آپ کی کہانی زیادہ سے زیادہ دلوں تک پہنچے، اور آپ کو لکھنے کی مسلسل توفیق اور خوشی عطا فرمائے۔ آمین۔',
+        duaUrdu: getRandomDua(DUAS_PUBLISHED),
+        // Always "Track Submission" -> tracking page, never a direct publishedUrl link
         ctaText: 'Track Submission',
         ctaLink: trackLink
       });
       break;
+    }
 
-    case 'episodes_added':
-      subject = `New Episodes Added — ${submissionCode}`;
+    case 'episodes_added': {
+      // Subject now includes novel title
+      subject = `New Episodes of "${safeTitle}" Added — ${submissionCode}`;
       html = buildEmailTemplate({
         heading: 'New Episodes Received',
         headingUrdu: 'نئی اقساط موصول ہو گئیں',
@@ -370,11 +402,12 @@ function handleSendEmail(body) {
           <p>You can track the status of your submission using your Submission ID: <strong>${escapeHtml(submissionCode)}</strong>.</p>
         `,
         bodyUrdu: 'آپ کی نئی اقساط ہمیں موصول ہو گئی ہیں، شکریہ۔',
-        duaUrdu: 'دعا ہے کہ اللہ تعالیٰ آپ کے قلم میں تسلسل اور برکت عطا فرمائے، اور آپ کی کہانی مسلسل بہتری کی طرف بڑھتی رہے۔ آمین۔',
+        duaUrdu: getRandomDua(DUAS_EPISODES),
         ctaText: 'Track Your Submission',
         ctaLink: trackLink
       });
       break;
+    }
 
     case 'episodes_published': {
       const epNumsStr = body.episodeNumbers || "";
@@ -396,9 +429,10 @@ function handleSendEmail(body) {
         bodyUrdu: isSingular 
           ? `ہمیں خوشی ہے کہ آپ کے ناول کی قسط نمبر ${escapeHtml(epNumsStr)} اردو ناول بینک پر شائع ہو گئی ہے۔`
           : 'ہمیں خوشی ہے کہ آپ کے ناول کی مزید اقساط اردو ناول بینک پر شائع ہو گئی ہیں۔',
-        duaUrdu: 'دعا ہے کہ آپ کی یہ اقساط قارئین کے دلوں میں جگہ بنائیں، اور اللہ تعالیٰ آپ کے تخلیقی سفر کو مزید کامیابیوں سے نوازے۔ آمین۔',
-        ctaText: publishedUrl ? 'View Your Novel' : 'Track Submission',
-        ctaLink: publishedUrl || trackLink
+        duaUrdu: getRandomDua(DUAS_EPISODES),
+        // Always "Track Submission" -> tracking page, never a direct publishedUrl link
+        ctaText: 'Track Submission',
+        ctaLink: trackLink
       });
       break;
     }

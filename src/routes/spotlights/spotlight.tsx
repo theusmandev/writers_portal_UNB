@@ -340,6 +340,17 @@ export default function SpotlightPage() {
     ? `${spotlight.display_name} - ${spotlight.spotlight_label}`
     : spotlight.display_name;
 
+  // Clean the badge label to never show the raw slug or writer's name
+  let badgeLabel = spotlight.spotlight_label || "Writer";
+  // Remove the writer's name from the label if it was concatenated
+  const nameRegex = new RegExp(spotlight.display_name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+  badgeLabel = badgeLabel.replace(nameRegex, '').replace(/-/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!badgeLabel) badgeLabel = "Writer";
+  // Append "Spotlight" if not already present
+  if (!badgeLabel.toLowerCase().includes("spotlight")) {
+    badgeLabel = `${badgeLabel} Spotlight`;
+  }
+
   return (
     <div>
       <SEO
@@ -353,25 +364,67 @@ export default function SpotlightPage() {
       <div className="relative overflow-hidden bg-background py-20 sm:py-28 lg:py-32 border-b border-border">
         {/* Spotlight Beam Visual */}
         <div 
-          className="pointer-events-none absolute inset-x-0 top-0 h-full overflow-hidden"
+          className="pointer-events-none absolute inset-x-0 top-0 h-full overflow-hidden flex justify-center"
           aria-hidden="true"
         >
-          {/* Main top radial glow */}
-          <div className="absolute -top-[30%] left-1/2 h-[160%] w-[150%] max-w-[900px] -translate-x-1/2 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-400/20 via-primary/5 to-transparent dark:from-amber-400/10 dark:via-primary/5" />
-          {/* Narrower beam overlay */}
-          <div 
-            className="absolute -top-[10%] left-1/2 h-[120%] w-[100%] max-w-[500px] -translate-x-1/2 opacity-30 dark:opacity-20"
-            style={{
-              background: "radial-gradient(circle at top, hsl(var(--primary) / 0.4) 0%, transparent 60%)"
-            }}
-          />
+          <svg 
+            viewBox="0 0 800 600" 
+            className="absolute top-0 w-full max-w-[800px] h-[600px] opacity-80 dark:opacity-60"
+            preserveAspectRatio="xMidYMin slice"
+          >
+            <defs>
+              <linearGradient id="spotlight-beam" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.25" />
+                <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
+              </linearGradient>
+              <linearGradient id="spotlight-beam-core" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#fde68a" stopOpacity="0.35" />
+                <stop offset="100%" stopColor="#fde68a" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+
+            {/* Ceiling bracket */}
+            <g transform="translate(460, 0)">
+              <rect x="-12" y="-5" width="24" height="15" rx="2" className="fill-primary" />
+              <rect x="-3" y="10" width="6" height="25" className="fill-primary" />
+              <circle cx="0" cy="35" r="5" className="fill-primary" />
+            </g>
+            
+            {/* Lamp and Beam */}
+            <g transform="translate(460, 35) rotate(15)">
+              {/* Ambient beam */}
+              <path 
+                d="M-20,42 L-250,600 L250,600 Z" 
+                fill="url(#spotlight-beam)" 
+              />
+              {/* Bright center beam */}
+              <path 
+                d="M-10,42 L-100,600 L100,600 Z" 
+                fill="url(#spotlight-beam-core)" 
+              />
+              
+              {/* Can-light Housing */}
+              <path d="M-5,0 L5,0 L14,12 L14,35 L-14,35 L-14,12 Z" className="fill-primary" />
+              {/* Heat sink ridges */}
+              <rect x="-15" y="15" width="30" height="2" className="fill-background" opacity="0.6" />
+              <rect x="-15" y="20" width="30" height="2" className="fill-background" opacity="0.6" />
+              <rect x="-15" y="25" width="30" height="2" className="fill-background" opacity="0.6" />
+              
+              {/* Front bezel */}
+              <rect x="-16" y="35" width="32" height="6" rx="1" className="fill-primary" />
+              <rect x="-18" y="41" width="36" height="3" rx="1" className="fill-primary" />
+              
+              {/* Bulb glow */}
+              <ellipse cx="0" cy="44" rx="14" ry="4" fill="#fde68a" opacity="0.8" />
+            </g>
+          </svg>
         </div>
 
         <div className="relative mx-auto max-w-4xl px-6 text-center">
           <div className="mb-6 flex justify-center">
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-3.5 py-1.5 text-xs font-bold uppercase tracking-[0.15em] text-amber-700 dark:text-amber-400 shadow-sm backdrop-blur-sm">
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-3.5 py-1.5 text-xs font-bold tracking-[0.15em] text-amber-700 dark:text-amber-400 shadow-sm backdrop-blur-sm uppercase">
               <Sparkles className="h-4 w-4" />
-              {spotlight.spotlight_label || "Writer Spotlight"}
+              {badgeLabel}
             </div>
           </div>
           
