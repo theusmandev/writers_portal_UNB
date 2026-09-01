@@ -189,13 +189,20 @@ export default function Index() {
           <div className="mx-auto max-w-6xl px-5 py-20">
             <FadeIn className="flex flex-col md:flex-row items-center gap-8 md:gap-10 lg:gap-16">
               <div className="w-full md:flex-1 space-y-6">
-                <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-3.5 py-1.5 text-xs font-bold tracking-[0.15em] text-amber-700 dark:text-amber-400 uppercase shadow-sm">
-                  <Star className="h-3.5 w-3.5" /> 
-                  {latestSpotlight.spotlight_label ? `${latestSpotlight.spotlight_label} Spotlight` : "Monthly Spotlight"}
+                <div className="space-y-3">
+                  <h2 className="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                    New Writer Spotlight
+                  </h2>
+                  <div>
+                    <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-3.5 py-1.5 text-xs font-bold tracking-[0.15em] text-amber-700 dark:text-amber-400 uppercase shadow-sm">
+                      <Star className="h-3.5 w-3.5" /> 
+                      {latestSpotlight.spotlight_label ? `${latestSpotlight.spotlight_label} Spotlight` : "Monthly Spotlight"}
+                    </div>
+                  </div>
                 </div>
-                <h2 className="text-3xl sm:text-4xl font-serif font-bold text-foreground">
+                <h3 className="text-3xl sm:text-4xl font-serif font-bold text-foreground">
                   {latestSpotlight.display_name}
-                </h2>
+                </h3>
                 <p className="text-muted-foreground text-lg leading-relaxed max-w-lg">
                   Dive into the journey and works of our highlighted author. Read their story, discover their published novels, and connect with their writing.
                 </p>
