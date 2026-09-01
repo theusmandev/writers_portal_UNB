@@ -340,16 +340,9 @@ export default function SpotlightPage() {
     ? `${spotlight.display_name} - ${spotlight.spotlight_label}`
     : spotlight.display_name;
 
-  // Clean the badge label to never show the raw slug or writer's name
-  let badgeLabel = spotlight.spotlight_label || "Writer";
-  // Remove the writer's name from the label if it was concatenated
-  const nameRegex = new RegExp(spotlight.display_name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-  badgeLabel = badgeLabel.replace(nameRegex, '').replace(/-/g, ' ').replace(/\s+/g, ' ').trim();
-  if (!badgeLabel) badgeLabel = "Writer";
-  // Append "Spotlight" if not already present
-  if (!badgeLabel.toLowerCase().includes("spotlight")) {
-    badgeLabel = `${badgeLabel} Spotlight`;
-  }
+  const badgeLabel = spotlight.spotlight_label 
+    ? `${spotlight.spotlight_label} Spotlight`
+    : "Writer Spotlight";
 
   return (
     <div>
@@ -394,28 +387,30 @@ export default function SpotlightPage() {
             <g transform="translate(460, 35) rotate(15)">
               {/* Ambient beam */}
               <path 
-                d="M-20,42 L-250,600 L250,600 Z" 
+                d="M-25,27 L-250,600 L250,600 Z" 
                 fill="url(#spotlight-beam)" 
               />
               {/* Bright center beam */}
               <path 
-                d="M-10,42 L-100,600 L100,600 Z" 
+                d="M-15,27 L-100,600 L100,600 Z" 
                 fill="url(#spotlight-beam-core)" 
               />
               
-              {/* Can-light Housing */}
-              <path d="M-5,0 L5,0 L14,12 L14,35 L-14,35 L-14,12 Z" className="fill-primary" />
-              {/* Heat sink ridges */}
-              <rect x="-15" y="15" width="30" height="2" className="fill-background" opacity="0.6" />
-              <rect x="-15" y="20" width="30" height="2" className="fill-background" opacity="0.6" />
-              <rect x="-15" y="25" width="30" height="2" className="fill-background" opacity="0.6" />
+              {/* Can-light Housing - Short & Wide */}
+              {/* Hinge mount */}
+              <path d="M-6,0 L6,0 L12,8 L-12,8 Z" className="fill-primary" />
+              
+              {/* Main wide body */}
+              <path d="M-16,8 L16,8 L22,22 L-22,22 Z" className="fill-primary" />
+              {/* Horizontal heat sink ridges for detail */}
+              <path d="M-18,12 L18,12" stroke="currentColor" strokeWidth="1.5" className="text-background" opacity="0.6" />
+              <path d="M-20,17 L20,17" stroke="currentColor" strokeWidth="1.5" className="text-background" opacity="0.6" />
               
               {/* Front bezel */}
-              <rect x="-16" y="35" width="32" height="6" rx="1" className="fill-primary" />
-              <rect x="-18" y="41" width="36" height="3" rx="1" className="fill-primary" />
+              <rect x="-24" y="22" width="48" height="5" rx="1.5" className="fill-primary" />
               
               {/* Bulb glow */}
-              <ellipse cx="0" cy="44" rx="14" ry="4" fill="#fde68a" opacity="0.8" />
+              <ellipse cx="0" cy="27" rx="20" ry="4" fill="#fde68a" opacity="0.8" />
             </g>
           </svg>
         </div>
