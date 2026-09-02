@@ -4,6 +4,7 @@ import { Search, AlertCircle, Globe, EyeOff, Star } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AdminPagination } from "@/components/admin/AdminPagination";
+import { getDateFilterPredicate } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import type { WriterRow } from "@/lib/supabase.types";
 
@@ -27,12 +28,13 @@ export default function AdminWriters() {
   const [publicFilter, setPublicFilter] = useState("All");
   const [featuredFilter, setFeaturedFilter] = useState("All");
   const [minSubmissions, setMinSubmissions] = useState("");
+  const [dateFilter, setDateFilter] = useState("All time");
   const [currentPage, setCurrentPage] = useState(1);
 
   // Reset to page 1 when search or filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, publicFilter, featuredFilter, minSubmissions]);
+  }, [search, publicFilter, featuredFilter, minSubmissions, dateFilter]);
 
   useEffect(() => {
     void load();
@@ -90,6 +92,7 @@ export default function AdminWriters() {
 
   const filtered = writers.filter((w) => {
     const q = search.toLowerCase().trim();
+    const datePredicate = getDateFilterPredicate(dateFilter);
     const matchesSearch =
       !q ||
       w.full_name.toLowerCase().includes(q) ||
@@ -112,7 +115,9 @@ export default function AdminWriters() {
       }
     }
 
-    return matchesSearch && matchesPublic && matchesFeatured && matchesMinSubs;
+    const matchesDate = datePredicate(w.registration_date);
+
+    return matchesSearch && matchesPublic && matchesFeatured && matchesMinSubs && matchesDate;
   });
 
   const itemsPerPage = 20;
@@ -127,7 +132,7 @@ export default function AdminWriters() {
   const startItem = filtered.length === 0 ? 0 : (safePage - 1) * itemsPerPage + 1;
   const endItem = Math.min(safePage * itemsPerPage, filtered.length);
 
-  const hasFilters = search.trim() !== "" || publicFilter !== "All" || featuredFilter !== "All" || minSubmissions.trim() !== "";
+  const hasFilters = search.trim() !== "" || publicFilter !== "All" || featuredFilter !== "All" || minSubmissions.trim() !== "" || dateFilter !== "All time";
   const countText = hasFilters 
     ? `Showing ${startItem}–${endItem} of ${filtered.length} writers (filtered from ${writers.length} total)`
     : `Showing ${startItem}–${endItem} of ${writers.length} writers`;
@@ -191,6 +196,20 @@ export default function AdminWriters() {
           />
         </div>
 
+        <select
+          id="date-filter"
+          value={dateFilter}
+          onChange={(e) => setDateFilter(e.target.value)}
+          className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
+        >
+          <option value="All time">All time</option>
+          <option value="Today">Today</option>
+          <option value="Yesterday">Yesterday</option>
+          <option value="Last 7 Days">Last 7 Days</option>
+          <option value="This Month">This Month</option>
+          <option value="Last Month">Last Month</option>
+        </select>
+
         {hasFilters && (
           <div className="w-full flex justify-center mt-2">
             <Button
@@ -201,6 +220,7 @@ export default function AdminWriters() {
                 setPublicFilter("All");
                 setFeaturedFilter("All");
                 setMinSubmissions("");
+                setDateFilter("All time");
               }}
               className="h-9 min-w-[120px]"
             >

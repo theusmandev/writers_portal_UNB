@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { AdminPagination } from "@/components/admin/AdminPagination";
+import { getDateFilterPredicate } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import { submissionStatuses, genres } from "@/data/content";
 import type { SubmissionRow } from "@/lib/supabase.types";
@@ -106,16 +107,7 @@ export default function AdminSubmissions() {
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
-    
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const sevenDaysAgo = new Date(today);
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
-    const thisMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-    const lastMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-    const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0, 23, 59, 59, 999);
+    const datePredicate = getDateFilterPredicate(dateFilter);
 
     return rows.filter((r) => {
       const matchesSearch =
@@ -127,21 +119,7 @@ export default function AdminSubmissions() {
       const matchesGenre = !genreFilter || r.genre === genreFilter;
       const matchesNovelType = !novelTypeFilter || r.novel_status === novelTypeFilter;
       
-      let matchesDate = true;
-      if (dateFilter !== "All time") {
-        const subDate = new Date(r.submission_date);
-        if (dateFilter === "Today") {
-          matchesDate = subDate >= today;
-        } else if (dateFilter === "Yesterday") {
-          matchesDate = subDate >= yesterday && subDate < today;
-        } else if (dateFilter === "Last 7 Days") {
-          matchesDate = subDate >= sevenDaysAgo;
-        } else if (dateFilter === "This Month") {
-          matchesDate = subDate >= thisMonthStart;
-        } else if (dateFilter === "Last Month") {
-          matchesDate = subDate >= lastMonthStart && subDate <= lastMonthEnd;
-        }
-      }
+      const matchesDate = datePredicate(r.submission_date);
 
       const hasPendingEpisode = r.novel_status === "Ongoing" && r.episodes && r.episodes.length > 0;
       const matchesPending = !showPendingOnly || hasPendingEpisode;
