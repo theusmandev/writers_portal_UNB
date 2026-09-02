@@ -79,7 +79,7 @@ export function AdminLayout() {
   );
 
   return (
-    <div className="flex min-h-screen flex-col md:flex-row bg-background">
+    <div className="flex h-screen flex-col md:flex-row bg-background">
       <SEO 
         noindex 
         title="Admin Portal | UNB" 
