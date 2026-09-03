@@ -253,3 +253,9 @@
 .publishing-dot:nth-child(3) {
   animation-delay: 0.4s;
 }
+
+/* ── Global fix for video embed mobile responsiveness ────────────────────── */
+[data-video-embed] {
+  max-width: 100% !important;
+  height: auto;
+}

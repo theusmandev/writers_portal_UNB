@@ -248,7 +248,7 @@ export const VideoEmbed = Node.create({
     const align = HTMLAttributes['data-align'] as string;
     const width = HTMLAttributes['data-width'] as string;
 
-    let style = `width: ${width}; clear: both; `;
+    let style = `width: ${width}; max-width: 100%; clear: both; `;
     if (align === 'center') {
       style += 'display: block; margin-left: auto; margin-right: auto; ';
     } else if (align === 'left') {
