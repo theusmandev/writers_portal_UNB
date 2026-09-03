@@ -248,11 +248,12 @@ export default function AdminSubmissionDetail() {
       // Reload history if status changed
       if (newStatus !== detail.current_status) {
         // Trigger email notification in background (non-blocking)
-        const isTargetStatus = ["Action Required", "Rejected", "Published"].includes(newStatus);
+        const isTargetStatus = ["Action Required", "Rejected", "Published", "Scheduled for Publication"].includes(newStatus);
         if (isTargetStatus && w?.email) {
           const emailType =
             newStatus === "Action Required" ? "action_required" :
-            newStatus === "Rejected" ? "rejected" : "published";
+            newStatus === "Rejected" ? "rejected" :
+            newStatus === "Scheduled for Publication" ? "publish_scheduled" : "published";
 
           let finalPublishedUrl = publishedUrl.trim() || undefined;
 
@@ -276,6 +277,7 @@ export default function AdminSubmissionDetail() {
             submissionCode: detail.submission_code,
             statusNote: statusNote.trim() || undefined,
             publishedUrl: finalPublishedUrl,
+            estimatedPublishAt: estimatedPublishAt || undefined,
           };
 
           sendNotificationEmail(emailType as any, emailPayload)

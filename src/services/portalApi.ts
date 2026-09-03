@@ -412,10 +412,11 @@ export interface EmailPayload {
   episodeCount?: number;
   newEpisodesCount?: number;
   episodeNumbers?: string;
+  estimatedPublishAt?: string;
 }
 
 export async function sendNotificationEmail(
-  emailType: "received" | "action_required" | "rejected" | "published" | "episodes_added" | "episodes_published",
+  emailType: "received" | "action_required" | "rejected" | "published" | "episodes_added" | "episodes_published" | "publish_scheduled",
   payload: EmailPayload
 ): Promise<ApiResult<null>> {
   const scriptUrl = import.meta.env["VITE_PORTAL_API_URL"] as string | undefined;
