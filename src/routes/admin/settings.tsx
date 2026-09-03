@@ -1,18 +1,20 @@
 import { useEffect, useState } from "react";
-import { Save, AlertCircle, CheckCircle2 } from "lucide-react";
+import { toast } from "sonner";
+import { Save, AlertCircle, Trash2, Plus, Loader2 } from "lucide-react";
 import { getSubmissionSettings, updateSubmissionSettings, getNotificationSettings, updateNotificationSettings, getEpisodeMinimumExceptions, addEpisodeMinimumException, removeEpisodeMinimumException, updateCustomHeadCode, type EpisodeMinimumException } from "@/services/portalApi";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { AdminPagination } from "@/components/admin/AdminPagination";
-import { Trash2, Plus, Loader2 } from "lucide-react";
 
 export default function AdminSettings() {
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  
+  const [savingNotification, setSavingNotification] = useState(false);
+  const [savingSubmission, setSavingSubmission] = useState(false);
+  const [savingPublishSite, setSavingPublishSite] = useState(false);
+  const [savingHeadCode, setSavingHeadCode] = useState(false);
   
   const [paused, setPaused] = useState(false);
   const [message, setMessage] = useState("");
@@ -37,14 +39,13 @@ export default function AdminSettings() {
 
   async function load() {
     setLoading(true);
-    setError(null);
     const result = await getSubmissionSettings();
     if (result.success) {
       setPaused(result.data.submissions_paused);
       setMessage(result.data.pause_message || "");
       setPreferredPublishSite(result.data.preferred_publish_site ?? "unb");
     } else {
-      setError(result.error);
+      toast.error(result.error);
     }
     
     const notifResult = await getNotificationSettings();
@@ -66,38 +67,77 @@ export default function AdminSettings() {
     setLoading(false);
   }
 
+  async function handleSaveNotification() {
+    setSavingNotification(true);
+    const result = await updateNotificationSettings(notificationEnabled, notificationMessage, notificationLinkUrl, notificationLinkText);
+    if (result.success) {
+      toast.success("Notification settings saved successfully.");
+    } else {
+      toast.error(result.error || "Failed to save notification settings.");
+    }
+    setSavingNotification(false);
+  }
+
+  async function handleSaveSubmission() {
+    setSavingSubmission(true);
+    const result = await updateSubmissionSettings(paused, message, preferredPublishSite);
+    if (result.success) {
+      toast.success("Submission settings saved successfully.");
+    } else {
+      toast.error(result.error || "Failed to save submission settings.");
+    }
+    setSavingSubmission(false);
+  }
+
+  async function handleSavePublishSite() {
+    setSavingPublishSite(true);
+    const result = await updateSubmissionSettings(paused, message, preferredPublishSite);
+    if (result.success) {
+      toast.success("Preferred publish site updated successfully.");
+    } else {
+      toast.error(result.error || "Failed to update preferred publish site.");
+    }
+    setSavingPublishSite(false);
+  }
+
+  async function handleSaveHeadCode() {
+    setSavingHeadCode(true);
+    const result = await updateCustomHeadCode(customHeadCode);
+    if (result.success) {
+      toast.success("Custom head code saved successfully.");
+    } else {
+      toast.error(result.error || "Failed to save custom head code.");
+    }
+    setSavingHeadCode(false);
+  }
+
   async function handleAddException(e: React.FormEvent) {
     e.preventDefault();
     if (!newExceptionEmail || !/^\S+@\S+\.\S+$/.test(newExceptionEmail)) {
-      setError("Please enter a valid email address.");
+      toast.error("Please enter a valid email address.");
       return;
     }
     setAddingException(true);
-    setError(null);
-    setSuccess(null);
     
     const res = await addEpisodeMinimumException(newExceptionEmail, newExceptionNote);
     if (res.success) {
-      setSuccess("Exception added successfully.");
+      toast.success("Exception added successfully.");
       setNewExceptionEmail("");
       setNewExceptionNote("");
       // Reload exceptions
       const updated = await getEpisodeMinimumExceptions();
       if (updated.success) setExceptions(updated.data);
-      setTimeout(() => setSuccess(null), 3000);
     } else {
-      setError(res.error);
+      toast.error(res.error);
     }
     setAddingException(false);
   }
 
   async function handleRemoveException(id: string) {
     if (!confirm("Are you sure you want to remove this exception?")) return;
-    setError(null);
-    setSuccess(null);
     const res = await removeEpisodeMinimumException(id);
     if (res.success) {
-      setSuccess("Exception removed.");
+      toast.success("Exception removed.");
       setExceptions(prev => {
         const updated = prev.filter(e => e.id !== id);
         const newTotalPages = Math.ceil(updated.length / 8);
@@ -106,29 +146,9 @@ export default function AdminSettings() {
         }
         return updated;
       });
-      setTimeout(() => setSuccess(null), 3000);
     } else {
-      setError(res.error);
+      toast.error(res.error);
     }
-  }
-
-  async function handleSave() {
-    setSaving(true);
-    setError(null);
-    setSuccess(null);
-    const [result, notifResultSave, headCodeSaveResult] = await Promise.all([
-      updateSubmissionSettings(paused, message, preferredPublishSite),
-      updateNotificationSettings(notificationEnabled, notificationMessage, notificationLinkUrl, notificationLinkText),
-      updateCustomHeadCode(customHeadCode)
-    ]);
-
-    if (result.success && notifResultSave.success && headCodeSaveResult.success) {
-      setSuccess("Settings saved successfully.");
-      setTimeout(() => setSuccess(null), 3000);
-    } else {
-      setError(result.error || notifResultSave.error || headCodeSaveResult.error || "Failed to save settings.");
-    }
-    setSaving(false);
   }
 
   const itemsPerPage = 8;
@@ -142,24 +162,10 @@ export default function AdminSettings() {
         <p className="text-muted-foreground">Manage site-wide configurations.</p>
       </div>
 
-      {error && (
-        <div className="flex items-center gap-2 rounded-md bg-destructive/10 p-4 text-destructive">
-          <AlertCircle className="h-5 w-5" />
-          <p>{error}</p>
-        </div>
-      )}
-
-      {success && (
-        <div className="flex items-center gap-2 rounded-md bg-green-500/10 p-4 text-green-700 dark:text-green-400">
-          <CheckCircle2 className="h-5 w-5" />
-          <p>{success}</p>
-        </div>
-      )}
-
       <div className="rounded-xl border bg-card p-6 shadow-sm">
         <h2 className="text-lg font-semibold mb-4">Site Notification Bar</h2>
         
-        <div className="space-y-6">
+        <form onSubmit={(e) => { e.preventDefault(); void handleSaveNotification(); }} className="space-y-6">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <label htmlFor="notification-toggle" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
@@ -173,7 +179,7 @@ export default function AdminSettings() {
               id="notification-toggle"
               checked={notificationEnabled}
               onCheckedChange={setNotificationEnabled}
-              disabled={loading || saving}
+              disabled={loading || savingNotification}
             />
           </div>
 
@@ -201,7 +207,7 @@ export default function AdminSettings() {
                 placeholder="e.g. https://chat.whatsapp.com/..."
                 value={notificationLinkUrl}
                 onChange={(e) => setNotificationLinkUrl(e.target.value)}
-                disabled={loading || saving}
+                disabled={loading || savingNotification}
               />
             </div>
             <div className="space-y-2">
@@ -213,22 +219,22 @@ export default function AdminSettings() {
                 placeholder="e.g. Join our WhatsApp Channel"
                 value={notificationLinkText}
                 onChange={(e) => setNotificationLinkText(e.target.value)}
-                disabled={loading || saving}
+                disabled={loading || savingNotification}
               />
             </div>
           </div>
           
-          <Button onClick={handleSave} disabled={loading || saving} className="w-full sm:w-auto">
+          <Button type="submit" disabled={loading || savingNotification} className="w-full sm:w-auto">
             <Save className="mr-2 h-4 w-4" />
-            {saving ? "Saving..." : "Save Notification Settings"}
+            {savingNotification ? "Saving..." : "Save Notification Settings"}
           </Button>
-        </div>
+        </form>
       </div>
 
       <div className="rounded-xl border bg-card p-6 shadow-sm">
         <h2 className="text-lg font-semibold mb-4">Submission Settings</h2>
         
-        <div className="space-y-6">
+        <form onSubmit={(e) => { e.preventDefault(); void handleSaveSubmission(); }} className="space-y-6">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <label htmlFor="pause-toggle" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
@@ -242,7 +248,7 @@ export default function AdminSettings() {
               id="pause-toggle"
               checked={paused}
               onCheckedChange={setPaused}
-              disabled={loading || saving}
+              disabled={loading || savingSubmission}
             />
           </div>
 
@@ -259,17 +265,17 @@ export default function AdminSettings() {
             />
           </div>
           
-          <Button onClick={handleSave} disabled={loading || saving} className="w-full sm:w-auto">
+          <Button type="submit" disabled={loading || savingSubmission} className="w-full sm:w-auto">
             <Save className="mr-2 h-4 w-4" />
-            {saving ? "Saving..." : "Save Settings"}
+            {savingSubmission ? "Saving..." : "Save Settings"}
           </Button>
-        </div>
+        </form>
       </div>
 
       <div className="rounded-xl border bg-card p-6 shadow-sm">
         <h2 className="text-lg font-semibold mb-4">Preferred Publish Site</h2>
         
-        <div className="space-y-6">
+        <form onSubmit={(e) => { e.preventDefault(); void handleSavePublishSite(); }} className="space-y-6">
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground">
               When a novel is available on both sites, which one should readers be sent to? If your preferred site's link is missing for a novel, the other one is used automatically.
@@ -282,7 +288,7 @@ export default function AdminSettings() {
                   value="unb"
                   checked={preferredPublishSite === "unb"}
                   onChange={() => setPreferredPublishSite("unb")}
-                  disabled={loading || saving}
+                  disabled={loading || savingPublishSite}
                   className="accent-primary"
                 />
                 <span className="text-sm font-medium">Urdu Novel Bank</span>
@@ -294,7 +300,7 @@ export default function AdminSettings() {
                   value="ufb"
                   checked={preferredPublishSite === "ufb"}
                   onChange={() => setPreferredPublishSite("ufb")}
-                  disabled={loading || saving}
+                  disabled={loading || savingPublishSite}
                   className="accent-primary"
                 />
                 <span className="text-sm font-medium">Urdu Fiction Bank</span>
@@ -302,17 +308,17 @@ export default function AdminSettings() {
             </div>
           </div>
           
-          <Button onClick={handleSave} disabled={loading || saving} className="w-full sm:w-auto">
+          <Button type="submit" disabled={loading || savingPublishSite} className="w-full sm:w-auto">
             <Save className="mr-2 h-4 w-4" />
-            {saving ? "Saving..." : "Save Settings"}
+            {savingPublishSite ? "Saving..." : "Save Settings"}
           </Button>
-        </div>
+        </form>
       </div>
 
       <div className="rounded-xl border bg-card p-6 shadow-sm">
         <h2 className="text-lg font-semibold mb-4">Custom Head Code</h2>
         
-        <div className="space-y-6">
+        <form onSubmit={(e) => { e.preventDefault(); void handleSaveHeadCode(); }} className="space-y-6">
           <div className="rounded-md bg-amber-500/10 p-4 text-amber-700 dark:text-amber-400">
             <div className="flex gap-2">
               <AlertCircle className="h-5 w-5 shrink-0" />
@@ -328,17 +334,17 @@ export default function AdminSettings() {
               placeholder="<!-- Paste Google Analytics, Meta Pixel, etc. here -->"
               value={customHeadCode}
               onChange={(e) => setCustomHeadCode(e.target.value)}
-              disabled={loading || saving}
+              disabled={loading || savingHeadCode}
               spellCheck={false}
               dir="ltr"
             />
           </div>
           
-          <Button onClick={handleSave} disabled={loading || saving} className="w-full sm:w-auto">
+          <Button type="submit" disabled={loading || savingHeadCode} className="w-full sm:w-auto">
             <Save className="mr-2 h-4 w-4" />
-            {saving ? "Saving..." : "Save Settings"}
+            {savingHeadCode ? "Saving..." : "Save Settings"}
           </Button>
-        </div>
+        </form>
       </div>
 
       <div className="rounded-xl border bg-card p-6 shadow-sm">

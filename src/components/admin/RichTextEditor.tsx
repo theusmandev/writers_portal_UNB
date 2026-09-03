@@ -4,6 +4,7 @@ import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import Link from '@tiptap/extension-link';
 import { ResizableImage } from './ResizableImage';
+import { VideoEmbed, parseVideoUrl } from './VideoEmbed';
 import TextAlign from '@tiptap/extension-text-align';
 import { Extension, Mark, mergeAttributes } from '@tiptap/core';
 
@@ -107,7 +108,7 @@ import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough, Eraser,
   Heading1, Heading2, Heading3, 
   List, ListOrdered, Quote, 
-  Link as LinkIcon, Image as ImageIcon, 
+  Link as LinkIcon, Image as ImageIcon, Video as VideoIcon,
   AlignLeft, AlignCenter, AlignRight,
   Undo, Redo, Loader2, Code2, WrapText
 } from 'lucide-react';
@@ -149,6 +150,10 @@ export function RichTextEditor({ content, onChange, postFolderToken, size = 'def
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
+  const [isVideoDialogOpen, setIsVideoDialogOpen] = useState(false);
+  const [videoUrl, setVideoUrl] = useState('');
+  const [videoError, setVideoError] = useState<string | null>(null);
+
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -161,6 +166,7 @@ export function RichTextEditor({ content, onChange, postFolderToken, size = 'def
         },
       }),
       ResizableImage,
+      VideoEmbed,
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
@@ -248,6 +254,22 @@ export function RichTextEditor({ content, onChange, postFolderToken, size = 'def
       setImageUrl('');
       setIsImageDialogOpen(false);
     }
+  };
+
+  const handleVideoUrlSubmit = () => {
+    const trimmed = videoUrl.trim();
+    if (!trimmed) return;
+
+    const parsed = parseVideoUrl(trimmed);
+    if (!parsed) {
+      setVideoError('Invalid URL. Only YouTube and Vimeo URLs are supported (e.g. youtube.com/watch?v=..., youtu.be/..., vimeo.com/...).');
+      return;
+    }
+
+    editor?.chain().focus().setVideoEmbed({ src: parsed.embedUrl, platform: parsed.platform }).run();
+    setVideoUrl('');
+    setVideoError(null);
+    setIsVideoDialogOpen(false);
   };
 
   if (!editor) return null;
@@ -372,6 +394,9 @@ export function RichTextEditor({ content, onChange, postFolderToken, size = 'def
           </ToolbarButton>
           <ToolbarButton onClick={() => setIsImageDialogOpen(true)} title="Insert Image">
             <ImageIcon className="w-4 h-4" />
+          </ToolbarButton>
+          <ToolbarButton onClick={() => { setVideoUrl(''); setVideoError(null); setIsVideoDialogOpen(true); }} title="Embed Video">
+            <VideoIcon className="w-4 h-4" />
           </ToolbarButton>
         </div>
 
@@ -521,6 +546,37 @@ export function RichTextEditor({ content, onChange, postFolderToken, size = 'def
               </div>
             </TabsContent>
           </Tabs>
+        </DialogContent>
+      </Dialog>
+
+      {/* Video Embed Dialog */}
+      <Dialog open={isVideoDialogOpen} onOpenChange={setIsVideoDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Embed Video</DialogTitle>
+            <DialogDescription>
+              Paste a YouTube or Vimeo URL to embed a video.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <div className="space-y-2">
+              <Label>Video URL</Label>
+              <Input
+                type="url"
+                placeholder="https://www.youtube.com/watch?v=... or https://vimeo.com/..."
+                value={videoUrl}
+                onChange={(e) => { setVideoUrl(e.target.value); setVideoError(null); }}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleVideoUrlSubmit(); }}
+              />
+              {videoError && (
+                <p className="text-sm text-destructive font-medium">{videoError}</p>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsVideoDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleVideoUrlSubmit} disabled={!videoUrl.trim()}>Embed Video</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
