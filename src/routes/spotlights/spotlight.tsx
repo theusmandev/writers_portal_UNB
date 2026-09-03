@@ -1,4 +1,4 @@
-import DOMPurify from "dompurify";
+import { sanitizeHtml } from "@/lib/sanitize";
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
@@ -219,17 +219,7 @@ export default function SpotlightPage() {
       setSpotlight(res.data as SpotlightData);
 
       if (res.data.spotlight_content) {
-        DOMPurify.addHook("afterSanitizeAttributes", (node) => {
-          if ("target" in node && node.nodeName === "A") {
-            node.setAttribute("target", "_blank");
-            node.setAttribute("rel", "noopener noreferrer");
-          }
-        });
-        setSanitizedContent(
-          DOMPurify.sanitize(res.data.spotlight_content, {
-            ADD_ATTR: ["target", "style", "data-align", "dir", "class", "id"],
-          })
-        );
+        setSanitizedContent(sanitizeHtml(res.data.spotlight_content));
       }
 
       setLoading(false);

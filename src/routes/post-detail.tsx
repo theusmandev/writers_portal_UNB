@@ -1,4 +1,4 @@
-import DOMPurify from 'dompurify';
+import { sanitizeHtml } from "@/lib/sanitize";
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { getPostBySlug } from "@/services/portalApi";
@@ -22,17 +22,7 @@ export default function PostDetailPage() {
         setPost(res.data);
         
         // Sanitize the HTML content for safe rendering
-        // Need to allow target="_blank" for links to work properly
-        DOMPurify.addHook('afterSanitizeAttributes', function(node) {
-          if ('target' in node && node.nodeName === 'A') {
-            node.setAttribute('target', '_blank');
-            node.setAttribute('rel', 'noopener noreferrer');
-          }
-        });
-        
-        setSanitizedContent(DOMPurify.sanitize(res.data.content, { 
-          ADD_ATTR: ['target', 'style', 'data-align', 'dir', 'class', 'id'] 
-        }));
+        setSanitizedContent(sanitizeHtml(res.data.content));
       } else {
         setError(res.error || "Post not found.");
       }
