@@ -468,6 +468,7 @@ export default function AdminSubmissionDetail() {
               <InfoRow label="Pen name" value={w?.pen_name} />
               <InfoRow label="Email" value={w?.email} />
               <InfoRow label="WhatsApp" value={w?.whatsapp} />
+              <InfoRow label="Location" value={w?.location || "Not provided"} />
               {w?.social_media_link && (
                 <div className="col-span-2">
                   <dt className="text-xs text-muted-foreground uppercase tracking-wide">Social Media</dt>
@@ -510,6 +511,7 @@ export default function AdminSubmissionDetail() {
             <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <InfoRow label="Genre" value={detail.genre} />
               <InfoRow label="Novel status" value={detail.novel_status} />
+              <InfoRow label="Language" value={detail.language} />
               <InfoRow label="Submitted" value={fmt(detail.submission_date)} />
               <InfoRow label="Last updated" value={fmt(detail.last_updated)} />
             </dl>

@@ -27,7 +27,7 @@ export function sanitizeHtml(content: string): string {
 
   // 3. Sanitize content with explicitly allowed iframe tags and attributes
   return DOMPurify.sanitize(content, {
-    ADD_TAGS: ["iframe"],
+    ADD_TAGS: ["iframe", "style"],
     ADD_ATTR: [
       "target",
       "style",

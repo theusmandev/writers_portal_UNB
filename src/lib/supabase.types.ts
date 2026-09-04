@@ -20,6 +20,7 @@ export interface Database {
           whatsapp: string | null;
           bio: string | null;
           social_media_link: string | null;
+          location: string | null;
           registration_date: string;
           status: string;
           is_public: boolean;
@@ -63,6 +64,7 @@ export interface Database {
           public_cover_image_url: string | null;
           episode_count: number | null;
           estimated_publish_at: string | null;
+          language: string | null;
         };
         Insert: Omit<
           Database["public"]["Tables"]["submissions"]["Row"],
