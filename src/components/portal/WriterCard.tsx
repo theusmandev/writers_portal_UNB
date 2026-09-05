@@ -62,7 +62,7 @@ export function WriterCard({ writer, hideFeaturedBadge }: WriterCardProps) {
           )}
         </div>
         {/* Badges */}
-        <div className="flex flex-col items-end gap-1.5 shrink-0">
+        <div className="flex flex-wrap items-center gap-2 justify-end">
           {/* Featured badge — only for featured writers (and when not explicitly hidden) */}
           {writer.is_featured && !hideFeaturedBadge && (
             <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-600">
