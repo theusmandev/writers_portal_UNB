@@ -516,7 +516,7 @@ export default function AdminSubmissionDetail() {
               <InfoRow label="Last updated" value={fmt(detail.last_updated)} />
             </dl>
             {detail.description && (
-              <div className="mt-4">
+              <div className="mt-4 rounded-lg border border-border/60 bg-muted/30 p-3.5">
                 <dt className="text-xs text-muted-foreground uppercase tracking-wide mb-1.5">Description</dt>
                 <dd className="text-sm text-muted-foreground break-words">{detail.description}</dd>
               </div>
