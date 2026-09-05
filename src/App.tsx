@@ -1,4 +1,4 @@
-import React, { Suspense } from "react";
+import React, { Suspense, useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { Instagram } from "lucide-react";
 import { SiteHeader } from "./components/portal/SiteHeader";
@@ -44,6 +44,16 @@ const WriterStatsPage = React.lazy(() => import("./routes/writer-stats"));
 
 /** Public layout — wraps all public routes with the site header and footer */
 function PublicLayout() {
+  const [showInsta, setShowInsta] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowInsta(window.scrollY > 300);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
     <div className="flex min-h-screen flex-col">
       <NotificationBar />
@@ -57,7 +67,9 @@ function PublicLayout() {
         href="https://instagram.com/urdunovelbank"
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-6 left-6 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-tr from-yellow-500 via-pink-500 to-purple-600 shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl"
+        className={`fixed bottom-6 left-6 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-tr from-yellow-500 via-pink-500 to-purple-600 shadow-lg transition-all duration-300 ease-in-out hover:scale-110 hover:shadow-xl ${
+          showInsta ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-10 opacity-0"
+        }`}
         aria-label="Contact us on Instagram"
       >
         <Instagram className="h-6 w-6 text-white" />
