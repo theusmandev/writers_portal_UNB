@@ -1,3 +1,4 @@
+import React, { Suspense } from "react";
 import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { SiteHeader } from "./components/portal/SiteHeader";
 import { SiteFooter } from "./components/portal/SiteFooter";
@@ -9,36 +10,36 @@ import { BackToTop } from "./components/portal/BackToTop";
 
 // ── Public pages ──────────────────────────────────────────────────────────────
 import Index from "./routes/index";
-import Process from "./routes/process";
-import Guidelines from "./routes/guidelines";
-import Policy from "./routes/policy";
-import Timeline from "./routes/timeline";
-import Faq from "./routes/faq";
-import Contact from "./routes/contact";
-import SubmitPage from "./routes/submit";
-import TrackPage from "./routes/track";
-import WritersPage from "./routes/writers";
-import FeaturedWritersList from "./routes/writers/featured-writers-list";
-import FeaturedWriterPage from "./routes/writers/featured-writer";
-import PostsPage from "./routes/posts";
-import PostDetailPage from "./routes/post-detail";
-import SpotlightsPage from "./routes/spotlights/index";
-import SpotlightPage from "./routes/spotlights/spotlight";
+const Process = React.lazy(() => import("./routes/process"));
+const Guidelines = React.lazy(() => import("./routes/guidelines"));
+const Policy = React.lazy(() => import("./routes/policy"));
+const Timeline = React.lazy(() => import("./routes/timeline"));
+const Faq = React.lazy(() => import("./routes/faq"));
+const Contact = React.lazy(() => import("./routes/contact"));
+const SubmitPage = React.lazy(() => import("./routes/submit"));
+const TrackPage = React.lazy(() => import("./routes/track"));
+const WritersPage = React.lazy(() => import("./routes/writers"));
+const FeaturedWritersList = React.lazy(() => import("./routes/writers/featured-writers-list"));
+const FeaturedWriterPage = React.lazy(() => import("./routes/writers/featured-writer"));
+const PostsPage = React.lazy(() => import("./routes/posts"));
+const PostDetailPage = React.lazy(() => import("./routes/post-detail"));
+const SpotlightsPage = React.lazy(() => import("./routes/spotlights/index"));
+const SpotlightPage = React.lazy(() => import("./routes/spotlights/spotlight"));
 
 // ── Admin pages ───────────────────────────────────────────────────────────────
-import AdminLoginPage from "./routes/admin/login";
-import AdminDashboard from "./routes/admin/index";
-import AdminSubmissions from "./routes/admin/submissions";
-import AdminSubmissionDetail from "./routes/admin/submission-detail";
-import AdminWriters from "./routes/admin/writers";
-import AdminWriterDetail from "./routes/admin/writer-detail";
-import AdminPosts from "./routes/admin/posts";
-import AdminPostEdit from "./routes/admin/post-edit";
-import AdminSpotlights from "./routes/admin/spotlights";
-import AdminSpotlightEdit from "./routes/admin/spotlight-edit";
-import AdminSettings from "./routes/admin/settings";
-import NotFound from "./routes/not-found";
-import WriterStatsPage from "./routes/writer-stats";
+const AdminLoginPage = React.lazy(() => import("./routes/admin/login"));
+const AdminDashboard = React.lazy(() => import("./routes/admin/index"));
+const AdminSubmissions = React.lazy(() => import("./routes/admin/submissions"));
+const AdminSubmissionDetail = React.lazy(() => import("./routes/admin/submission-detail"));
+const AdminWriters = React.lazy(() => import("./routes/admin/writers"));
+const AdminWriterDetail = React.lazy(() => import("./routes/admin/writer-detail"));
+const AdminPosts = React.lazy(() => import("./routes/admin/posts"));
+const AdminPostEdit = React.lazy(() => import("./routes/admin/post-edit"));
+const AdminSpotlights = React.lazy(() => import("./routes/admin/spotlights"));
+const AdminSpotlightEdit = React.lazy(() => import("./routes/admin/spotlight-edit"));
+const AdminSettings = React.lazy(() => import("./routes/admin/settings"));
+const NotFound = React.lazy(() => import("./routes/not-found"));
+const WriterStatsPage = React.lazy(() => import("./routes/writer-stats"));
 
 /** Public layout — wraps all public routes with the site header and footer */
 function PublicLayout() {
@@ -54,12 +55,21 @@ function PublicLayout() {
   );
 }
 
+function PageLoader() {
+  return (
+    <div className="flex min-h-[50vh] items-center justify-center">
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+    </div>
+  );
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
       <BackToTop />
-      <Routes>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
         {/* ── Admin login (no auth guard, no public layout) ── */}
         <Route path="/admin/login" element={<AdminLoginPage />} />
 
@@ -110,7 +120,8 @@ export default function App() {
           <Route path="/spotlights/:slug" element={<SpotlightPage />} />
           <Route path="*" element={<NotFound />} />
         </Route>
-      </Routes>
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }
