@@ -8,7 +8,7 @@ import { getDateFilterPredicate } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import type { WriterRow } from "@/lib/supabase.types";
 
-type WriterWithCount = WriterRow & { submission_count: number };
+type WriterWithCount = WriterRow & { submission_count: number; has_spotlight: boolean };
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString(undefined, {
@@ -27,6 +27,7 @@ export default function AdminWriters() {
   const [toggling, setToggling] = useState<string | null>(null);
   const [publicFilter, setPublicFilter] = useState("All");
   const [featuredFilter, setFeaturedFilter] = useState("All");
+  const [spotlightFilter, setSpotlightFilter] = useState("All");
   const [minSubmissions, setMinSubmissions] = useState("");
   const [dateFilter, setDateFilter] = useState("All time");
   const [currentPage, setCurrentPage] = useState(1);
@@ -34,7 +35,7 @@ export default function AdminWriters() {
   // Reset to page 1 when search or filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, publicFilter, featuredFilter, minSubmissions, dateFilter]);
+  }, [search, publicFilter, featuredFilter, spotlightFilter, minSubmissions, dateFilter]);
 
   useEffect(() => {
     void load();
@@ -57,15 +58,28 @@ export default function AdminWriters() {
         .select("writer_id");
       if (sErr) throw sErr;
 
+      // Fetch published spotlights
+      const { data: spotlightData, error: spErr } = await supabase
+        .from("writer_spotlights")
+        .select("writer_id")
+        .eq("is_published", true);
+      if (spErr) throw spErr;
+
       const countMap: Record<string, number> = {};
       for (const s of subData ?? []) {
         countMap[s.writer_id] = (countMap[s.writer_id] ?? 0) + 1;
+      }
+
+      const spotlightMap: Record<string, boolean> = {};
+      for (const s of spotlightData ?? []) {
+        spotlightMap[s.writer_id] = true;
       }
 
       setWriters(
         (writerData ?? []).map((w) => ({
           ...w,
           submission_count: countMap[w.id] ?? 0,
+          has_spotlight: spotlightMap[w.id] ?? false,
         })),
       );
     } catch {
@@ -107,6 +121,10 @@ export default function AdminWriters() {
     if (featuredFilter === "Featured only") matchesFeatured = w.is_featured;
     if (featuredFilter === "Not Featured") matchesFeatured = !w.is_featured;
 
+    let matchesSpotlight = true;
+    if (spotlightFilter === "Spotlight only") matchesSpotlight = w.has_spotlight;
+    if (spotlightFilter === "No Spotlight") matchesSpotlight = !w.has_spotlight;
+
     let matchesMinSubs = true;
     if (minSubmissions.trim() !== "") {
       const num = parseInt(minSubmissions, 10);
@@ -117,7 +135,7 @@ export default function AdminWriters() {
 
     const matchesDate = datePredicate(w.registration_date);
 
-    return matchesSearch && matchesPublic && matchesFeatured && matchesMinSubs && matchesDate;
+    return matchesSearch && matchesPublic && matchesFeatured && matchesSpotlight && matchesMinSubs && matchesDate;
   });
 
   const itemsPerPage = 20;
@@ -132,7 +150,7 @@ export default function AdminWriters() {
   const startItem = filtered.length === 0 ? 0 : (safePage - 1) * itemsPerPage + 1;
   const endItem = Math.min(safePage * itemsPerPage, filtered.length);
 
-  const hasFilters = search.trim() !== "" || publicFilter !== "All" || featuredFilter !== "All" || minSubmissions.trim() !== "" || dateFilter !== "All time";
+  const hasFilters = search.trim() !== "" || publicFilter !== "All" || featuredFilter !== "All" || spotlightFilter !== "All" || minSubmissions.trim() !== "" || dateFilter !== "All time";
   const countText = hasFilters 
     ? `Showing ${startItem}–${endItem} of ${filtered.length} writers (filtered from ${writers.length} total)`
     : `Showing ${startItem}–${endItem} of ${writers.length} writers`;
@@ -184,6 +202,17 @@ export default function AdminWriters() {
           <option value="Not Featured">Not Featured</option>
         </select>
 
+        <select
+          id="spotlight-filter"
+          value={spotlightFilter}
+          onChange={(e) => setSpotlightFilter(e.target.value)}
+          className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
+        >
+          <option value="All">All Spotlights</option>
+          <option value="Spotlight only">Spotlight only</option>
+          <option value="No Spotlight">No Spotlight</option>
+        </select>
+
         <div className="relative w-[110px]">
           <Input
             id="min-submissions-filter"
@@ -219,6 +248,7 @@ export default function AdminWriters() {
                 setSearch("");
                 setPublicFilter("All");
                 setFeaturedFilter("All");
+                setSpotlightFilter("All");
                 setMinSubmissions("");
                 setDateFilter("All time");
               }}
@@ -258,14 +288,21 @@ export default function AdminWriters() {
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex flex-col">
-                        <div className="flex items-center gap-2 font-medium">
+                        <div className="flex flex-wrap items-center gap-2 font-medium">
                           {w.full_name}
-                          {w.is_featured && (
-                            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-600">
-                              <Star className="h-2.5 w-2.5 fill-amber-500 text-amber-500" />
-                              Featured
-                            </span>
-                          )}
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {w.is_featured && (
+                              <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-600">
+                                <Star className="h-2.5 w-2.5 fill-amber-500 text-amber-500" />
+                                Featured
+                              </span>
+                            )}
+                            {w.has_spotlight && (
+                              <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-indigo-500/10 px-2 py-0.5 text-[10px] font-semibold text-indigo-600">
+                                ✨ Spotlight
+                              </span>
+                            )}
+                          </div>
                         </div>
                         <div className="text-xs text-muted-foreground mt-0.5">{w.pen_name ? `Pen Name: ${w.pen_name}` : "No pen name"}</div>
                       </div>
@@ -330,14 +367,21 @@ export default function AdminWriters() {
                     onClick={() => navigate(`/admin/writers/${w.id}`)}
                   >
                     <td className="px-4 py-3 font-medium">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         {w.full_name}
-                        {w.is_featured && (
-                          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-600">
-                            <Star className="h-2.5 w-2.5 fill-amber-500 text-amber-500" />
-                            Featured
-                          </span>
-                        )}
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {w.is_featured && (
+                            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-600">
+                              <Star className="h-2.5 w-2.5 fill-amber-500 text-amber-500" />
+                              Featured
+                            </span>
+                          )}
+                          {w.has_spotlight && (
+                            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-indigo-500/10 px-2 py-0.5 text-[10px] font-semibold text-indigo-600">
+                              ✨ Spotlight
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">{w.pen_name ?? "—"}</td>
