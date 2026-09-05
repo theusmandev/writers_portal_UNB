@@ -61,13 +61,25 @@ export function WriterCard({ writer, hideFeaturedBadge }: WriterCardProps) {
             <p className="truncate text-xs text-muted-foreground">{writer.pen_name}</p>
           )}
         </div>
-        {/* Featured badge — only for featured writers (and when not explicitly hidden) */}
-        {writer.is_featured && !hideFeaturedBadge && (
-          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-600">
-            <Star className="h-2.5 w-2.5 fill-amber-500 text-amber-500" />
-            Featured
-          </span>
-        )}
+        {/* Badges */}
+        <div className="flex flex-col items-end gap-1.5 shrink-0">
+          {/* Featured badge — only for featured writers (and when not explicitly hidden) */}
+          {writer.is_featured && !hideFeaturedBadge && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-600">
+              <Star className="h-2.5 w-2.5 fill-amber-500 text-amber-500" />
+              Featured
+            </span>
+          )}
+          {/* Spotlight badge */}
+          {writer.has_spotlight && writer.latest_spotlight_slug && (
+            <Link
+              to={`/spotlights/${writer.latest_spotlight_slug}`}
+              className="inline-flex items-center gap-1 rounded-full bg-indigo-500/10 px-2 py-0.5 text-[10px] font-semibold text-indigo-600 hover:bg-indigo-500/20 transition-colors"
+            >
+              ✨ Spotlight
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* Bio */}

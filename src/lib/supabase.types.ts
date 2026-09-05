@@ -254,6 +254,8 @@ export interface Database {
            *  are intentionally NOT present here. */
           is_featured: boolean;
           featured_slug: string | null;
+          has_spotlight: boolean | null;
+          latest_spotlight_slug: string | null;
         };
       };
     };
