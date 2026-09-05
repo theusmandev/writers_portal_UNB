@@ -915,12 +915,12 @@ export default function SubmitPage() {
                 <Input id="location" value={form.location} onChange={(e) => set("location", e.target.value)} />
               </Field>
               <div className="sm:col-span-2">
-                <Field id="bio" label="Short writer bio (optional)" hint="2–4 lines, Urdu or English" error={errors["bio"]}>
+                <Field id="bio" label="Short writer bio (optional)" hint="2–4 lines, Urdu or English — This will show on Your Writer Profile." error={errors["bio"]}>
                   <Textarea id="bio" rows={3} value={form.bio} onChange={(e) => set("bio", e.target.value)} />
                 </Field>
               </div>
               <div className="sm:col-span-2">
-                <Field id="socialMediaLink" label="Social Media Link (optional)" error={errors["socialMediaLink"]}>
+                <Field id="socialMediaLink" label="Social Media Link (optional)" hint="We will add this Social Media Handle on Your Novel Post." error={errors["socialMediaLink"]}>
                   <Input id="socialMediaLink" placeholder="e.g. facebook.com/yourprofile or instagram.com/yourprofile" value={form.socialMediaLink} onChange={(e) => set("socialMediaLink", e.target.value)} />
                 </Field>
               </div>
