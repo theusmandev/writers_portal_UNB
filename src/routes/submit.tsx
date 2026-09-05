@@ -204,7 +204,7 @@ export default function SubmitPage() {
     setEpisodes(prev => prev.map(ep => ep.id === id ? { ...ep, file } : ep));
   };
 
-  const [agree, setAgree] = useState({ guidelines: false, policy: false, rights: false });
+  const [agree, setAgree] = useState({ guidelines: false, policy: false, rights: false, contentPolicy: false });
   const [submitting, setSubmitting] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -388,8 +388,8 @@ export default function SubmitPage() {
     
     const coverError = validateFile(cover, ALLOWED_IMG, false, "cover");
     if (coverError) next["cover"] = coverError;
-    if (!agree.guidelines || !agree.policy || !agree.rights)
-      next["agree"] = "Please confirm all three statements before submitting";
+    if (!agree.guidelines || !agree.policy || !agree.rights || !agree.contentPolicy)
+      next["agree"] = "Please confirm all statements before submitting";
 
     setErrors(next);
     if (Object.keys(next).length > 0) {
@@ -1107,6 +1107,10 @@ export default function SubmitPage() {
                 {
                   key: "rights" as const,
                   label: "This work is mine, or I have the rights required to submit it.",
+                },
+                {
+                  key: "contentPolicy" as const,
+                  label: "I confirm that my novel does not contain any bold, explicit, inappropriate, or abusive content. I understand that submitting such content may result in my permanent removal from Urdu Novel Bank.",
                 },
               ].map((item) => (
                 <label key={item.key} className="flex items-start gap-3 text-sm">

@@ -166,7 +166,8 @@ export const guidelines: GuidelineSection[] = [
       "No plagiarised, translated-without-permission or AI-generated-as-original work.",
       "No content that is obscene, sectarian, or promotes hatred or violence.",
       "No defamation of real persons or organisations.",
-      "Mature themes must be handled responsibly and without explicit description.",
+      "Bold, explicit, sexual, inappropriate, or abusive content is strictly prohibited. This applies to the full manuscript and all episodes.",
+      "Violators of the bold/explicit content rule will be permanently blacklisted.",
     ],
   },
   {
@@ -232,8 +233,8 @@ export const policy: PolicySection[] = [
     body: "A writer may withdraw a submission at any time before publication by contacting us with the Submission ID. After publication, removal requests are handled within 14 days.",
   },
   {
-    title: "10. Rejection",
-    body: "A submission may be rejected for plagiarism, guideline violations, unreadable files, or unsuitable content. A rejected work may be revised and resubmitted as a new submission.",
+    title: "10. Rejection & Content Violations",
+    body: "A submission may be rejected for plagiarism, guideline violations, unreadable files, or unsuitable content. A rejected work may generally be revised and resubmitted. However, submissions containing bold, explicit, sexual, inappropriate, or abusive content will face immediate rejection and the writer will be permanently blacklisted.",
   },
   {
     title: "11. Communication policy",
