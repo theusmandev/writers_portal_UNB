@@ -10,21 +10,21 @@ import { BackToTop } from "./components/portal/BackToTop";
 
 // ── Public pages ──────────────────────────────────────────────────────────────
 import Index from "./routes/index";
-const Process = React.lazy(() => import("./routes/process"));
-const Guidelines = React.lazy(() => import("./routes/guidelines"));
-const Policy = React.lazy(() => import("./routes/policy"));
-const Timeline = React.lazy(() => import("./routes/timeline"));
-const Faq = React.lazy(() => import("./routes/faq"));
-const Contact = React.lazy(() => import("./routes/contact"));
-const SubmitPage = React.lazy(() => import("./routes/submit"));
-const TrackPage = React.lazy(() => import("./routes/track"));
-const WritersPage = React.lazy(() => import("./routes/writers"));
-const FeaturedWritersList = React.lazy(() => import("./routes/writers/featured-writers-list"));
-const FeaturedWriterPage = React.lazy(() => import("./routes/writers/featured-writer"));
-const PostsPage = React.lazy(() => import("./routes/posts"));
-const PostDetailPage = React.lazy(() => import("./routes/post-detail"));
-const SpotlightsPage = React.lazy(() => import("./routes/spotlights/index"));
-const SpotlightPage = React.lazy(() => import("./routes/spotlights/spotlight"));
+import Process from "./routes/process";
+import Guidelines from "./routes/guidelines";
+import Policy from "./routes/policy";
+import Timeline from "./routes/timeline";
+import Faq from "./routes/faq";
+import Contact from "./routes/contact";
+import SubmitPage from "./routes/submit";
+import TrackPage from "./routes/track";
+import WritersPage from "./routes/writers";
+import FeaturedWritersList from "./routes/writers/featured-writers-list";
+import FeaturedWriterPage from "./routes/writers/featured-writer";
+import PostsPage from "./routes/posts";
+import PostDetailPage from "./routes/post-detail";
+import SpotlightsPage from "./routes/spotlights/index";
+import SpotlightPage from "./routes/spotlights/spotlight";
 
 // ── Admin pages ───────────────────────────────────────────────────────────────
 const AdminLoginPage = React.lazy(() => import("./routes/admin/login"));
