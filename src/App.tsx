@@ -1,5 +1,6 @@
 import React, { Suspense } from "react";
 import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+import { Instagram } from "lucide-react";
 import { SiteHeader } from "./components/portal/SiteHeader";
 import { SiteFooter } from "./components/portal/SiteFooter";
 import { AdminGuard } from "./components/portal/AdminGuard";
@@ -51,6 +52,16 @@ function PublicLayout() {
         <Outlet />
       </main>
       <SiteFooter />
+
+      <a
+        href="https://instagram.com/urdunovelbank"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-6 left-6 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-tr from-yellow-500 via-pink-500 to-purple-600 shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl"
+        aria-label="Contact us on Instagram"
+      >
+        <Instagram className="h-6 w-6 text-white" />
+      </a>
     </div>
   );
 }
