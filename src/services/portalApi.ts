@@ -287,6 +287,32 @@ export async function updateSubmissionFiles(
   }
 }
 
+// ── Public: updateEpisodeFile ────────────────────────────────────────────────
+// Updates a specific episode's drive url and failure state
+
+export async function updateEpisodeFile(
+  episodeId: string,
+  updates: { upload_failed: boolean; drive_url: string }
+): Promise<ApiResult<null>> {
+  if (!isSupabaseConfigured) {
+    return { success: true, data: null };
+  }
+  try {
+    const { error } = await supabase
+      .from("episodes")
+      .update({
+        upload_failed: updates.upload_failed,
+        drive_url: updates.drive_url,
+      })
+      .eq("id", episodeId);
+
+    if (error) return { success: false, error: error.message };
+    return { success: true, data: null };
+  } catch (err: any) {
+    return { success: false, error: err?.message || "Failed to update episode in database." };
+  }
+}
+
 // ── Public: uploadEpisodeFile ────────────────────────────────────────────────
 
 export async function uploadEpisodeFile(

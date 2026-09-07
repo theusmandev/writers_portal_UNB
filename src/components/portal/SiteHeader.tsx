@@ -31,9 +31,11 @@ export function SiteHeader() {
       <header className="sticky top-0 z-50 flex-none border-b border-border/70 bg-background/85 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3.5">
         <Link to="/" className="flex items-center gap-3" onClick={() => handleLinkClick("/")}>
-          <span className="flex size-9 items-center justify-center rounded-md bg-primary text-primary-foreground shadow-sm">
-            <BookOpen className="size-4.5" />
-          </span>
+          <img 
+            src="/unb-logo.png" 
+            alt="Urdu Novel Bank" 
+            className="h-12 w-12 md:h-14 md:w-14 object-cover rounded-full shadow-md" 
+          />
           <span className="leading-tight">
             <span className="block font-display text-base font-semibold">{site.name}</span>
             <span className="block text-[11px] tracking-wide text-muted-foreground uppercase">

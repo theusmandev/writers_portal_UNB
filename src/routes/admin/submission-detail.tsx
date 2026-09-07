@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/lib/supabase";
 import { submissionStatuses, getMissingFileMessage } from "@/data/content";
 import type { SubmissionRow, StatusHistoryRow, WriterRow, SubmissionResponseRow, EpisodeRow } from "@/lib/supabase.types";
-import { sendNotificationEmail, updateSubmissionFiles, publishEpisodes, deleteSubmission } from "@/services/portalApi";
+import { sendNotificationEmail, updateSubmissionFiles, publishEpisodes, deleteSubmission, updateEpisodeFile } from "@/services/portalApi";
 
 /**
  * Canonical stage name for each status value.
@@ -118,6 +118,7 @@ export default function AdminSubmissionDetail() {
   
   const [manuscriptResolveUrl, setManuscriptResolveUrl] = useState("");
   const [coverResolveUrl, setCoverResolveUrl] = useState("");
+  const [episodeResolveUrls, setEpisodeResolveUrls] = useState<Record<string, string>>({});
   const [copiedTracking, setCopiedTracking] = useState(false);
 
   const isTerminalStatus = ["Published", "Rejected", "Withdrawn"].includes(detail?.current_status || "");
@@ -136,6 +137,22 @@ export default function AdminSubmissionDetail() {
     await updateSubmissionFiles(detail.submission_code, {
       [type === "manuscript" ? "manuscriptUploadFailed" : "coverUploadFailed"]: false,
       [type === "manuscript" ? "manuscriptUrl" : "coverUrl"]: finalUrl
+    });
+  }
+
+  async function handleResolveEpisode(episodeId: string, url?: string) {
+    const finalUrl = url || "resolved";
+
+    // Optimistic update
+    setEpisodes(prev => prev.map(ep => 
+      ep.id === episodeId 
+        ? { ...ep, upload_failed: false, drive_url: finalUrl }
+        : ep
+    ));
+
+    await updateEpisodeFile(episodeId, {
+      upload_failed: false,
+      drive_url: finalUrl
     });
   }
 
@@ -658,44 +675,71 @@ export default function AdminSubmissionDetail() {
                       </h3>
                       <div className="flex flex-col gap-2">
                         {eps.map(ep => (
-                          <div key={ep.id} className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/30 px-3 py-2">
-                            <div className="flex items-center gap-3">
-                              {/* Checkbox for unpublished, successful uploads */}
-                              {!ep.upload_failed && ep.drive_url && !ep.published && (
-                                <input
-                                  type="checkbox"
-                                  className="h-3.5 w-3.5 rounded border-gray-300 text-primary focus:ring-primary"
-                                  checked={selectedEpisodes.includes(ep.episode_number)}
-                                  onChange={(e) => {
-                                    if (e.target.checked) {
-                                      setSelectedEpisodes(prev => [...prev, ep.episode_number]);
-                                    } else {
-                                      setSelectedEpisodes(prev => prev.filter(n => n !== ep.episode_number));
-                                    }
-                                  }}
-                                  title="Select to publish"
-                                />
-                              )}
-                              <div className={`flex items-center gap-2 text-xs ${ep.upload_failed ? 'text-destructive' : (ep.drive_url ? (ep.published ? 'text-primary font-bold' : 'text-green-600') : 'text-muted-foreground')}`}>
-                                {ep.upload_failed ? <XCircle className="size-4 shrink-0" /> : (ep.drive_url ? <CheckCircle2 className="size-4 shrink-0" /> : <Loader2 className="size-4 shrink-0 animate-spin" />)}
-                                <span className={ep.upload_failed ? "line-through opacity-70 font-medium" : "font-medium"}>
-                                  Episode {ep.episode_number}
-                                </span>
-                                {ep.upload_failed && <span className="text-[10px] ml-1 no-underline opacity-100">(failed)</span>}
-                                {!ep.upload_failed && !ep.drive_url && <span className="text-[10px] ml-1 no-underline opacity-100">(pending)</span>}
-                                {ep.published && <span className="text-[10px] ml-1 no-underline opacity-100 rounded bg-primary/10 text-primary px-1.5 py-0.5 border border-primary/20 uppercase tracking-wider">Published</span>}
+                          <div key={ep.id} className="flex flex-col gap-1.5">
+                            <div className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/30 px-3 py-2">
+                              <div className="flex items-center gap-3">
+                                {/* Checkbox for unpublished, successful uploads */}
+                                {!ep.upload_failed && ep.drive_url && !ep.published && (
+                                  <input
+                                    type="checkbox"
+                                    className="h-3.5 w-3.5 rounded border-gray-300 text-primary focus:ring-primary"
+                                    checked={selectedEpisodes.includes(ep.episode_number)}
+                                    onChange={(e) => {
+                                      if (e.target.checked) {
+                                        setSelectedEpisodes(prev => [...prev, ep.episode_number]);
+                                      } else {
+                                        setSelectedEpisodes(prev => prev.filter(n => n !== ep.episode_number));
+                                      }
+                                    }}
+                                    title="Select to publish"
+                                  />
+                                )}
+                                <div className={`flex items-center gap-2 text-xs ${ep.upload_failed ? 'text-destructive' : (ep.drive_url ? (ep.published ? 'text-primary font-bold' : 'text-green-600') : 'text-muted-foreground')}`}>
+                                  {ep.upload_failed ? <XCircle className="size-4 shrink-0" /> : (ep.drive_url ? <CheckCircle2 className="size-4 shrink-0" /> : <Loader2 className="size-4 shrink-0 animate-spin" />)}
+                                  <span className={ep.upload_failed ? "line-through opacity-70 font-medium" : "font-medium"}>
+                                    Episode {ep.episode_number}
+                                  </span>
+                                  {ep.upload_failed && <span className="text-[10px] ml-1 no-underline opacity-100">(failed)</span>}
+                                  {!ep.upload_failed && !ep.drive_url && <span className="text-[10px] ml-1 no-underline opacity-100">(pending)</span>}
+                                  {ep.published && <span className="text-[10px] ml-1 no-underline opacity-100 rounded bg-primary/10 text-primary px-1.5 py-0.5 border border-primary/20 uppercase tracking-wider">Published</span>}
+                                </div>
                               </div>
+                              
+                              {ep.drive_url && (
+                                <a
+                                  href={ep.drive_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2 py-1 text-[10px] font-medium hover:bg-muted/80 transition-colors"
+                                >
+                                  <FileText className="h-3 w-3" /> View
+                                </a>
+                              )}
                             </div>
-                            
-                            {ep.drive_url && (
-                              <a
-                                href={ep.drive_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2 py-1 text-[10px] font-medium hover:bg-muted/80 transition-colors"
-                              >
-                                <FileText className="h-3 w-3" /> View
-                              </a>
+
+                            {ep.upload_failed && !isTerminalStatus && (
+                              <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs flex flex-col gap-2">
+                                <div className="flex items-center gap-2 text-destructive">
+                                  <AlertCircle className="h-4 w-4 shrink-0" />
+                                  <span><strong>Missing File:</strong> Episode {ep.episode_number} failed to upload.</span>
+                                </div>
+                                <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-1 w-full">
+                                  <Input 
+                                    placeholder="Paste Drive URL (optional)" 
+                                    className="h-7 text-xs bg-background w-full sm:w-48 px-2"
+                                    value={episodeResolveUrls[ep.id] || ""}
+                                    onChange={(e) => setEpisodeResolveUrls(prev => ({ ...prev, [ep.id]: e.target.value }))}
+                                  />
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    className="h-7 text-xs border-destructive/50 hover:bg-destructive/10"
+                                    onClick={() => void handleResolveEpisode(ep.id, (episodeResolveUrls[ep.id] || "").trim())}
+                                  >
+                                    Mark as Resolved
+                                  </Button>
+                                </div>
+                              </div>
                             )}
                           </div>
                         ))}
