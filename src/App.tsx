@@ -64,11 +64,11 @@ function PublicLayout() {
       <SiteFooter />
 
       <div
-        className={`fixed bottom-6 left-6 z-50 flex flex-col items-center gap-2 transition-all duration-300 ease-in-out ${
+        className={`fixed bottom-6 left-6 z-50 flex flex-col items-center justify-center gap-2 transition-all duration-300 ease-in-out ${
           showInsta ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-10 opacity-0"
         }`}
       >
-        <span className="bg-white/90 backdrop-blur-sm px-3 py-1.5 text-xs font-semibold text-stone-700 shadow-md rounded-2xl border border-stone-200">Need help?</span>
+        <span className="bg-white/90 backdrop-blur-sm px-2 py-1 text-[11px] leading-none font-medium whitespace-nowrap text-stone-600 shadow-md rounded-full border border-stone-200">Need help?</span>
         <a
           href="https://instagram.com/urdunovelbank"
           target="_blank"
