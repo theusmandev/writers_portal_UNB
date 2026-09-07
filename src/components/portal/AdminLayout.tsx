@@ -32,9 +32,7 @@ export function AdminLayout() {
     <>
       {/* Logo */}
       <div className="flex items-center gap-2.5 border-b border-border px-4 py-4">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-          <BookOpen className="h-4 w-4 text-primary" />
-        </div>
+        <img src="/unb-logo.png" alt="UNB Admin" className="h-10 w-10 object-cover rounded-full shadow-sm border border-stone-200" />
         <div>
           <p className="text-sm font-semibold leading-tight">UNB Portal</p>
           <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Admin</p>
@@ -89,9 +87,7 @@ export function AdminLayout() {
       {/* ── Mobile Top Bar ── */}
       <div className="flex items-center justify-between border-b border-border bg-card px-4 py-3 md:hidden">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-            <BookOpen className="h-4 w-4 text-primary" />
-          </div>
+          <img src="/unb-logo.png" alt="UNB Admin" className="h-10 w-10 object-cover rounded-full shadow-sm border border-stone-200" />
           <div>
             <p className="text-sm font-semibold leading-tight">UNB Portal</p>
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Admin</p>
