@@ -16,7 +16,10 @@ export function SiteFooter() {
     <footer className="mt-24 border-t border-secondary bg-secondary text-secondary-foreground">
       <div className="mx-auto grid max-w-6xl gap-10 px-5 py-14 sm:grid-cols-2 lg:grid-cols-4">
         <div className="lg:col-span-2">
-          <h3 className="font-display text-lg font-semibold">{site.name}</h3>
+          <div className="flex items-center gap-3 mb-4">
+            <img src="/unb-logo.png" alt="Urdu Novel Bank" className="h-12 w-12 md:h-14 md:w-14 object-cover rounded-full shadow-md" />
+            <h3 className="font-display text-lg font-semibold">{site.name}</h3>
+          </div>
           <p className="urdu mt-2 max-w-sm text-sm opacity-80">{site.taglineUrdu}</p>
           <p className="mt-3 max-w-sm text-sm opacity-80">{site.tagline}</p>
         </div>
