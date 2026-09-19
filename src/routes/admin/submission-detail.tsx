@@ -161,46 +161,52 @@ export default function AdminSubmissionDetail() {
     if (!id) return;
     async function load() {
       setLoading(true);
-      const [detailRes, historyRes, responsesRes, episodesRes] = await Promise.all([
-        supabase.from("submissions").select("*, writers(*)").eq("id", id!).single(),
-        supabase
-          .from("status_history")
-          .select("*")
-          .eq("submission_id", id!)
-          .order("changed_at", { ascending: false }),
-        supabase
-          .from("submission_responses")
-          .select("*")
-          .eq("submission_id", id!)
-          .order("submitted_at", { ascending: false }),
-        supabase
-          .from("episodes")
-          .select("*")
-          .eq("submission_id", id!)
-          .order("episode_number", { ascending: true }),
-        getSubmissionSettings(),
-      ]);
+      try {
+        const [detailRes, historyRes, responsesRes, episodesRes, settingsRes] = await Promise.all([
+          supabase.from("submissions").select("*, writers(*)").eq("id", id!).single(),
+          supabase
+            .from("status_history")
+            .select("*")
+            .eq("submission_id", id!)
+            .order("changed_at", { ascending: false }),
+          supabase
+            .from("submission_responses")
+            .select("*")
+            .eq("submission_id", id!)
+            .order("submitted_at", { ascending: false }),
+          supabase
+            .from("episodes")
+            .select("*")
+            .eq("submission_id", id!)
+            .order("episode_number", { ascending: true }),
+          getSubmissionSettings().catch(() => ({ success: false, data: null })),
+        ]);
 
-      if (detailRes.error) {
-        setError("Submission not found.");
-      } else {
-        const d = detailRes.data as Detail;
-        setDetail(d);
-        setNewStatus(d.current_status);
-        setNotes(d.admin_notes ?? "");
-        setStatusNote(d.status_note ?? "");
-        setPublishedUrl(d.published_url ?? "");
-        setPublishedUrlUfb(d.published_url_ufb ?? "");
-        setPublicCoverImageUrl(d.public_cover_image_url ?? "");
-        setEstimatedPublishAt(d.estimated_publish_at ? formatToDatetimeLocal(d.estimated_publish_at) : "");
+        if (detailRes.error) {
+          setError("Submission not found.");
+        } else {
+          const d = detailRes.data as Detail;
+          setDetail(d);
+          setNewStatus(d.current_status);
+          setNotes(d.admin_notes ?? "");
+          setStatusNote(d.status_note ?? "");
+          setPublishedUrl(d.published_url ?? "");
+          setPublishedUrlUfb(d.published_url_ufb ?? "");
+          setPublicCoverImageUrl(d.public_cover_image_url ?? "");
+          setEstimatedPublishAt(d.estimated_publish_at ? formatToDatetimeLocal(d.estimated_publish_at) : "");
+        }
+        setHistory((historyRes.data ?? []) as StatusHistoryRow[]);
+        setWriterResponses((responsesRes.data ?? []) as SubmissionResponseRow[]);
+        setEpisodes((episodesRes.data ?? []) as EpisodeRow[]);
+        if (settingsRes && settingsRes.success && settingsRes.data) {
+          setPreferredSite(settingsRes.data.preferred_publish_site ?? "unb");
+        }
+      } catch (err) {
+        console.error(err);
+        setError("Failed to load submission data.");
+      } finally {
+        setLoading(false);
       }
-      setHistory((historyRes.data ?? []) as StatusHistoryRow[]);
-      setWriterResponses((responsesRes.data ?? []) as SubmissionResponseRow[]);
-      setEpisodes((episodesRes.data ?? []) as EpisodeRow[]);
-      if (settingsRes.success && settingsRes.data) {
-        setPreferredSite(settingsRes.data.preferred_publish_site ?? "unb");
-      }
-      setLoading(false);
     }
     void load();
   }, [id]);
