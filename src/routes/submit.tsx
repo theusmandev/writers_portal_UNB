@@ -294,7 +294,7 @@ export default function SubmitPage() {
         setIsUnlocked(true);
       } else {
         setGateMessage({ 
-          text: "اس ای میل سے کوئی پرانا ریکارڈ نہیں ملا۔ نئی بھرتیاں فی الحال بند ہیں، براہ کرم بعد میں دوبارہ چیک کریں۔", 
+          text: "اس ای میل سے کوئی پرانا ریکارڈ نہیں ملا۔ نئے ناولز کی وصولی فی الحال بند ہے، براہ کرم بعد میں دوبارہ چیک کریں۔", 
           type: "error" 
         });
       }
@@ -767,7 +767,7 @@ export default function SubmitPage() {
         <PageHero
           eyebrow="Notice"
           title="Submissions Temporarily Paused"
-          titleUrdu="نئی بھرتیاں فی الحال بند ہیں"
+          titleUrdu="نئے ناولز کی وصولی فی الحال بند ہے"
           description="Please read the message below for more information."
         />
         <div className="mx-auto max-w-2xl px-4 sm:px-5 py-20">
