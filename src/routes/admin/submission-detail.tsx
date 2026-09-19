@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/lib/supabase";
 import { submissionStatuses, getMissingFileMessage } from "@/data/content";
 import type { SubmissionRow, StatusHistoryRow, WriterRow, SubmissionResponseRow, EpisodeRow } from "@/lib/supabase.types";
-import { sendNotificationEmail, updateSubmissionFiles, publishEpisodes, deleteSubmission, updateEpisodeFile } from "@/services/portalApi";
+import { sendNotificationEmail, updateSubmissionFiles, publishEpisodes, deleteSubmission, updateEpisodeFile, getSubmissionSettings } from "@/services/portalApi";
 
 /**
  * Canonical stage name for each status value.
@@ -98,6 +98,7 @@ export default function AdminSubmissionDetail() {
   const [error, setError] = useState<string | null>(null);
 
   // ── Editable fields ──────────────────────────────────────────────────────────
+  const [preferredSite, setPreferredSite] = useState<"unb" | "ufb">("unb");
   const [newStatus, setNewStatus] = useState("");
   const [notes, setNotes] = useState("");          // admin_notes (internal / writer-facing update)
   const [statusNote, setStatusNote] = useState(""); // status_note (visible on Rejected / Action Required cards)
@@ -177,6 +178,7 @@ export default function AdminSubmissionDetail() {
           .select("*")
           .eq("submission_id", id!)
           .order("episode_number", { ascending: true }),
+        getSubmissionSettings(),
       ]);
 
       if (detailRes.error) {
@@ -195,6 +197,9 @@ export default function AdminSubmissionDetail() {
       setHistory((historyRes.data ?? []) as StatusHistoryRow[]);
       setWriterResponses((responsesRes.data ?? []) as SubmissionResponseRow[]);
       setEpisodes((episodesRes.data ?? []) as EpisodeRow[]);
+      if (settingsRes.success && settingsRes.data) {
+        setPreferredSite(settingsRes.data.preferred_publish_site ?? "unb");
+      }
       setLoading(false);
     }
     void load();
@@ -426,6 +431,10 @@ export default function AdminSubmissionDetail() {
       console.error("Failed to copy", e);
     }
   }
+
+  const activePublishedUrl = preferredSite === "ufb" && detail?.published_url_ufb 
+    ? detail.published_url_ufb 
+    : detail?.published_url;
 
   return (
     <div className="p-6 space-y-6 max-w-5xl">
@@ -754,16 +763,16 @@ export default function AdminSubmissionDetail() {
           )}
 
           {/* Published URL display (read-only info; editable via right panel) */}
-          {detail.published_url && (
+          {activePublishedUrl && (
             <section className="rounded-xl border border-border bg-card p-5">
-              <h2 className="text-sm font-semibold mb-2">Published Link</h2>
+              <h2 className="text-sm font-semibold mb-2">Published Link {preferredSite === 'ufb' ? '(Fiction Bank)' : '(Novel Bank)'}</h2>
               <a
-                href={detail.published_url}
+                href={activePublishedUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline break-all"
               >
-                {detail.published_url} <ExternalLink className="h-3 w-3 shrink-0" />
+                {activePublishedUrl} <ExternalLink className="h-3 w-3 shrink-0" />
               </a>
             </section>
           )}
