@@ -291,7 +291,7 @@ export function RichTextEditor({ content, onChange, postFolderToken, size = 'def
 
   return (
     <div className="border border-border rounded-xl bg-card flex flex-col shadow-sm focus-within:border-primary/50 transition-colors relative">
-      <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-2 p-2 border-b border-border bg-muted/95 backdrop-blur supports-[backdrop-filter]:bg-muted/40 rounded-t-xl">
+      <div className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-2 p-2 border-b border-stone-200/50 shadow-sm bg-card rounded-t-xl">
         
         <div className="flex flex-wrap items-center gap-1">
           {viewMode === 'visual' && (

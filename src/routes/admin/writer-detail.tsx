@@ -380,13 +380,13 @@ export default function AdminWriterDetail() {
           </section>
 
           {/* ── Featured Writer Section ─────────────────────────────────── */}
-          <section className="rounded-xl border border-border bg-card shadow-soft overflow-hidden">
+          <section className="rounded-xl border border-border bg-card shadow-soft">
             {/* Collapsible header */}
             <button
               id="featured-writer-toggle"
               type="button"
               onClick={() => setFeaturedOpen((o) => !o)}
-              className="w-full flex items-center justify-between gap-3 px-5 py-4 text-left hover:bg-muted/40 transition-colors"
+              className={`w-full flex items-center justify-between gap-3 px-5 py-4 text-left hover:bg-muted/40 transition-colors ${featuredOpen ? 'rounded-t-xl' : 'rounded-xl'}`}
             >
               <div className="flex items-center gap-2.5">
                 <Star
