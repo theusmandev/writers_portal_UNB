@@ -7,6 +7,8 @@ import { Loader2, Calendar, ArrowLeft } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { SEO } from "@/components/SEO";
 
+const isUrduText = (text: string) => /[\u0600-\u06FF]/.test(text);
+
 export default function PostDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const [post, setPost] = useState<PostRow | null>(null);
@@ -78,6 +80,8 @@ export default function PostDetailPage() {
     );
   }
 
+  const titleIsUrdu = isUrduText(post.title);
+
   return (
     <article className="mx-auto max-w-3xl px-6 py-12 md:py-20">
       <SEO title={seoTitle} description={seoDescription} type="article" image={seoImage} />
@@ -89,11 +93,14 @@ export default function PostDetailPage() {
       </Link>
 
       <header className="mb-10 space-y-4">
-        <div className="flex items-center gap-2 text-sm font-medium text-primary">
+        <div className={`flex items-center gap-2 text-sm font-medium text-primary ${titleIsUrdu ? 'flex-row-reverse' : ''}`}>
           <Calendar className="h-4 w-4" />
           <time dateTime={post.created_at}>{formatDate(post.created_at)}</time>
         </div>
-        <h1 className="urdu font-display text-3xl font-bold leading-tight text-foreground sm:text-4xl md:text-5xl" dir="auto">
+        <h1 
+          className={`urdu font-display text-3xl font-bold leading-tight text-foreground sm:text-4xl md:text-5xl ${titleIsUrdu ? 'text-right' : 'text-left'}`}
+          dir={titleIsUrdu ? "rtl" : "ltr"}
+        >
           {post.title}
         </h1>
       </header>
