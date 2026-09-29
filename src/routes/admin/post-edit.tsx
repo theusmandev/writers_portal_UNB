@@ -7,8 +7,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
-import { Loader2, ArrowLeft, Save } from "lucide-react";
+import { Loader2, ArrowLeft, Save, Eye, Calendar } from "lucide-react";
 import type { PostRow } from "@/lib/supabase.types";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { sanitizeHtml } from "@/lib/sanitize";
+import { formatDate } from "@/lib/utils";
+
+const isUrduText = (text: string) => /[\u0600-\u06FF]/.test(text);
 
 export default function AdminPostEdit() {
   const { id } = useParams<{ id: string }>();
@@ -218,6 +223,43 @@ export default function AdminPostEdit() {
           <Button variant="outline" type="button" onClick={() => navigate("/admin/posts")}>
             Cancel
           </Button>
+
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="secondary" type="button">
+                <Eye className="mr-2 h-4 w-4" />
+                Preview
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
+              <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border p-4 flex items-center justify-between">
+                <h2 className="text-lg font-semibold">Preview — Unsaved Changes</h2>
+              </div>
+              <div className="p-6">
+                <article className="mx-auto max-w-3xl px-6 py-12 md:py-20">
+                  <header className="mb-10 space-y-4">
+                    <div className={`flex items-center gap-2 text-sm font-medium text-primary ${isUrduText(title) ? 'flex-row-reverse' : ''}`}>
+                      <Calendar className="h-4 w-4" />
+                      <time dateTime={new Date().toISOString()}>{formatDate(new Date().toISOString())}</time>
+                    </div>
+                    <h1 
+                      className={`urdu font-display text-3xl font-bold leading-tight text-foreground sm:text-4xl md:text-5xl ${isUrduText(title) ? 'text-right' : 'text-left'}`}
+                      dir={isUrduText(title) ? "rtl" : "ltr"}
+                    >
+                      {title || "Untitled Post"}
+                    </h1>
+                  </header>
+
+                  <div 
+                    className="urdu prose prose-lg prose-stone dark:prose-invert max-w-none prose-headings:font-urdu prose-a:text-primary hover:prose-a:text-primary/80 prose-p:leading-loose prose-headings:leading-[1.8] leading-loose"
+                    dir="auto"
+                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) || "<p class='text-muted-foreground'>No content</p>" }}
+                  />
+                </article>
+              </div>
+            </DialogContent>
+          </Dialog>
+
           <Button type="submit" disabled={saving}>
             {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
             {saving ? "Saving..." : "Save Post"}
