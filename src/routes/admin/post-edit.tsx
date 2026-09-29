@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
-import { Loader2, ArrowLeft, Save, Eye, Calendar } from "lucide-react";
+import { Loader2, ArrowLeft, Save, Eye, Calendar, X } from "lucide-react";
 import type { PostRow } from "@/lib/supabase.types";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { sanitizeHtml } from "@/lib/sanitize";
@@ -31,6 +31,9 @@ export default function AdminPostEdit() {
   const [metaTitle, setMetaTitle] = useState("");
   const [metaDesc, setMetaDesc] = useState("");
   const [published, setPublished] = useState(true);
+
+  // Preview Modal state
+  const [showPreview, setShowPreview] = useState(false);
 
   // Stable token for Google Drive folder linking
   const [postFolderToken] = useState(() => {
@@ -224,7 +227,7 @@ export default function AdminPostEdit() {
             Cancel
           </Button>
 
-          <Dialog>
+          <Dialog open={showPreview} onOpenChange={setShowPreview}>
             <DialogTrigger asChild>
               <Button variant="secondary" type="button">
                 <Eye className="mr-2 h-4 w-4" />
@@ -234,6 +237,10 @@ export default function AdminPostEdit() {
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
               <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border p-4 flex items-center justify-between">
                 <h2 className="text-lg font-semibold">Preview — Unsaved Changes</h2>
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setShowPreview(false)}>
+                  <X className="h-5 w-5" />
+                  <span className="sr-only">Close</span>
+                </Button>
               </div>
               <div className="p-6">
                 <article className="mx-auto max-w-3xl px-6 py-12 md:py-20">
