@@ -11,6 +11,7 @@ import { Loader2, ArrowLeft, Save, Search, X, Eye, Sparkles } from "lucide-react
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { slugify } from "@/lib/utils";
 import { sanitizeHtml } from "@/lib/sanitize";
+import { SpotlightRelationalPreview } from "@/components/admin/SpotlightRelationalPreview";
 import type { WriterSpotlightRow, WriterRow } from "@/lib/supabase.types";
 
 export default function AdminSpotlightEdit() {
@@ -371,9 +372,13 @@ export default function AdminSpotlightEdit() {
                       </p>
                     </section>
                   )}
-                  <div className="rounded-xl border border-dashed border-border bg-muted/30 p-8 text-center text-sm text-muted-foreground">
-                    Published novels and social card will also appear here based on the writer's profile.
-                  </div>
+                  {writerId ? (
+                    <SpotlightRelationalPreview writerId={writerId} />
+                  ) : (
+                    <div className="rounded-xl border border-dashed border-border bg-muted/30 p-8 text-center text-sm text-muted-foreground">
+                      Please select a writer to preview their published novels and social links.
+                    </div>
+                  )}
                 </div>
               </div>
             </DialogContent>
