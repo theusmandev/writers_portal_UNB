@@ -35,6 +35,9 @@ export default function AdminSpotlightEdit() {
   const [writerSearch, setWriterSearch] = useState("");
   const [isWriterDropdownOpen, setIsWriterDropdownOpen] = useState(false);
 
+  // Preview Modal state
+  const [showPreview, setShowPreview] = useState(false);
+
   // Stable token for Google Drive folder linking (images in rich text)
   const [folderToken] = useState(() => {
     if (!isNew && id) return id;
@@ -291,7 +294,7 @@ export default function AdminSpotlightEdit() {
             Cancel
           </Button>
 
-          <Dialog>
+          <Dialog open={showPreview} onOpenChange={setShowPreview}>
             <DialogTrigger asChild>
               <Button variant="secondary" type="button">
                 <Eye className="mr-2 h-4 w-4" />
@@ -301,6 +304,10 @@ export default function AdminSpotlightEdit() {
             <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto p-0">
               <div className="sticky top-0 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border p-4 flex items-center justify-between">
                 <h2 className="text-lg font-semibold">Preview — Unsaved Changes</h2>
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setShowPreview(false)}>
+                  <X className="h-5 w-5" />
+                  <span className="sr-only">Close</span>
+                </Button>
               </div>
               <div className="relative">
                 {/* ── Spotlight Hero ── */}

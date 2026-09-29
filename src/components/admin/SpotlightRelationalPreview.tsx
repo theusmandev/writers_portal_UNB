@@ -159,7 +159,7 @@ export function SpotlightRelationalPreview({ writerId }: { writerId: string }) {
       try {
         const [wRes, nRes] = await Promise.all([
           supabase.from('writers').select('full_name, pen_name, social_media_link').eq('id', writerId).single(),
-          supabase.from('published_novels').select('*').eq('writer_id', writerId).order('novel_published_at', { ascending: false })
+          supabase.from('submissions').select('id, novel_title, genre, published_url, public_cover_image_url, novel_status, episode_count, submission_date, estimated_publish_at').eq('writer_id', writerId).eq('current_status', 'Published').order('submission_date', { ascending: false })
         ]);
 
         if (!isMounted) return;
@@ -169,7 +169,18 @@ export function SpotlightRelationalPreview({ writerId }: { writerId: string }) {
           setWriterName(wRes.data.pen_name || wRes.data.full_name);
         }
         if (nRes.data) {
-          setNovels(nRes.data);
+          const mappedNovels = nRes.data.map((sub: any) => ({
+            id: sub.id,
+            novel_title: sub.novel_title,
+            genre: sub.genre,
+            published_url: sub.published_url,
+            public_cover_image_url: sub.public_cover_image_url,
+            novel_status: sub.novel_status,
+            published_episode_count: sub.episode_count || 0,
+            novel_published_at: sub.estimated_publish_at || sub.submission_date,
+            resolved_published_url: sub.published_url
+          }));
+          setNovels(mappedNovels);
         }
       } catch (err) {
         console.error("Failed to load spotlight relational data", err);
