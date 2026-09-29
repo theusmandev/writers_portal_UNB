@@ -888,13 +888,20 @@ export default function SubmitPage() {
                 </Button>
               </div>
               {autoFillMessage && (
-                <p className={`mt-3 text-sm ${
-                  autoFillMessage.type === 'success' ? 'text-primary font-medium' :
-                  autoFillMessage.type === 'error' ? 'text-destructive' :
-                  'text-muted-foreground'
-                }`}>
-                  {autoFillMessage.text}
-                </p>
+                autoFillMessage.type === 'info' ? (
+                  <div className="p-3 rounded-md mt-4 text-sm flex items-start gap-2 bg-sky-50 border border-sky-200 text-sky-800 dark:bg-sky-950/30 dark:border-sky-900/50 dark:text-sky-300">
+                    <Info className="h-4 w-4 shrink-0 mt-0.5" />
+                    <p>{autoFillMessage.text}</p>
+                  </div>
+                ) : (
+                  <p className={`mt-3 text-sm ${
+                    autoFillMessage.type === 'success' ? 'text-primary font-medium' :
+                    autoFillMessage.type === 'error' ? 'text-destructive' :
+                    'text-muted-foreground'
+                  }`}>
+                    {autoFillMessage.text}
+                  </p>
+                )
               )}
             </div>
 
