@@ -681,7 +681,7 @@ function RejectedCard({ record }: { record: SubmissionRecord }) {
             This submission wasn't approved this time
           </h3>
           {record.statusNote && (
-            <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+            <p className="mt-2 text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
               {record.statusNote}
             </p>
           )}
@@ -745,7 +745,7 @@ function ActionRequiredSection({
           <div>
             <h3 className="font-semibold text-foreground">Action needed on your submission</h3>
             {record.statusNote ? (
-              <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+              <p className="mt-2 text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
                 {record.statusNote}
               </p>
             ) : (
@@ -1308,7 +1308,7 @@ export default function TrackPage() {
 
                 {/* General admin note — shown for all non-special statuses (under progress timeline) */}
                 {record.note && !isSpecialStatus && (
-                  <p className="mt-5 rounded-lg bg-primary/5 p-4 text-sm text-muted-foreground">
+                  <p className="mt-5 rounded-lg bg-primary/5 p-4 text-sm text-muted-foreground whitespace-pre-wrap">
                     {record.note}
                   </p>
                 )}
