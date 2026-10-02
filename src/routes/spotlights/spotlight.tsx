@@ -17,9 +17,10 @@ import {
   Link as LinkIcon,
   Sparkles,
 } from "lucide-react";
-import { getSpotlightBySlug } from "@/services/portalApi";
+import { getSpotlightBySlug, getSpotlightsList } from "@/services/portalApi";
 import { PageHero } from "@/components/portal/PageHero";
 import { SEO } from "@/components/SEO";
+import { SpotlightCard, type SpotlightSummary } from "@/components/portal/SpotlightCard";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -188,6 +189,7 @@ type SpotlightData = {
 export default function SpotlightPage() {
   const { slug } = useParams<{ slug: string }>();
   const [spotlight, setSpotlight] = useState<SpotlightData | null>(null);
+  const [moreSpotlights, setMoreSpotlights] = useState<SpotlightSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -220,6 +222,12 @@ export default function SpotlightPage() {
 
       if (res.data.spotlight_content) {
         setSanitizedContent(sanitizeHtml(res.data.spotlight_content));
+      }
+
+      const listRes = await getSpotlightsList();
+      if (listRes.success) {
+        const filtered = listRes.data.filter((s: any) => s.slug !== slug).slice(0, 3);
+        setMoreSpotlights(filtered as SpotlightSummary[]);
       }
 
       setLoading(false);
@@ -597,6 +605,20 @@ export default function SpotlightPage() {
             </section>
           );
         })()}
+
+        {/* ── Read More Spotlights ── */}
+        {moreSpotlights.length > 0 && (
+          <section aria-label="Read more spotlights">
+            <h2 className="mb-6 text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
+              Read More Spotlights
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+              {moreSpotlights.map((s, i) => (
+                <SpotlightCard key={s.id} spotlight={s} delayMs={i * 100} layout="grid" />
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     </div>
   );
