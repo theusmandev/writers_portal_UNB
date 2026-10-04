@@ -214,7 +214,10 @@ export default function Index() {
                   </Link>
                 </div>
               </div>
-              <div className="w-full md:w-5/12 aspect-square md:aspect-auto md:h-80 bg-card rounded-2xl border border-border shadow-soft flex items-center justify-center relative overflow-hidden group">
+              <Link 
+                to={`/spotlights/${latestSpotlight.slug}`}
+                className="w-full md:w-5/12 aspect-square md:aspect-auto md:h-80 bg-card rounded-2xl border border-border shadow-soft flex items-center justify-center relative overflow-hidden group cursor-pointer transition-transform duration-300 hover:scale-[1.02] hover:shadow-lg"
+              >
                 <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 via-transparent to-primary/5 transition-opacity group-hover:opacity-70" />
                 <div className="relative text-center p-8 space-y-5">
                    <div className="mx-auto h-24 w-24 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-4xl font-serif text-white shadow-md">
@@ -227,7 +230,7 @@ export default function Index() {
                      </div>
                    </div>
                 </div>
-              </div>
+              </Link>
             </FadeIn>
           </div>
         </section>
