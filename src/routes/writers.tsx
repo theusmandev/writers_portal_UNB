@@ -139,18 +139,9 @@ export default function WritersPage() {
         {!loading && !error && writers.length > 0 && (
           <>
             <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div className="text-lg font-medium flex items-center gap-3">
+              <div className="text-lg font-medium">
                 {debouncedQuery.trim() ? (
-                  <>
-                    <span>Showing {filteredAndSortedWriters.length} of {writers.length} Total Writers</span>
-                    <button
-                      onClick={clearSearch}
-                      className="px-3 py-1.5 text-sm font-medium bg-amber-100 text-amber-800 hover:bg-amber-200 transition-colors rounded-full flex items-center gap-1.5"
-                    >
-                      <RotateCcw className="h-[14px] w-[14px]" />
-                      See all writers
-                    </button>
-                  </>
+                  <>Showing {filteredAndSortedWriters.length} of {writers.length} Total Writers</>
                 ) : (
                   <>{writers.length} Total {writers.length === 1 ? "Writer" : "Writers"}</>
                 )}
@@ -209,13 +200,33 @@ export default function WritersPage() {
                 <p className="mt-4 text-muted-foreground">
                   No writers found matching "{searchQuery}"
                 </p>
+                {debouncedQuery.trim() && (
+                  <button
+                    onClick={clearSearch}
+                    className="flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2.5 mx-auto mt-6 text-sm font-medium text-amber-800 bg-amber-50/50 border border-amber-200 rounded-lg shadow-sm hover:bg-amber-100 hover:border-amber-300 transition-all duration-200"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                    See all writers
+                  </button>
+                )}
               </div>
             ) : (
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {filteredAndSortedWriters.map((writer) => (
-                  <WriterCard key={writer.id} writer={writer} />
-                ))}
-              </div>
+              <>
+                {debouncedQuery.trim() && (
+                  <button
+                    onClick={clearSearch}
+                    className="flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2.5 mb-6 text-sm font-medium text-amber-800 bg-amber-50/50 border border-amber-200 rounded-lg shadow-sm hover:bg-amber-100 hover:border-amber-300 transition-all duration-200"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                    See all writers
+                  </button>
+                )}
+                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                  {filteredAndSortedWriters.map((writer) => (
+                    <WriterCard key={writer.id} writer={writer} />
+                  ))}
+                </div>
+              </>
             )}
           </>
         )}
