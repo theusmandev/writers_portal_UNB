@@ -314,6 +314,11 @@ export const genres = [
   "Adventure",
   "Horror",
   "Islamic / Spiritual",
+  "Tragedy",
+  "Fantasy",
+  "Humor / Comedy",
+  "Self Help",
+  "Sci-Fi",
   "Other",
 ];
 
