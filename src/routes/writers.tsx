@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { ExternalLink, BookOpen, User, AlertCircle, Star, Search } from "lucide-react";
+import { ExternalLink, BookOpen, User, AlertCircle, Star, Search, X } from "lucide-react";
 import { PageHero } from "@/components/portal/PageHero";
 import { WriterCard } from "@/components/portal/WriterCard";
 import { supabase } from "@/lib/supabase";
@@ -20,7 +20,7 @@ import { Label } from "@/components/ui/label";
 type SortOption = "a-z" | "novels";
 
 export default function WritersPage() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const initialQuery = searchParams.get("q") || "";
 
   const [writers, setWriters] = useState<PublicWriterRow[]>([]);
@@ -31,6 +31,14 @@ export default function WritersPage() {
   const [debouncedQuery, setDebouncedQuery] = useState(initialQuery);
   const [sortOption, setSortOption] = useState<SortOption>("a-z");
   const [featuredFirst, setFeaturedFirst] = useState(false);
+
+  const clearSearch = () => {
+    setSearchQuery("");
+    setSearchParams((prev) => {
+      prev.delete("q");
+      return prev;
+    });
+  };
 
   // Debounce search query
   useEffect(() => {
@@ -131,9 +139,14 @@ export default function WritersPage() {
         {!loading && !error && writers.length > 0 && (
           <>
             <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div className="text-lg font-medium">
+              <div className="text-lg font-medium flex items-center gap-3">
                 {debouncedQuery.trim() ? (
-                  <>Showing {filteredAndSortedWriters.length} of {writers.length} Total Writers</>
+                  <>
+                    <span>Showing {filteredAndSortedWriters.length} of {writers.length} Total Writers</span>
+                    <button onClick={clearSearch} className="text-sm font-normal text-amber-700 hover:underline">
+                      See all writers
+                    </button>
+                  </>
                 ) : (
                   <>{writers.length} Total {writers.length === 1 ? "Writer" : "Writers"}</>
                 )}
@@ -146,8 +159,17 @@ export default function WritersPage() {
                     placeholder="Search writers..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 sm:w-[250px]"
+                    className="w-full pl-9 pr-9 sm:w-[250px]"
                   />
+                  {searchQuery && (
+                    <button
+                      onClick={clearSearch}
+                      className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground"
+                      title="Clear search"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
 
                 <div className="flex flex-row items-center gap-3">
