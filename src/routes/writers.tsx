@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { ExternalLink, BookOpen, User, AlertCircle, Star, Search } from "lucide-react";
 import { PageHero } from "@/components/portal/PageHero";
 import { WriterCard } from "@/components/portal/WriterCard";
@@ -20,12 +20,15 @@ import { Label } from "@/components/ui/label";
 type SortOption = "a-z" | "novels";
 
 export default function WritersPage() {
+  const [searchParams] = useSearchParams();
+  const initialQuery = searchParams.get("q") || "";
+
   const [writers, setWriters] = useState<PublicWriterRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(initialQuery);
+  const [debouncedQuery, setDebouncedQuery] = useState(initialQuery);
   const [sortOption, setSortOption] = useState<SortOption>("a-z");
   const [featuredFirst, setFeaturedFirst] = useState(false);
 

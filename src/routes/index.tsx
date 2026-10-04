@@ -248,11 +248,16 @@ export default function Index() {
           
           <div className="flex flex-wrap justify-center gap-8 md:gap-12">
             {writers.map((w, i) => (
-              <FadeIn key={w.pen_name} delayMs={i * 50} className="flex flex-col items-center gap-3 group">
-                <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-full bg-muted border border-border flex items-center justify-center text-2xl sm:text-3xl font-serif text-muted-foreground shadow-sm transition-all duration-300 group-hover:scale-105 group-hover:shadow-md group-hover:border-primary/30 group-hover:bg-primary/5 group-hover:text-primary">
-                  {w.pen_name.charAt(0).toUpperCase()}
-                </div>
-                <span className="text-sm sm:text-base font-medium text-foreground transition-colors group-hover:text-primary">{w.pen_name}</span>
+              <FadeIn key={w.pen_name} delayMs={i * 50}>
+                <Link
+                  to={w.is_featured && w.featured_slug ? `/writers/featured/${w.featured_slug}` : `/writers?q=${encodeURIComponent(w.pen_name || w.full_name)}`}
+                  className="flex flex-col items-center gap-3 group cursor-pointer block transition-transform duration-300 hover:-translate-y-1"
+                >
+                  <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-full bg-muted border border-border flex items-center justify-center text-2xl sm:text-3xl font-serif text-muted-foreground shadow-sm transition-all duration-300 group-hover:scale-105 group-hover:shadow-md group-hover:border-primary/30 group-hover:bg-primary/5 group-hover:text-primary">
+                    {w.pen_name.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="text-sm sm:text-base font-medium text-foreground transition-colors group-hover:text-primary">{w.pen_name}</span>
+                </Link>
               </FadeIn>
             ))}
           </div>
