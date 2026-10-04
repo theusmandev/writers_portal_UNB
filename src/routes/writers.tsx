@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { ExternalLink, BookOpen, User, AlertCircle, Star, Search, X } from "lucide-react";
+import { ExternalLink, BookOpen, User, AlertCircle, Star, Search, X, RotateCcw } from "lucide-react";
 import { PageHero } from "@/components/portal/PageHero";
 import { WriterCard } from "@/components/portal/WriterCard";
 import { supabase } from "@/lib/supabase";
@@ -143,7 +143,11 @@ export default function WritersPage() {
                 {debouncedQuery.trim() ? (
                   <>
                     <span>Showing {filteredAndSortedWriters.length} of {writers.length} Total Writers</span>
-                    <button onClick={clearSearch} className="text-sm font-normal text-amber-700 hover:underline">
+                    <button
+                      onClick={clearSearch}
+                      className="px-3 py-1.5 text-sm font-medium bg-amber-100 text-amber-800 hover:bg-amber-200 transition-colors rounded-full flex items-center gap-1.5"
+                    >
+                      <RotateCcw className="h-[14px] w-[14px]" />
                       See all writers
                     </button>
                   </>
