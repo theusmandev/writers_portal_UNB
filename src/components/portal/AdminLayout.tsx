@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
-import { LayoutDashboard, FileText, Users, Newspaper, LogOut, BookOpen, Settings, Menu, Star } from "lucide-react";
+import { LayoutDashboard, FileText, Users, Newspaper, LogOut, BookOpen, Settings, Menu, Star, ExternalLink } from "lucide-react";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { SEO } from "@/components/SEO";
 
@@ -58,6 +58,17 @@ export function AdminLayout() {
             {label}
           </NavLink>
         ))}
+
+        <hr className="my-4 border-amber-200 dark:border-amber-900/50" />
+        <a
+          href="/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium text-amber-600 transition-colors hover:bg-muted hover:text-amber-700 dark:text-amber-500 dark:hover:text-amber-400"
+        >
+          <ExternalLink className="h-4 w-4 shrink-0" />
+          View Portal
+        </a>
       </nav>
 
       {/* User info + logout */}
