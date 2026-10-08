@@ -800,7 +800,7 @@ export default function AdminSubmissionDetail() {
               <ul className="space-y-3">
                 {writerResponses.map((r) => (
                   <li key={r.id} className="rounded-lg border border-border bg-muted/30 p-3 space-y-1">
-                    <p className="text-sm leading-relaxed">{r.response_text}</p>
+                    <p className="text-sm leading-relaxed break-words break-all whitespace-pre-wrap">{r.response_text}</p>
                     <p className="text-[11px] text-muted-foreground">{fmt(r.submitted_at)}</p>
                   </li>
                 ))}
