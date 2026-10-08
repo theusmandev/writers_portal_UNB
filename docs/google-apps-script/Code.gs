@@ -342,7 +342,7 @@ function handleSendEmail(body) {
           <strong>${escapeHtml(safeTitle)}</strong> (${escapeHtml(submissionCode)}).</p>
           ${statusNote ? `
             <div style="background:${CONFIG.BG_CREAM}; border-left:4px solid ${CONFIG.BRAND_ACCENT}; padding:14px 16px; margin:16px 0; border-radius:6px;">
-              ${escapeHtml(statusNote)}
+              ${nl2br(statusNote)}
             </div>
           ` : ''}
           <p>Please visit your tracking page to respond.</p>
@@ -366,7 +366,7 @@ function handleSendEmail(body) {
           <strong>${escapeHtml(safeTitle)}</strong> (${escapeHtml(submissionCode)}) at this time.</p>
           ${statusNote ? `
             <div style="background:${CONFIG.BG_CREAM}; border-left:4px solid #999; padding:14px 16px; margin:16px 0; border-radius:6px;">
-              ${escapeHtml(statusNote)}
+              ${nl2br(statusNote)}
             </div>
           ` : ''}
           <p>You're welcome to revise and submit again in the future. Thank you for considering Urdu Novel Bank.</p>
@@ -508,6 +508,11 @@ function handleSendEmail(body) {
 function escapeHtml(str) {
   if (!str) return '';
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function nl2br(str) {
+  if (!str) return '';
+  return escapeHtml(str).replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/\n/g, '<br>');
 }
 
 // ── EMAIL TEMPLATE BUILDER (v2 — mobile-first, social links, dua) ────
