@@ -65,9 +65,10 @@ export default function AdminLoginPage() {
           )}
 
           <div className="space-y-1.5">
-            <Label htmlFor="login-email">Email</Label>
+            <Label htmlFor="email">Email</Label>
             <Input
-              id="login-email"
+              id="email"
+              name="email"
               type="email"
               autoComplete="email"
               value={email}
@@ -78,9 +79,10 @@ export default function AdminLoginPage() {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="login-password">Password</Label>
+            <Label htmlFor="password">Password</Label>
             <Input
-              id="login-password"
+              id="password"
+              name="password"
               type="password"
               autoComplete="current-password"
               value={password}
