@@ -302,7 +302,7 @@ export default function AdminSubmissionDetail() {
           const emailType =
             newStatus === "Action Required" ? "action_required" :
             newStatus === "Rejected" ? "rejected" :
-            newStatus === "Scheduled for Publication" ? "publish_scheduled" : "published";
+            newStatus === "Scheduled for Publication" ? (detail.novel_status === "Ongoing" ? "episode_scheduled" : "publish_scheduled") : "published";
 
           let finalPublishedUrl = publishedUrl.trim() || undefined;
 

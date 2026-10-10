@@ -516,6 +516,45 @@ function handleSendEmail(body) {
       break;
     }
 
+    case 'episode_scheduled': {
+      // Format the ISO timestamp to Pakistan Standard Time (PKT = Asia/Karachi, UTC+5)
+      let formattedDatePKT = 'a scheduled date';
+      if (estimatedPublishAt) {
+        try {
+          const dateObj = new Date(estimatedPublishAt);
+          // Utilities.formatDate uses Java SimpleDateFormat patterns
+          formattedDatePKT = Utilities.formatDate(
+            dateObj,
+            'Asia/Karachi',
+            'MMMM dd, yyyy \'at\' h:mm a'
+          ) + ' (PKT)';
+        } catch (dateErr) {
+          console.error('Failed to parse estimatedPublishAt:', dateErr);
+          formattedDatePKT = estimatedPublishAt; // fallback: show raw value
+        }
+      }
+
+      subject = `📅 Next Episode of "${safeTitle}" is Scheduled! — ${submissionCode}`;
+      html = buildEmailTemplate({
+        heading: '📅 Your Next Episode is Scheduled',
+        headingUrdu: 'آپ کی اگلی قسط کی اشاعت کی تاریخ مقرر ہو گئی',
+        body: `
+          <p>Dear ${escapeHtml(writerName || 'Writer')},</p>
+          <p>Great news! The next episode(s) for your ongoing novel <strong>${escapeHtml(safeTitle)}</strong> (${escapeHtml(submissionCode)}) have been scheduled for publishing.</p>
+          <div style="background:${CONFIG.BG_CREAM}; border-left:4px solid ${CONFIG.BRAND_ACCENT}; padding:14px 16px; margin:16px 0; border-radius:6px;">
+            <strong>Estimated Publish Date:</strong><br>
+            <span style="font-size:18px; font-weight:bold; color:${CONFIG.BRAND_PRIMARY};">${escapeHtml(formattedDatePKT)}</span>
+          </div>
+          <p>We'll notify you again once the episode goes live. You can track the status of your submission anytime using the button below.</p>
+        `,
+        bodyUrdu: 'آپ کے ناول کی اگلی قسط کی اشاعت کی تاریخ مقرر کر دی گئی ہے۔ جب یہ قسط شائع ہو گی تو ہم آپ کو دوبارہ مطلع کریں گے۔',
+        duaUrdu: getRandomDua(DUAS_SCHEDULED),
+        ctaText: 'Track Your Submission',
+        ctaLink: trackLink
+      });
+      break;
+    }
+
     default:
       return { success: false, error: 'Unknown emailType: ' + emailType };
   }
