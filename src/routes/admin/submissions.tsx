@@ -312,8 +312,8 @@ export default function AdminSubmissions() {
                           {s.current_status}
                         </span>
                         {s.novel_status === "Ongoing" && (
-                          <span className="rounded bg-muted/60 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground flex items-center gap-1">
-                            Ongoing • {s.episode_count || 0} eps
+                          <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium flex items-center gap-1 ${s.is_completed ? 'bg-emerald-100 text-emerald-800' : 'bg-muted/60 text-muted-foreground'}`}>
+                            {s.is_completed ? 'Completed' : 'Ongoing'} • {s.episode_count || 0} eps
                           </span>
                         )}
                       </div>
@@ -398,8 +398,8 @@ export default function AdminSubmissions() {
                           {s.current_status}
                         </span>
                         {s.novel_status === "Ongoing" && (
-                          <span className="rounded bg-muted/60 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground flex items-center gap-1">
-                            Ongoing • {s.episode_count || 0} episodes
+                          <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium flex items-center gap-1 ${s.is_completed ? 'bg-emerald-100 text-emerald-800' : 'bg-muted/60 text-muted-foreground'}`}>
+                            {s.is_completed ? 'Completed' : 'Ongoing'} • {s.episode_count || 0} episodes
                           </span>
                         )}
                         {s.novel_status === "Ongoing" && s.episodes && s.episodes.length > 0 && (

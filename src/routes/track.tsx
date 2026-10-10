@@ -511,7 +511,7 @@ function AddNewEpisodesSection({
 /** Celebratory card shown when current_status = "Published" or episodes are published */
 function PublishedCard({ record }: { record: SubmissionRecord }) {
   const publishedEpisodes = record.episodes?.filter(e => e.published) || [];
-  const isEpisodeAware = record.novelStatus === "Ongoing" && publishedEpisodes.length > 0;
+  const isEpisodeAware = record.novelStatus === "Ongoing" && !record.isCompleted && publishedEpisodes.length > 0;
   
   const [copied, setCopied] = useState(false);
   const url = record.resolvedPublishedUrl || "";
@@ -1271,7 +1271,7 @@ export default function TrackPage() {
                 )}
 
                 {/* Add New Episodes (Ongoing novels only) */}
-                {record.novelStatus === 'Ongoing' && !isSpecialStatus && record.status !== 'Withdrawn' && (
+                {record.novelStatus === 'Ongoing' && !isSpecialStatus && record.status !== 'Withdrawn' && !record.isCompleted && (
                   <AddNewEpisodesSection
                     record={record}
                     submissionCode={submissionId}

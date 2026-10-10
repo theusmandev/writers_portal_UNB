@@ -65,14 +65,16 @@ export interface Database {
           episode_count: number | null;
           estimated_publish_at: string | null;
           language: string | null;
+          is_completed: boolean;
         };
         Insert: Omit<
           Database["public"]["Tables"]["submissions"]["Row"],
-          "id" | "submission_date" | "last_updated"
+          "id" | "submission_date" | "last_updated" | "is_completed"
         > & {
           id?: string;
           submission_date?: string;
           last_updated?: string;
+          is_completed?: boolean;
         };
         Update: Partial<Database["public"]["Tables"]["submissions"]["Insert"]>;
         Relationships: any[];
@@ -247,6 +249,7 @@ export interface Database {
             genre: string | null;
             published_url: string | null;
             novel_status: string | null;
+            is_completed?: boolean;
             published_episode_count: number;
             novel_published_at: string | null;
           }>;
@@ -285,6 +288,7 @@ export interface Database {
             published_url: string | null;
             public_cover_image_url: string | null;
             novel_status: string | null;
+            is_completed?: boolean;
             published_episode_count: number;
             novel_published_at: string | null;
           }>;
@@ -353,6 +357,7 @@ export type FeaturedWriterPublic = {
     published_url: string | null;
     public_cover_image_url: string | null;
     novel_status: string | null;
+    is_completed?: boolean;
     published_episode_count: number;
     novel_published_at: string | null;
   }>;

@@ -57,6 +57,7 @@ export type SubmissionRecord = {
   manuscriptUploadFailed?: boolean;
   coverUploadFailed?: boolean;
   novelStatus?: string | undefined;
+  isCompleted?: boolean;
   episodeCount?: number | undefined;
   episodes?: Array<{ episode_number: number; upload_failed: boolean; drive_url?: string | null; published?: boolean }> | undefined;
   estimatedPublishAt?: string | null;
@@ -656,6 +657,7 @@ export async function trackSubmission(
         manuscriptUploadFailed: row.manuscript_upload_failed,
         coverUploadFailed: row.cover_upload_failed,
         novelStatus: row.novel_status,
+        isCompleted: row.is_completed ?? false,
         episodeCount: row.episode_count ?? undefined,
         episodes: row.episodes ?? undefined,
         estimatedPublishAt: row.estimated_publish_at ?? null,

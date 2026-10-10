@@ -28,6 +28,13 @@ const CONFIG = {
 };
 
 // ── DUA POOLS (randomly selected per email) ──────────────────
+const DUAS_COMPLETED = [
+  'دعا ہے کہ اللہ تعالیٰ آپ کو اس ناول کی تکمیل پر بے پناہ خوشیاں اور کامیابیاں عطا فرمائے، اور آپ کا قلم یونہی رواں دواں رہے۔ آمین۔',
+  'اللہ تعالیٰ آپ کی اس محنت اور کاوش کو قبول فرمائے، اور آپ کی کہانی قارئین کے دلوں میں ہمیشہ زندہ رہے۔ آمین۔',
+  'دعا ہے کہ آپ کے قلم کا یہ سفر یونہی جاری رہے، اور آپ کی ہر اگلی تخلیق پچھلی سے زیادہ کامیاب ہو۔ آمین۔',
+  'اللہ کرے یہ تکمیل آپ کے لیے نئی منزلوں کا آغاز بنے، اور آپ کے لیے ہر نیا قدم خوشیوں اور کامرانیوں سے بھرپور ہو۔ آمین۔'
+];
+
 const DUAS_PUBLISHED = [
   'دعا ہے کہ اللہ تعالیٰ آپ کے قلم میں ہمیشہ برکت عطا فرمائے، آپ کی تخلیق کو زیادہ سے زیادہ دلوں تک پہنچائے اور آپ کو لکھنے کی مسلسل توفیق، خوشی اور کامیابی نصیب فرمائے۔ آمین۔',
   'اللہ تعالیٰ آپ کی اس محنت اور کاوش کو قبول فرمائے، آپ کے ناول کو قارئین کے دلوں میں جگہ دے اور اسے آپ کے لیے عزت و خوشی کا ذریعہ بنائے۔ آمین۔',
@@ -397,6 +404,24 @@ function handleSendEmail(body) {
       break;
     }
 
+    case 'novel_completed': {
+      subject = `🎉 Congratulations on Completing Your Novel! — ${submissionCode}`;
+      html = buildEmailTemplate({
+        heading: '🎉 Congratulations on Completing Your Novel',
+        headingUrdu: 'ناول مکمل ہونے پر بہت بہت مبارک باد',
+        body: `
+          <p>Dear ${escapeHtml(writerName || 'Writer')},</p>
+          <p>Congratulations! You have successfully completed all episodes of your episodic novel <strong>${escapeHtml(safeTitle)}</strong>.</p>
+          <p>This is a huge milestone, and we are incredibly proud of your hard work and dedication. Your complete novel is now available for readers to enjoy in its entirety.</p>
+        `,
+        bodyUrdu: 'یہ ایک بڑی کامیابی ہے، اور ہم آپ کی محنت اور لگن کو سراہتے ہیں۔ آپ کا مکمل ناول اب قارئین کے لیے دستیاب ہے۔',
+        duaUrdu: getRandomDua(DUAS_COMPLETED),
+        ctaText: 'Track Your Submission',
+        ctaLink: trackLink
+      });
+      break;
+    }
+
     case 'episodes_added': {
       const newCount = body.newEpisodesCount || 1;
       const totalCount = body.episodeCount || newCount;
@@ -469,9 +494,9 @@ function handleSendEmail(body) {
         }
       }
 
-      subject = `📅 Your Novel "${safeTitle}" is Now Scheduled! — ${submissionCode}`;
+      subject = `⏰ Your Novel "${safeTitle}" is Now Scheduled! — ${submissionCode}`;
       html = buildEmailTemplate({
-        heading: '📅 Your Novel is Scheduled for Publishing',
+        heading: '⏰ Your Novel is Scheduled for Publishing',
         headingUrdu: 'آپ کے ناول کی اشاعت کی تاریخ مقرر ہو گئی',
         body: `
           <p>Dear ${escapeHtml(writerName || 'Writer')},</p>

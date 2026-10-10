@@ -138,8 +138,8 @@ export function WriterCard({ writer, hideFeaturedBadge }: WriterCardProps) {
                     </span>
                   )}
                   {novel.novel_status === 'Ongoing' && (
-                    <span className="ml-2 inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary align-middle">
-                      Ongoing • {novel.published_episode_count} {novel.published_episode_count === 1 ? 'episode' : 'episodes'}
+                    <span className={`ml-2 inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider align-middle ${novel.is_completed ? 'bg-emerald-100 text-emerald-800' : 'bg-primary/10 text-primary'}`}>
+                      {novel.is_completed ? 'Completed' : 'Ongoing'} • {novel.published_episode_count} {novel.published_episode_count === 1 ? 'episode' : 'episodes'}
                     </span>
                   )}
                   {novel.genre && (

@@ -100,6 +100,8 @@ export default function AdminSubmissionDetail() {
   // ── Editable fields ──────────────────────────────────────────────────────────
   const [preferredSite, setPreferredSite] = useState<"unb" | "ufb">("unb");
   const [newStatus, setNewStatus] = useState("");
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [initialIsCompleted, setInitialIsCompleted] = useState(false);
   const [notes, setNotes] = useState("");          // admin_notes (internal / writer-facing update)
   const [statusNote, setStatusNote] = useState(""); // status_note (visible on Rejected / Action Required cards)
   const [publishedUrl, setPublishedUrl] = useState(""); // published_url (visible on Published card)
@@ -188,6 +190,8 @@ export default function AdminSubmissionDetail() {
           const d = detailRes.data as Detail;
           setDetail(d);
           setNewStatus(d.current_status);
+          setIsCompleted(d.is_completed ?? false);
+          setInitialIsCompleted(d.is_completed ?? false);
           setNotes(d.admin_notes ?? "");
           setStatusNote(d.status_note ?? "");
           setPublishedUrl(d.published_url ?? "");
@@ -253,6 +257,10 @@ export default function AdminSubmissionDetail() {
       updates.current_stage = STATUS_TO_STAGE[newStatus] ?? newStatus;
     }
 
+    if (detail.novel_status === "Ongoing" && isCompleted !== initialIsCompleted) {
+      updates.is_completed = isCompleted;
+    }
+
     // Status-specific public fields
     // Always save the field relevant to the current status;
     // preserve the other field's existing value from DB state.
@@ -273,6 +281,19 @@ export default function AdminSubmissionDetail() {
     } else {
       setSaveMsg("✓ Saved");
       setDetail((prev) => (prev ? { ...prev, ...updates } : prev));
+      
+      if (detail.novel_status === "Ongoing" && isCompleted && !initialIsCompleted) {
+        if (w?.email) {
+          sendNotificationEmail("novel_completed" as any, {
+            writerEmail: w.email,
+            writerName: w.pen_name || w.full_name,
+            novelTitle: detail.novel_title,
+            submissionCode: detail.submission_code,
+          }).catch(console.error);
+        }
+        setInitialIsCompleted(true);
+      }
+
       // Reload history if status changed
       if (newStatus !== detail.current_status) {
         // Trigger email notification in background (non-blocking)
@@ -833,6 +854,27 @@ export default function AdminSubmissionDetail() {
                 </p>
               )}
             </div>
+
+            {/* Mark as Completed toggle (Ongoing only) */}
+            {detail.novel_status === "Ongoing" && (
+              <div className="flex items-center gap-3 py-3 border-b border-border/50">
+                <input
+                  type="checkbox"
+                  id="mark-completed"
+                  checked={isCompleted}
+                  onChange={(e) => setIsCompleted(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                />
+                <Label htmlFor="mark-completed" className="text-sm font-medium">
+                  Mark Episodic Novel as Completed
+                </Label>
+                {isCompleted && !initialIsCompleted && (
+                  <span className="text-[10px] text-green-600 font-medium ml-auto bg-green-50 px-2 py-0.5 rounded-full border border-green-200">
+                    Email will be sent on save
+                  </span>
+                )}
+              </div>
+            )}
 
             {/* Conditional: Note for writer (Rejected / Action Required) */}
             {needsNote(newStatus) && (
