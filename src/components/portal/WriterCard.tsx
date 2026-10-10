@@ -88,7 +88,7 @@ export function WriterCard({ writer, hideFeaturedBadge }: WriterCardProps) {
           <div>
             <p 
               ref={bioRef}
-              className={`text-sm text-muted-foreground leading-relaxed break-words ${isBioExpanded ? "" : "line-clamp-4"}`}
+              className={`text-sm text-muted-foreground leading-relaxed break-words whitespace-pre-wrap ${isBioExpanded ? "" : "line-clamp-4"}`}
             >
               {writer.bio}
             </p>

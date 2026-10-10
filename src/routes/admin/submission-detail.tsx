@@ -542,7 +542,7 @@ export default function AdminSubmissionDetail() {
             {w?.bio && (
               <div className="mt-4 rounded-lg border border-border/60 bg-muted/30 p-3.5">
                 <dt className="text-xs text-muted-foreground uppercase tracking-wide mb-1.5">Bio</dt>
-                <dd className="text-sm text-muted-foreground break-words">{w.bio}</dd>
+                <dd className="text-sm text-muted-foreground break-words whitespace-pre-wrap">{w.bio}</dd>
               </div>
             )}
             {w && (
@@ -571,7 +571,7 @@ export default function AdminSubmissionDetail() {
             {detail.description && (
               <div className="mt-4 rounded-lg border border-border/60 bg-muted/30 p-3.5">
                 <dt className="text-xs text-muted-foreground uppercase tracking-wide mb-1.5">Description</dt>
-                <dd className="text-sm text-muted-foreground break-words">{detail.description}</dd>
+                <dd className="text-sm text-muted-foreground break-words whitespace-pre-wrap">{detail.description}</dd>
               </div>
             )}
           </section>
