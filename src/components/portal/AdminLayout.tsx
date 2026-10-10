@@ -88,7 +88,7 @@ export function AdminLayout() {
   );
 
   return (
-    <div className="flex h-screen flex-col md:flex-row bg-background">
+    <div className="flex h-screen overflow-hidden flex-col md:flex-row bg-background">
       <SEO 
         noindex 
         title="Admin Portal | UNB" 
@@ -133,7 +133,7 @@ export function AdminLayout() {
       )}
 
       {/* ── Page content ── */}
-      <main className="min-w-0 flex-1 overflow-auto">
+      <main className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden">
         <Outlet />
       </main>
     </div>
