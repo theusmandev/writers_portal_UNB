@@ -33,8 +33,8 @@ export default function SpotlightsPage() {
       <PageHero
         eyebrow="Writer Features"
         title="Writer Spotlights"
-        titleUrdu="مصنفین کی جھلکیاں"
-        description="Celebrate our standout authors and discover their stories."
+        titleUrdu="نئے اور باصلاحیت لکھاری"
+        description="Celebrate our standout New authors and discover their stories."
       />
 
       <div className="mx-auto max-w-4xl px-6 py-16">

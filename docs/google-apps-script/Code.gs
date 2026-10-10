@@ -534,9 +534,9 @@ function handleSendEmail(body) {
         }
       }
 
-      subject = `📅 Next Episode of "${safeTitle}" is Scheduled! — ${submissionCode}`;
+      subject = `⏰  Next Episode of "${safeTitle}" is Scheduled! — ${submissionCode}`;
       html = buildEmailTemplate({
-        heading: '📅 Your Next Episode is Scheduled',
+        heading: '⏰  Your Next Episode is Scheduled',
         headingUrdu: 'آپ کی اگلی قسط کی اشاعت کی تاریخ مقرر ہو گئی',
         body: `
           <p>Dear ${escapeHtml(writerName || 'Writer')},</p>
