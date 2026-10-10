@@ -14,8 +14,8 @@ const socialLinks = [
 export function SiteFooter() {
   return (
     <footer className="mt-24 border-t border-secondary bg-secondary text-secondary-foreground">
-      <div className="mx-auto grid max-w-6xl gap-10 px-5 py-14 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="lg:col-span-2">
+      <div className="mx-auto grid max-w-6xl gap-10 px-5 py-14 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+        <div className="sm:col-span-2 md:col-span-3 lg:col-span-2">
           <div className="flex items-center gap-3 mb-4">
             <img src="/unb-logo.png" alt="Urdu Novel Bank" className="h-12 w-12 md:h-14 md:w-14 object-cover rounded-full shadow-md" />
             <h3 className="font-display text-lg font-semibold">{site.name}</h3>
@@ -44,6 +44,21 @@ export function SiteFooter() {
             <li>
               <Link to="/timeline" className="hover:text-primary-glow transition-colors">
                 Publication Timeline
+              </Link>
+            </li>
+          </ul>
+        </div>
+        <div>
+          <p className="text-sm font-semibold">Explore</p>
+          <ul className="mt-3 space-y-2 text-sm opacity-80">
+            <li>
+              <Link to="/writers" className="hover:text-primary-glow transition-colors">
+                Writers Directory
+              </Link>
+            </li>
+            <li>
+              <Link to="/spotlights" className="hover:text-primary-glow transition-colors">
+                Spotlights
               </Link>
             </li>
           </ul>
