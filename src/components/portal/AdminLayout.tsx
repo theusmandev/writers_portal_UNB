@@ -88,7 +88,7 @@ export function AdminLayout() {
   );
 
   return (
-    <div className="flex h-screen overflow-hidden flex-col md:flex-row bg-background">
+    <div className="fixed inset-0 flex overflow-hidden flex-col md:flex-row bg-background">
       <SEO 
         noindex 
         title="Admin Portal | UNB" 
