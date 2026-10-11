@@ -1,17 +1,21 @@
 import { Link } from "react-router-dom";
 import { site } from "@/data/content";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { FaWhatsapp, FaYoutube, FaInstagram, FaFacebookF, FaPinterestP, FaTelegram } from "react-icons/fa6";
 
-const socialLinks = [
-  { icon: FaFacebookF, url: "https://www.facebook.com/people/Urdu-novel-Bank/100090906471153/", label: "Follow us on Facebook" },
-  { icon: FaWhatsapp, url: "https://whatsapp.com/channel/0029VaurdEY0wajrnyeAl50Y", label: "Follow us on WhatsApp" },
-  { icon: FaPinterestP, url: "https://www.pinterest.com/urdunovelbanks/", label: "Follow us on Pinterest" },
-  { icon: FaInstagram, url: "https://www.instagram.com/urdunovelbank/", label: "Follow us on Instagram" },
-  { icon: FaYoutube, url: "https://youtube.com/@urdunovelbank", label: "Follow us on YouTube" },
-  { icon: FaTelegram, url: "https://t.me/urdunovelbank", label: "Follow us on Telegram" },
-];
-
 export function SiteFooter() {
+  const { settings } = useSiteSettings();
+  const instagramUrl = settings.instagram_url || "https://www.instagram.com/urdunovelbank/";
+  const mainSiteUrl = settings.main_website_url || site.mainSite;
+
+  const socialLinks = [
+    { icon: FaFacebookF, url: "https://www.facebook.com/people/Urdu-novel-Bank/100090906471153/", label: "Follow us on Facebook" },
+    { icon: FaWhatsapp, url: "https://whatsapp.com/channel/0029VaurdEY0wajrnyeAl50Y", label: "Follow us on WhatsApp" },
+    { icon: FaPinterestP, url: "https://www.pinterest.com/urdunovelbanks/", label: "Follow us on Pinterest" },
+    { icon: FaInstagram, url: instagramUrl, label: "Follow us on Instagram" },
+    { icon: FaYoutube, url: "https://youtube.com/@urdunovelbank", label: "Follow us on YouTube" },
+    { icon: FaTelegram, url: "https://t.me/urdunovelbank", label: "Follow us on Telegram" },
+  ];
   return (
     <footer className="mt-24 border-t border-secondary bg-secondary text-secondary-foreground">
       <div className="mx-auto grid max-w-6xl gap-10 px-5 py-14 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
@@ -82,7 +86,7 @@ export function SiteFooter() {
               </Link>
             </li>
             <li>
-              <a href={site.mainSite} className="hover:text-primary-glow transition-colors">
+              <a href={mainSiteUrl} className="hover:text-primary-glow transition-colors">
                 Main Website
               </a>
             </li>

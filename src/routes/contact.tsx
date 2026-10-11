@@ -5,31 +5,38 @@ import { site } from "@/data/content";
 import { FadeIn } from "@/components/portal/FadeIn";
 import { SEO } from "@/components/SEO";
 
-const channels = [
-  {
-    icon: Mail,
-    label: "Email",
-    value: site.email,
-    href: `mailto:${site.email}`,
-    note: "Best for submission questions and corrections. Always include your Submission ID.",
-  },
-  {
-    icon: Instagram,
-    label: "Instagram",
-    value: "@urdunovelbank",
-    href: "https://www.instagram.com/urdunovelbank",
-    note: "Have a quick question about the portal or your submission? Need guidance? Message us on Instagram.",
-  },
-  {
-    icon: Globe,
-    label: "Main website",
-    value: "urdunovelbanks.com",
-    href: site.mainSite,
-    note: "Read published novels and follow the writers' community.",
-  },
-];
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 export default function ContactPage() {
+  const { settings } = useSiteSettings();
+
+  const websiteDisplay = settings.main_website_url
+    ? settings.main_website_url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")
+    : "urdunovelbanks.com";
+
+  const channels = [
+    {
+      icon: Mail,
+      label: "Email",
+      value: settings.support_email || site.email,
+      href: `mailto:${settings.support_email || site.email}`,
+      note: "Best for submission questions and corrections. Always include your Submission ID.",
+    },
+    {
+      icon: Instagram,
+      label: "Instagram",
+      value: settings.instagram_handle || "@urdunovelbank",
+      href: settings.instagram_url || "https://www.instagram.com/urdunovelbank",
+      note: "Have a quick question about the portal or your submission? Need guidance? Message us on Instagram.",
+    },
+    {
+      icon: Globe,
+      label: "Main website",
+      value: websiteDisplay,
+      href: settings.main_website_url || site.mainSite,
+      note: "Read published novels and follow the writers' community.",
+    },
+  ];
   return (
     <div>
       <SEO 

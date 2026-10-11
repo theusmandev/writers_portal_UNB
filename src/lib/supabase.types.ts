@@ -202,6 +202,12 @@ export interface Database {
           notification_link_text: string | null;
           notification_version: number;
           custom_head_code: string | null;
+          preferred_publish_site: "unb" | "ufb";
+          support_email: string;
+          main_website_url: string;
+          instagram_handle: string;
+          instagram_url: string;
+          show_floating_widget: boolean;
         };
         Insert: Omit<Database["public"]["Tables"]["site_settings"]["Row"], "id"> & { id?: number };
         Update: Partial<Database["public"]["Tables"]["site_settings"]["Insert"]>;

@@ -96,6 +96,19 @@ export type SiteSettings = {
   submissions_paused: boolean;
   pause_message: string | null;
   preferred_publish_site?: "unb" | "ufb";
+  support_email?: string;
+  main_website_url?: string;
+  instagram_handle?: string;
+  instagram_url?: string;
+  show_floating_widget?: boolean;
+};
+
+export type ContactAndWidgetSettings = {
+  support_email: string;
+  main_website_url: string;
+  instagram_handle: string;
+  instagram_url: string;
+  show_floating_widget: boolean;
 };
 
 export type NotificationSettings = {
@@ -915,6 +928,82 @@ export async function updateSubmissionStatus(
 }
 
 // ── Site Settings ─────────────────────────────────────────────────────────────
+
+export const defaultSiteSettings: SiteSettingsRow = {
+  id: 1,
+  submissions_paused: false,
+  pause_message: null,
+  notification_enabled: false,
+  notification_message: null,
+  notification_link_url: null,
+  notification_link_text: null,
+  notification_version: 1,
+  custom_head_code: null,
+  preferred_publish_site: "unb",
+  support_email: "urdunovelbankofficial@gmail.com",
+  main_website_url: "https://www.urdunovelbanks.com",
+  instagram_handle: "@urdunovelbank",
+  instagram_url: "https://www.instagram.com/urdunovelbank",
+  show_floating_widget: true,
+};
+
+export async function getSiteSettings(): Promise<ApiResult<SiteSettingsRow>> {
+  if (!isSupabaseConfigured) {
+    return { success: true, data: defaultSiteSettings };
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("site_settings")
+      .select("*")
+      .eq("id", 1)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return { success: true, data: defaultSiteSettings };
+      }
+      return { success: false, error: error.message };
+    }
+
+    return {
+      success: true,
+      data: {
+        ...defaultSiteSettings,
+        ...data,
+      } as SiteSettingsRow
+    };
+  } catch (err: any) {
+    return { success: false, error: err?.message || "Failed to load site settings." };
+  }
+}
+
+export async function updateContactAndWidgetSettings(
+  settings: ContactAndWidgetSettings
+): Promise<ApiResult<null>> {
+  if (!isSupabaseConfigured) {
+    await new Promise((r) => setTimeout(r, 400));
+    return { success: true, data: null };
+  }
+
+  try {
+    const { error } = await supabase
+      .from("site_settings")
+      .update({
+        support_email: settings.support_email.trim(),
+        main_website_url: settings.main_website_url.trim(),
+        instagram_handle: settings.instagram_handle.trim(),
+        instagram_url: settings.instagram_url.trim(),
+        show_floating_widget: settings.show_floating_widget,
+      })
+      .eq("id", 1);
+
+    if (error) return { success: false, error: error.message };
+    return { success: true, data: null };
+  } catch (err: any) {
+    return { success: false, error: err?.message || "Failed to save contact settings." };
+  }
+}
 
 export async function getSubmissionSettings(): Promise<ApiResult<SiteSettings>> {
   if (!isSupabaseConfigured) {

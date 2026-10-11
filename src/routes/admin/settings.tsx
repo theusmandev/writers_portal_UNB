@@ -1,7 +1,21 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Save, AlertCircle, Trash2, Plus, Loader2 } from "lucide-react";
-import { getSubmissionSettings, updateSubmissionSettings, getNotificationSettings, updateNotificationSettings, getEpisodeMinimumExceptions, addEpisodeMinimumException, removeEpisodeMinimumException, updateCustomHeadCode, type EpisodeMinimumException } from "@/services/portalApi";
+import { useQueryClient } from "@tanstack/react-query";
+import { SITE_SETTINGS_QUERY_KEY } from "@/hooks/useSiteSettings";
+import { 
+  getSubmissionSettings, 
+  updateSubmissionSettings, 
+  getNotificationSettings, 
+  updateNotificationSettings, 
+  getEpisodeMinimumExceptions, 
+  addEpisodeMinimumException, 
+  removeEpisodeMinimumException, 
+  updateCustomHeadCode, 
+  getSiteSettings, 
+  updateContactAndWidgetSettings, 
+  type EpisodeMinimumException 
+} from "@/services/portalApi";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
@@ -9,16 +23,25 @@ import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { AdminPagination } from "@/components/admin/AdminPagination";
 
 export default function AdminSettings() {
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(true);
   
   const [savingNotification, setSavingNotification] = useState(false);
   const [savingSubmission, setSavingSubmission] = useState(false);
   const [savingPublishSite, setSavingPublishSite] = useState(false);
   const [savingHeadCode, setSavingHeadCode] = useState(false);
+  const [savingContact, setSavingContact] = useState(false);
+  const [savingWidget, setSavingWidget] = useState(false);
   
   const [paused, setPaused] = useState(false);
   const [message, setMessage] = useState("");
   const [preferredPublishSite, setPreferredPublishSite] = useState<"unb" | "ufb">("unb");
+
+  const [supportEmail, setSupportEmail] = useState("");
+  const [mainWebsiteUrl, setMainWebsiteUrl] = useState("");
+  const [instagramHandle, setInstagramHandle] = useState("");
+  const [instagramUrl, setInstagramUrl] = useState("");
+  const [showFloatingWidget, setShowFloatingWidget] = useState(true);
 
   const [notificationEnabled, setNotificationEnabled] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState("");
@@ -55,6 +78,15 @@ export default function AdminSettings() {
       setNotificationLinkUrl(notifResult.data.notification_link_url || "");
       setNotificationLinkText(notifResult.data.notification_link_text || "");
       setCustomHeadCode(notifResult.data.custom_head_code || "");
+    }
+    
+    const siteSettingsResult = await getSiteSettings();
+    if (siteSettingsResult.success) {
+      setSupportEmail(siteSettingsResult.data.support_email || "");
+      setMainWebsiteUrl(siteSettingsResult.data.main_website_url || "");
+      setInstagramHandle(siteSettingsResult.data.instagram_handle || "");
+      setInstagramUrl(siteSettingsResult.data.instagram_url || "");
+      setShowFloatingWidget(siteSettingsResult.data.show_floating_widget !== false);
     }
     
     setLoadingExceptions(true);
@@ -109,6 +141,42 @@ export default function AdminSettings() {
       toast.error(result.error || "Failed to save custom head code.");
     }
     setSavingHeadCode(false);
+  }
+
+  async function handleSaveContact() {
+    setSavingContact(true);
+    const result = await updateContactAndWidgetSettings({
+      support_email: supportEmail,
+      main_website_url: mainWebsiteUrl,
+      instagram_handle: instagramHandle,
+      instagram_url: instagramUrl,
+      show_floating_widget: showFloatingWidget,
+    });
+    if (result.success) {
+      await queryClient.invalidateQueries({ queryKey: SITE_SETTINGS_QUERY_KEY });
+      toast.success("Contact settings saved successfully.");
+    } else {
+      toast.error(result.error || "Failed to save contact settings.");
+    }
+    setSavingContact(false);
+  }
+
+  async function handleSaveWidget() {
+    setSavingWidget(true);
+    const result = await updateContactAndWidgetSettings({
+      support_email: supportEmail,
+      main_website_url: mainWebsiteUrl,
+      instagram_handle: instagramHandle,
+      instagram_url: instagramUrl,
+      show_floating_widget: showFloatingWidget,
+    });
+    if (result.success) {
+      await queryClient.invalidateQueries({ queryKey: SITE_SETTINGS_QUERY_KEY });
+      toast.success("Floating widget settings saved successfully.");
+    } else {
+      toast.error(result.error || "Failed to save floating widget settings.");
+    }
+    setSavingWidget(false);
   }
 
   async function handleAddException(e: React.FormEvent) {
@@ -311,6 +379,110 @@ export default function AdminSettings() {
           <Button type="submit" disabled={loading || savingPublishSite} className="w-full sm:w-auto">
             <Save className="mr-2 h-4 w-4" />
             {savingPublishSite ? "Saving..." : "Save Settings"}
+          </Button>
+        </form>
+      </div>
+
+      <div className="rounded-xl border bg-card p-6 shadow-sm">
+        <h2 className="text-lg font-semibold mb-4">Contact & Social Channels</h2>
+        
+        <form onSubmit={(e) => { e.preventDefault(); void handleSaveContact(); }} className="space-y-6">
+          <p className="text-sm text-muted-foreground">
+            Configure the official contact email, main website URL, and Instagram channels shown on the Contact page, Footer, and across the portal.
+          </p>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <label htmlFor="support-email" className="text-sm font-medium leading-none">
+                Support Email
+              </label>
+              <Input
+                id="support-email"
+                type="email"
+                placeholder="urdunovelbankofficial@gmail.com"
+                value={supportEmail}
+                onChange={(e) => setSupportEmail(e.target.value)}
+                disabled={loading || savingContact}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="main-website-url" className="text-sm font-medium leading-none">
+                Main Website URL
+              </label>
+              <Input
+                id="main-website-url"
+                type="url"
+                placeholder="https://www.urdunovelbanks.com"
+                value={mainWebsiteUrl}
+                onChange={(e) => setMainWebsiteUrl(e.target.value)}
+                disabled={loading || savingContact}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="instagram-handle" className="text-sm font-medium leading-none">
+                Instagram Handle
+              </label>
+              <Input
+                id="instagram-handle"
+                placeholder="@urdunovelbank"
+                value={instagramHandle}
+                onChange={(e) => setInstagramHandle(e.target.value)}
+                disabled={loading || savingContact}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="instagram-url" className="text-sm font-medium leading-none">
+                Instagram Profile URL
+              </label>
+              <Input
+                id="instagram-url"
+                type="url"
+                placeholder="https://www.instagram.com/urdunovelbank"
+                value={instagramUrl}
+                onChange={(e) => setInstagramUrl(e.target.value)}
+                disabled={loading || savingContact}
+                required
+              />
+            </div>
+          </div>
+          
+          <Button type="submit" disabled={loading || savingContact} className="w-full sm:w-auto">
+            <Save className="mr-2 h-4 w-4" />
+            {savingContact ? "Saving..." : "Save Contact Settings"}
+          </Button>
+        </form>
+      </div>
+
+      <div className="rounded-xl border bg-card p-6 shadow-sm">
+        <h2 className="text-lg font-semibold mb-4">Floating Help Widget</h2>
+        
+        <form onSubmit={(e) => { e.preventDefault(); void handleSaveWidget(); }} className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <label htmlFor="widget-toggle" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Show Floating Instagram Widget
+              </label>
+              <p className="text-sm text-muted-foreground">
+                Display the floating &quot;Need help?&quot; Instagram button at the bottom left of all public pages when users scroll down.
+              </p>
+            </div>
+            <Switch
+              id="widget-toggle"
+              checked={showFloatingWidget}
+              onCheckedChange={setShowFloatingWidget}
+              disabled={loading || savingWidget}
+            />
+          </div>
+          
+          <Button type="submit" disabled={loading || savingWidget} className="w-full sm:w-auto">
+            <Save className="mr-2 h-4 w-4" />
+            {savingWidget ? "Saving..." : "Save Widget Settings"}
           </Button>
         </form>
       </div>
