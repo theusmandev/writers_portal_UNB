@@ -119,7 +119,7 @@ export default function Index() {
               <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
                 <li>• New and established Urdu writers alike — we read every submission.</li>
                 <li>• The novel must be written by you, in Urdu script.</li>
-                <li>• Complete novels are preferred; ongoing work needs 5+ ready episodes.</li>
+                <li>• Complete novels OR ongoing work needs 5+ ready episodes.</li>
                 <li>• You keep the copyright; we only ask for permission to publish.</li>
               </ul>
               <Button asChild variant="outline" className="mt-6">

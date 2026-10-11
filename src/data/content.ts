@@ -110,7 +110,7 @@ export const guidelines: GuidelineSection[] = [
     title: "What we accept",
     items: [
       "Original Urdu novels, novelettes and long-form serialised fiction.",
-      "Popular genres: social, romantic, suspense, historical, thriller, family drama, adventure.",
+      "Popular genres: social, romantic, suspense, historical, thriller, family drama, adventure and many more.",
       "Complete novels are strongly preferred. Ongoing novels are accepted only when at least 5 episodes are ready.",
       "Roman Urdu is not accepted. Urdu script only.",
     ],
@@ -147,7 +147,7 @@ export const guidelines: GuidelineSection[] = [
     title: "Author information",
     items: [
       "Real full name (kept private) and the pen name you want published.",
-      "Working email address and WhatsApp number for communication.",
+      "Working email address and WhatsApp number for communication(Optional).",
       "A short writer bio (2–4 lines) in Urdu or English.",
       "City / country is optional.",
     ],
@@ -271,7 +271,7 @@ export const faqs: Faq[] = [
   {
     category: "Submitting",
     q: "Can I submit an incomplete novel?",
-    a: "Complete novels are preferred. An ongoing novel is accepted only if at least 5 episodes are ready. You can upload additional episodes later through the Track Submission page.",
+    a: "YEs, Ongoing novel is accepted only if at least 5 episodes are ready. You can upload additional episodes later through the Track Submission page.",
   },
   {
     category: "Submitting",
