@@ -17,7 +17,7 @@ const channels = [
     icon: Instagram,
     label: "Instagram",
     value: "@urdunovelbank",
-    href: "https://www.instagram.com/urdunovelbank/",
+    href: "https://www.instagram.com/urdunovelbank",
     note: "Have a quick question about the portal or your submission? Need guidance? Message us on Instagram.",
   },
   {
