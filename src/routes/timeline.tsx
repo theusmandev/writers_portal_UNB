@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { AlertCircle } from "lucide-react";
 import { PageHero } from "@/components/portal/PageHero";
-import { processStages, timelineFactors } from "@/data/content";
+import { processStages, timelineFactors, timelineQualifier } from "@/data/content";
 import { FadeIn } from "@/components/portal/FadeIn";
 import { SEO } from "@/components/SEO";
 
@@ -19,6 +19,15 @@ export default function TimelinePage() {
         description="Typical durations for each stage. These are honest estimates, not guarantees — actual time depends on the factors listed below."
       />
       <div className="mx-auto max-w-3xl px-5 py-16">
+        <FadeIn className="mb-8 rounded-xl border border-border bg-card/60 p-4 sm:p-5 shadow-soft">
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            {timelineQualifier.en}
+          </p>
+          <p dir="rtl" className="urdu mt-2 text-base leading-loose text-muted-foreground">
+            {timelineQualifier.ur}
+          </p>
+        </FadeIn>
+
         <FadeIn className="overflow-hidden rounded-xl border border-border bg-card shadow-soft">
           <table className="w-full text-left text-sm">
             <thead className="bg-primary/10 text-xs tracking-wide text-primary uppercase">

@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { PageHero } from "@/components/portal/PageHero";
-import { processStages } from "@/data/content";
+import { processStages, timelineQualifier } from "@/data/content";
 import { FadeIn } from "@/components/portal/FadeIn";
 import { SEO } from "@/components/SEO";
 
@@ -19,6 +19,15 @@ export default function ProcessPage() {
         description="Nothing about publishing with us is hidden. This is the exact journey your manuscript takes, and roughly how long each stage lasts."
       />
       <div className="mx-auto max-w-3xl px-5 py-16">
+        <FadeIn className="mb-8 rounded-xl border border-border bg-card/60 p-4 sm:p-5 shadow-soft">
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            {timelineQualifier.en}
+          </p>
+          <p dir="rtl" className="urdu mt-2 text-base leading-loose text-muted-foreground">
+            {timelineQualifier.ur}
+          </p>
+        </FadeIn>
+
         <ol className="relative border-l border-border pl-8">
           {processStages.map((stage, i) => (
             <FadeIn as="li" key={stage.key} className="relative pb-10 last:pb-0" delayMs={i * 100}>

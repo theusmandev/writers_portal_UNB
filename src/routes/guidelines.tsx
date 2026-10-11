@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHero } from "@/components/portal/PageHero";
-import { guidelines, site } from "@/data/content";
+import { guidelines } from "@/data/content";
 import { FadeIn } from "@/components/portal/FadeIn";
 import { SEO } from "@/components/SEO";
 
@@ -17,7 +17,7 @@ export default function GuidelinesPage() {
         eyebrow="For Writers"
         title="Submission Guidelines"
         titleUrdu="ناول بھیجنے کی ہدایات"
-        description={`Please read these before submitting. Manuscripts that follow the guidelines are reviewed faster — usually within ${site.reviewWindow}.`}
+        description="Please read these before submitting. Manuscripts that follow the guidelines are processed faster and published within 7 days."
       />
       <div className="mx-auto max-w-4xl px-5 py-16">
         <div className="grid gap-6 sm:grid-cols-2">

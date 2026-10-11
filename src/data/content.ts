@@ -15,7 +15,7 @@ export const site = {
   taglineUrdu: "اردو ناولز اور ان کے لکھنے والوں کے لیے ایک منظم اور شفاف پلیٹ فارم۔",
   mainSite: "https://www.urdunovelbanks.com",
   email: "urdunovelbankofficial@gmail.com",
-  reviewWindow: "7–21 days",
+  reviewWindow: "within 7 days",
 };
 
 export type ProcessStage = {
@@ -49,7 +49,7 @@ export const processStages: ProcessStage[] = [
     titleUrdu: "ابتدائی جانچ",
     description:
       "We check completeness, file readability, language, originality and whether the work fits our content guidelines.",
-    duration: "2–4 days",
+    duration: "Within 1 day",
   },
   {
     key: "editorial",
@@ -57,7 +57,7 @@ export const processStages: ProcessStage[] = [
     titleUrdu: "ادارتی جائزہ",
     description:
       "The manuscript is read by our editorial team for story quality, structure, language and reader suitability.",
-    duration: "7–14 days",
+    duration: "2–3 days",
   },
   {
     key: "corrections",
@@ -65,14 +65,14 @@ export const processStages: ProcessStage[] = [
     titleUrdu: "اصلاح یا اضافی معلومات",
     description:
       "If something is missing or needs improvement, we contact you with clear, specific notes.",
-    duration: "Depends on the writer",
+    duration: "Only if needed — depends on the writer",
   },
   {
     key: "approval",
     title: "Approval",
     titleUrdu: "منظوری",
     description: "The novel is accepted for publication on Urdu Novel Bank.",
-    duration: "1–3 days after review",
+    duration: "Within 1 day",
   },
   {
     key: "formatting",
@@ -80,14 +80,14 @@ export const processStages: ProcessStage[] = [
     titleUrdu: "فارمیٹنگ اور تیاری",
     description:
       "Text is cleaned, paginated, episode-split where needed, and the cover is prepared or finalised.",
-    duration: "3–7 days",
+    duration: "Within 1 day",
   },
   {
     key: "scheduling",
     title: "Publication Scheduling",
     titleUrdu: "اشاعت کا شیڈول",
     description: "A publication date (or episode schedule) is assigned and shared with you.",
-    duration: "1–5 days",
+    duration: "Within 1 day",
   },
   {
     key: "publication",
@@ -95,7 +95,7 @@ export const processStages: ProcessStage[] = [
     titleUrdu: "اشاعت",
     description:
       "The novel goes live on urdunovelbanks.com and is shared with our readers' community.",
-    duration: "On schedule",
+    duration: "Within 7 days of submission",
   },
 ];
 
@@ -255,6 +255,11 @@ export const timelineFactors = [
   "Delays in writer communication",
 ];
 
+export const timelineQualifier = {
+  en: "These timings assume your manuscript follows our guidelines and needs no corrections. If we request corrections, the process continues once you reply.",
+  ur: "یہ مدت اس صورت میں ہے جب آپ کی تحریر ہماری ہدایات کے مطابق ہو اور اس میں کسی اصلاح کی ضرورت نہ پڑے۔ اگر اصلاح درکار ہوئی تو آپ کے جواب کے بعد عمل دوبارہ شروع ہو گا۔",
+};
+
 export type Faq = { q: string; a: string; category: string };
 
 export const faqs: Faq[] = [
@@ -276,7 +281,7 @@ export const faqs: Faq[] = [
   {
     category: "Review",
     q: "How long does the review take?",
-    a: `Initial screening usually takes 2–4 days and full editorial review ${site.reviewWindow} depending on manuscript length and queue.`,
+    a: "If the manuscript follows our guidelines and needs no corrections, it is reviewed and published within 7 days of submission. If corrections are requested, the process continues once the writer replies.",
   },
   {
     category: "Review",

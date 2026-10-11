@@ -81,7 +81,7 @@ export default function Index() {
           <div className="mt-12 sm:mt-6 grid max-w-3xl gap-6 border-t border-primary-foreground/20 pt-8 sm:pt-5 sm:grid-cols-3">
             {[
               { label: "Cost to writers", value: "Free" },
-              { label: "Typical review", value: site.reviewWindow },
+              { label: "To publication", value: "7 days" },
               { label: "Stay with you", value: "Rights" },
             ].map((stat) => (
               <div key={stat.label}>
@@ -280,7 +280,7 @@ export default function Index() {
               stay private, and your novel is always published under your name or pen name.
             </p>
             <div className="mt-5 flex items-center gap-2 text-sm text-muted-foreground">
-              <Clock className="size-4" /> Typical review time: {site.reviewWindow}
+              <Clock className="size-4" /> Typical time to publication: within 7 days
             </div>
           </FadeIn>
           <FadeIn delayMs={100} className="lg:col-span-2">
