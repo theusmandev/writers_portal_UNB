@@ -4,6 +4,7 @@ import {
   ArrowLeft, ExternalLink, Loader2, Save, AlertCircle, Globe, EyeOff,
   Calendar, FileText, Star, ChevronDown, ChevronRight, CheckCircle2, Copy,
 } from "lucide-react";
+import { TrackingLinkRow, getAllSubmissionsUrl } from "@/components/admin/TrackingLinkRow";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -247,6 +248,7 @@ export default function AdminWriterDetail() {
 
   const publicPageUrl = `${origin}/writers/featured/${featuredSlug.trim()}`;
   const showPublicLinks = writer.is_featured && !!writer.featured_slug;
+  const allSubmissionsUrl = writer.email ? getAllSubmissionsUrl(writer.email) : null;
 
   return (
     <div className="p-6 space-y-6 max-w-5xl">
@@ -715,6 +717,15 @@ export default function AdminWriterDetail() {
                 <dd className="font-semibold">{writer.submissions.length}</dd>
               </div>
             </dl>
+
+            {allSubmissionsUrl && (
+              <div className="pt-3 border-t border-border/50 space-y-1.5">
+                <TrackingLinkRow label="All Submissions Link:" url={allSubmissionsUrl} className="w-full" />
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Anyone with this link can see all of this writer&apos;s submissions — share it only with the writer.
+                </p>
+              </div>
+            )}
           </section>
         </div>
       </div>

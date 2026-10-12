@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Loader2, Search, ExternalLink, AlertCircle, Send, CheckCircle2, BookOpen, Calendar, XCircle, FileText, Plus, Trash2, Copy, Check, Share, MessageCircle, Twitter, Facebook } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -933,19 +933,42 @@ function PublishCountdown({ estimatedPublishAt, hideOnPast = false, isSmall = fa
   );
 }
 
+function getDecodedQueryParam(searchParams: URLSearchParams, key: string): string | null {
+  if (typeof window !== "undefined") {
+    const match = window.location.search.match(new RegExp(`[?&]${key}=([^&]*)`));
+    if (match) {
+      try {
+        return decodeURIComponent(match[1]);
+      } catch {
+        return match[1];
+      }
+    }
+  }
+  return searchParams.get(key);
+}
+
 export default function TrackPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState<"by-id" | "by-email">("by-id");
+  const hasAutoLoadedRef = useRef(false);
 
   // Tab 1: Track by ID State
-  const [submissionId, setSubmissionId] = useState(searchParams.get("code") || "");
-  const [email, setEmail] = useState(searchParams.get("email") || "");
+  const [submissionId, setSubmissionId] = useState(() => getDecodedQueryParam(searchParams, "code") || "");
+  const [email, setEmail] = useState(() => getDecodedQueryParam(searchParams, "email") || "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [record, setRecord] = useState<SubmissionRecord | null>(null);
 
   // Tab 2: View All My Submissions State
-  const [emailForList, setEmailForList] = useState("");
+  const [emailForList, setEmailForList] = useState(() => {
+    const code = getDecodedQueryParam(searchParams, "code");
+    const emailParam = getDecodedQueryParam(searchParams, "email");
+    return !code && emailParam ? emailParam : "";
+  });
+  const [activeTab, setActiveTab] = useState<"by-id" | "by-email">(() => {
+    const code = getDecodedQueryParam(searchParams, "code");
+    const emailParam = getDecodedQueryParam(searchParams, "email");
+    return !code && emailParam ? "by-email" : "by-id";
+  });
   const [listLoading, setListLoading] = useState(false);
   const [listError, setListError] = useState<string | null>(null);
   const [submissionsList, setSubmissionsList] = useState<WriterSubmissionSummary[] | null>(null);
@@ -962,16 +985,46 @@ export default function TrackPage() {
     setRecord(res.data);
   }
 
+  async function fetchSubmissionsByEmail(targetEmail: string) {
+    setListError(null);
+    setSubmissionsList(null);
+    if (!targetEmail.trim()) {
+      setListError("Please enter your email address.");
+      return;
+    }
+    if (!/^\S+@\S+\.\S+$/.test(targetEmail.trim())) {
+      setListError("Please enter a valid email address.");
+      return;
+    }
+    setListLoading(true);
+    const res = await getSubmissionsByEmail(targetEmail.trim());
+    setListLoading(false);
+    if (!res.success) {
+      setListError(res.error);
+      return;
+    }
+    setSubmissionsList(res.data);
+  }
+
   useEffect(() => {
-    const initialCode = searchParams.get("code");
-    const initialEmail = searchParams.get("email");
+    if (hasAutoLoadedRef.current) return;
+
+    const initialCode = getDecodedQueryParam(searchParams, "code");
+    const initialEmail = getDecodedQueryParam(searchParams, "email");
+
     if (initialCode && initialEmail) {
+      hasAutoLoadedRef.current = true;
       setSubmissionId(initialCode);
       setEmail(initialEmail);
       setSearchParams({}, { replace: true });
+    } else if (initialEmail && !initialCode) {
+      hasAutoLoadedRef.current = true;
+      setActiveTab("by-email");
+      setEmailForList(initialEmail);
+      setSearchParams({}, { replace: true });
+      void fetchSubmissionsByEmail(initialEmail);
     }
   }, [searchParams, setSearchParams]);
-
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -990,24 +1043,7 @@ export default function TrackPage() {
 
   async function handleFindSubmissions(e: React.FormEvent) {
     e.preventDefault();
-    setListError(null);
-    setSubmissionsList(null);
-    if (!emailForList.trim()) {
-      setListError("Please enter your email address.");
-      return;
-    }
-    if (!/^\S+@\S+\.\S+$/.test(emailForList.trim())) {
-      setListError("Please enter a valid email address.");
-      return;
-    }
-    setListLoading(true);
-    const res = await getSubmissionsByEmail(emailForList);
-    setListLoading(false);
-    if (!res.success) {
-      setListError(res.error);
-      return;
-    }
-    setSubmissionsList(res.data);
+    await fetchSubmissionsByEmail(emailForList);
   }
 
   async function handleSelectSubmission(code: string) {

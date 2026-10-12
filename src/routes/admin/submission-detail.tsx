@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, ExternalLink, Loader2, Save, AlertCircle, CheckCircle2, Clock, MessageSquare, FileText, Image, XCircle, Trash2, Copy, Check } from "lucide-react";
+import { ArrowLeft, ExternalLink, Loader2, Save, AlertCircle, CheckCircle2, Clock, MessageSquare, FileText, Image, XCircle, Trash2 } from "lucide-react";
+import { TrackingLinkRow, getTrackingUrl, getAllSubmissionsUrl } from "@/components/admin/TrackingLinkRow";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -122,7 +123,6 @@ export default function AdminSubmissionDetail() {
   const [manuscriptResolveUrl, setManuscriptResolveUrl] = useState("");
   const [coverResolveUrl, setCoverResolveUrl] = useState("");
   const [episodeResolveUrls, setEpisodeResolveUrls] = useState<Record<string, string>>({});
-  const [copiedTracking, setCopiedTracking] = useState(false);
 
   const isTerminalStatus = ["Published", "Rejected", "Withdrawn"].includes(detail?.current_status || "");
 
@@ -445,19 +445,12 @@ export default function AdminSubmissionDetail() {
   const w = detail.writers;
 
   const trackingUrl = detail && w?.email
-    ? `https://portal.urdunovelbanks.com/track?code=${detail.submission_code}&email=${encodeURIComponent(w.email)}`
+    ? getTrackingUrl(detail.submission_code, w.email)
     : null;
 
-  async function copyTrackingUrl() {
-    if (!trackingUrl) return;
-    try {
-      await navigator.clipboard.writeText(trackingUrl);
-      setCopiedTracking(true);
-      setTimeout(() => setCopiedTracking(false), 1500);
-    } catch (e) {
-      console.error("Failed to copy", e);
-    }
-  }
+  const allSubmissionsUrl = w?.email
+    ? getAllSubmissionsUrl(w.email)
+    : null;
 
   const activePublishedUrl = preferredSite === "ufb" && detail?.published_url_ufb 
     ? detail.published_url_ufb 
@@ -478,27 +471,14 @@ export default function AdminSubmissionDetail() {
             <h1 className="text-xl font-semibold break-words">{detail.novel_title}</h1>
             <p className="text-sm text-muted-foreground mt-1 font-mono">{detail.submission_code}</p>
             {trackingUrl && (
-              <div className="mt-3 flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-1.5 text-xs w-full sm:w-max overflow-hidden">
-                <span className="text-muted-foreground font-medium shrink-0">Tracking Link:</span>
-                <span className="font-mono text-muted-foreground truncate min-w-0 flex-1 sm:flex-none sm:max-w-sm">{trackingUrl}</span>
-                <div className="flex items-center gap-1 ml-2 pl-3 border-l border-border/50 shrink-0">
-                  <button
-                    onClick={copyTrackingUrl}
-                    title="Copy Link"
-                    className="p-2 sm:p-1.5 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground"
-                  >
-                    {copiedTracking ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
-                  </button>
-                  <a
-                    href={trackingUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title="Open in new tab"
-                    className="p-2 sm:p-1.5 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                  </a>
-                </div>
+              <TrackingLinkRow label="Tracking Link:" url={trackingUrl} className="mt-3" />
+            )}
+            {allSubmissionsUrl && (
+              <div className="mt-2">
+                <TrackingLinkRow label="All Submissions Link:" url={allSubmissionsUrl} />
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Anyone with this link can see all of this writer&apos;s submissions — share it only with the writer.
+                </p>
               </div>
             )}
           </div>
