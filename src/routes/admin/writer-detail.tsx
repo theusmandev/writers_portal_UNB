@@ -695,8 +695,8 @@ export default function AdminWriterDetail() {
         </div>
 
         {/* RIGHT — Summary sidebar */}
-        <div className="space-y-4">
-          <section className="rounded-xl border border-border bg-card p-5 space-y-4 shadow-soft">
+        <div className="space-y-4 min-w-0">
+          <section className="rounded-xl border border-border bg-card p-5 space-y-4 shadow-soft min-w-0 overflow-hidden">
             <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
               Registration Info
             </h2>
@@ -719,9 +719,9 @@ export default function AdminWriterDetail() {
             </dl>
 
             {allSubmissionsUrl && (
-              <div className="pt-3 border-t border-border/50 space-y-1.5">
+              <div className="pt-3 border-t border-border/50 space-y-1.5 min-w-0 overflow-hidden w-full">
                 <TrackingLinkRow label="All Submissions Link:" url={allSubmissionsUrl} className="w-full" />
-                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                <p className="text-[11px] text-muted-foreground leading-relaxed break-words">
                   Anyone with this link can see all of this writer&apos;s submissions — share it only with the writer.
                 </p>
               </div>

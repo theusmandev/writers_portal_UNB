@@ -32,10 +32,10 @@ export function TrackingLinkRow({ label, url, className = "" }: TrackingLinkRowP
 
   return (
     <div
-      className={`flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-1.5 text-xs w-full sm:w-max overflow-hidden ${className}`}
+      className={`flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-1.5 text-xs overflow-hidden min-w-0 max-w-full ${className || "w-full sm:w-max"}`}
     >
       <span className="text-muted-foreground font-medium shrink-0">{label}</span>
-      <span className="font-mono text-muted-foreground truncate min-w-0 flex-1 sm:flex-none sm:max-w-sm">
+      <span className="font-mono text-muted-foreground truncate min-w-0 flex-1">
         {url}
       </span>
       <div className="flex items-center gap-1 ml-2 pl-3 border-l border-border/50 shrink-0">

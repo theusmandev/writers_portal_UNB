@@ -934,7 +934,7 @@ function PublishCountdown({ estimatedPublishAt, hideOnPast = false, isSmall = fa
 }
 
 function getDecodedQueryParam(searchParams: URLSearchParams, key: string): string | null {
-  if (typeof window !== "undefined") {
+  if (typeof window !== "undefined" && window.location.search) {
     const match = window.location.search.match(new RegExp(`[?&]${key}=([^&]*)`));
     if (match) {
       try {
@@ -944,31 +944,36 @@ function getDecodedQueryParam(searchParams: URLSearchParams, key: string): strin
       }
     }
   }
-  return searchParams.get(key);
+  const param = searchParams.get(key);
+  return param ? decodeURIComponent(param) : null;
 }
 
 export default function TrackPage() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const hasAutoLoadedRef = useRef(false);
 
+  const initialCode = getDecodedQueryParam(searchParams, "code")?.trim() || "";
+  const initialEmail = getDecodedQueryParam(searchParams, "email")?.trim() || "";
+
+  const hasBoth = Boolean(initialCode && initialEmail);
+  const hasEmailOnly = Boolean(initialEmail && !initialCode);
+
   // Tab 1: Track by ID State
-  const [submissionId, setSubmissionId] = useState(() => getDecodedQueryParam(searchParams, "code") || "");
-  const [email, setEmail] = useState(() => getDecodedQueryParam(searchParams, "email") || "");
+  // Requirement:
+  // - If BOTH code and email exist: submissionId = code, email = decodedEmail
+  // - If ONLY email exists (no code): Do NOT put the email in Tab 1 email state! (email = "")
+  const [submissionId, setSubmissionId] = useState(() => (hasBoth ? initialCode : (initialCode || "")));
+  const [email, setEmail] = useState(() => (hasBoth ? initialEmail : ""));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [record, setRecord] = useState<SubmissionRecord | null>(null);
 
   // Tab 2: View All My Submissions State
-  const [emailForList, setEmailForList] = useState(() => {
-    const code = getDecodedQueryParam(searchParams, "code");
-    const emailParam = getDecodedQueryParam(searchParams, "email");
-    return !code && emailParam ? emailParam : "";
-  });
-  const [activeTab, setActiveTab] = useState<"by-id" | "by-email">(() => {
-    const code = getDecodedQueryParam(searchParams, "code");
-    const emailParam = getDecodedQueryParam(searchParams, "email");
-    return !code && emailParam ? "by-email" : "by-id";
-  });
+  // Requirement:
+  // - If ONLY email exists (no code): activeTab = "by-email", Tab 2's emailForList = decodedEmail
+  // - If BOTH code and email exist: activeTab = "by-id", Tab 2's emailForList = ""
+  const [emailForList, setEmailForList] = useState(() => (hasEmailOnly ? initialEmail : ""));
+  const [activeTab, setActiveTab] = useState<"by-id" | "by-email">(() => (hasEmailOnly ? "by-email" : "by-id"));
   const [listLoading, setListLoading] = useState(false);
   const [listError, setListError] = useState<string | null>(null);
   const [submissionsList, setSubmissionsList] = useState<WriterSubmissionSummary[] | null>(null);
@@ -1007,24 +1012,19 @@ export default function TrackPage() {
   }
 
   useEffect(() => {
-    if (hasAutoLoadedRef.current) return;
-
-    const initialCode = getDecodedQueryParam(searchParams, "code");
-    const initialEmail = getDecodedQueryParam(searchParams, "email");
-
-    if (initialCode && initialEmail) {
-      hasAutoLoadedRef.current = true;
+    if (hasBoth) {
+      setActiveTab("by-id");
       setSubmissionId(initialCode);
       setEmail(initialEmail);
-      setSearchParams({}, { replace: true });
-    } else if (initialEmail && !initialCode) {
-      hasAutoLoadedRef.current = true;
+    } else if (hasEmailOnly) {
       setActiveTab("by-email");
       setEmailForList(initialEmail);
-      setSearchParams({}, { replace: true });
-      void fetchSubmissionsByEmail(initialEmail);
+      if (!hasAutoLoadedRef.current) {
+        hasAutoLoadedRef.current = true;
+        void fetchSubmissionsByEmail(initialEmail);
+      }
     }
-  }, [searchParams, setSearchParams]);
+  }, [hasBoth, hasEmailOnly, initialCode, initialEmail]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
