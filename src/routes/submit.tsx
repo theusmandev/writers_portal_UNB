@@ -137,9 +137,9 @@ export default function SubmitPage() {
     file: File | null;
     number: number;
   };
-  const [minEpisodes, setMinEpisodes] = useState(5);
+  const [minEpisodes, setMinEpisodes] = useState(3);
   const [episodes, setEpisodes] = useState<EpisodeSlot[]>(
-    Array.from({ length: 5 }, (_, i) => ({ id: crypto.randomUUID(), file: null, number: i + 1 }))
+    Array.from({ length: 3 }, (_, i) => ({ id: crypto.randomUUID(), file: null, number: i + 1 }))
   );
 
   // Check minimum episodes based on email and novel status
@@ -165,15 +165,15 @@ export default function SubmitPage() {
     const checkMin = async () => {
       if (form.novelStatus !== "Ongoing") return;
       if (!form.email || !/^\S+@\S+\.\S+$/.test(form.email)) {
-        if (minEpisodes !== 5) {
-          setMinEpisodes(5);
-          setEpisodes(prev => adjustEpisodes(prev, 5));
+        if (minEpisodes !== 3) {
+          setMinEpisodes(3);
+          setEpisodes(prev => adjustEpisodes(prev, 3));
         }
         return;
       }
       const isExempt = await checkEpisodeMinimumException(form.email);
       if (!active) return;
-      const newMin = isExempt ? 1 : 5;
+      const newMin = isExempt ? 1 : 3;
       if (newMin !== minEpisodes) {
         setMinEpisodes(newMin);
         setEpisodes(prev => adjustEpisodes(prev, newMin));
@@ -370,6 +370,10 @@ export default function SubmitPage() {
     if (form.novelStatus === "Ongoing") {
       let epError = false;
       const nextEps = [...episodes];
+      if (nextEps.length < minEpisodes) {
+        next["episodes"] = `At least ${minEpisodes} episodes are required for an ongoing novel.`;
+        epError = true;
+      }
       for (let i = 0; i < nextEps.length; i++) {
         const ep = nextEps[i];
         const err = validateFile(ep.file, ALLOWED_DOC, true, `episode`);
@@ -378,7 +382,7 @@ export default function SubmitPage() {
           epError = true;
         }
       }
-      if (epError) {
+      if (epError && !next["episodes"]) {
         next["episodes"] = "Please check your attached episodes.";
       }
     } else {

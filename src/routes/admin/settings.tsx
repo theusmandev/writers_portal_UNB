@@ -529,7 +529,7 @@ export default function AdminSettings() {
           )}
         </div>
         <p className="text-sm text-muted-foreground mb-6">
-          Writers in this list can submit an "Ongoing" novel with just 1 episode, instead of the standard minimum of 5.
+          Writers in this list can submit an "Ongoing" novel with just 1 episode, instead of the standard minimum of 3.
         </p>
 
         <form onSubmit={handleAddException} className="mb-8 grid gap-4 sm:grid-cols-[1fr_1fr_auto] items-start">
