@@ -164,9 +164,15 @@ export function SpotlightRelationalPreview({ writerId }: { writerId: string }) {
 
         if (!isMounted) return;
 
-        if (wRes.data) {
-          setSocialLink(wRes.data.social_media_link);
-          setWriterName(wRes.data.pen_name || wRes.data.full_name);
+        const writerData = (wRes as any).data as {
+          full_name?: string;
+          pen_name?: string | null;
+          social_media_link?: string | null;
+        } | null;
+
+        if (writerData) {
+          setSocialLink(writerData.social_media_link || null);
+          setWriterName(writerData.pen_name || writerData.full_name || "");
         }
         if (nRes.data) {
           const mappedNovels = nRes.data.map((sub: any) => ({
