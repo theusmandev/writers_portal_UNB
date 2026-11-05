@@ -10,7 +10,7 @@ import {
   FaTelegram,
 } from "react-icons/fa6";
 import { TrustpilotPromo } from "@/components/portal/TrustpilotPromo";
-import { BrandLogo } from "@/components/portal/BrandLogo";
+import { BrandWordmark } from "@/components/portal/BrandWordmark";
 
 export function SiteFooter() {
   const { settings } = useSiteSettings();
@@ -41,12 +41,15 @@ export function SiteFooter() {
     <footer className="mt-24 border-t border-secondary bg-secondary text-secondary-foreground">
       <div className="mx-auto grid max-w-6xl gap-10 px-5 py-14 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
         <div className="sm:col-span-2 md:col-span-3 lg:col-span-2">
-          <div className="flex items-center gap-3 mb-4">
-            <BrandLogo className="h-12 w-12 md:h-14 md:w-14 rounded-full shadow-md shrink-0" />
-            <h3 className="font-display text-lg font-semibold">{site.name}</h3>
-          </div>
-          <p className="urdu mt-2 max-w-sm text-sm opacity-80">{site.taglineUrdu}</p>
-          <p className="mt-3 max-w-sm text-sm opacity-80">{site.tagline}</p>
+          <Link
+            to="/"
+            className="inline-block transition-opacity hover:opacity-90"
+            aria-label={site.name}
+          >
+            <BrandWordmark variant="light-on-dark" className="h-14 sm:h-16 md:h-18 w-auto" />
+          </Link>
+          <p className="urdu mt-3 max-w-sm text-sm opacity-80">{site.taglineUrdu}</p>
+          <p className="mt-2 max-w-sm text-sm opacity-80">{site.tagline}</p>
           <div className="mt-5">
             <TrustpilotPromo variant="compact" />
           </div>
