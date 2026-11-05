@@ -46,10 +46,12 @@ export function SiteFooter() {
             className="inline-block transition-opacity hover:opacity-90"
             aria-label={site.name}
           >
-            <BrandWordmark variant="light-on-dark" className="h-14 sm:h-16 md:h-18 w-auto" />
+            <BrandWordmark variant="light-on-dark" className="h-10 sm:h-11 md:h-12 w-auto" />
           </Link>
-          <p className="urdu mt-3 max-w-sm text-sm opacity-80">{site.taglineUrdu}</p>
-          <p className="mt-2 max-w-sm text-sm opacity-80">{site.tagline}</p>
+          <p dir="rtl" className="urdu mt-3 max-w-sm text-sm opacity-80 text-left">
+            {site.taglineUrdu}
+          </p>
+          <p className="mt-2.5 max-w-sm text-sm opacity-80">{site.tagline}</p>
           <div className="mt-5">
             <TrustpilotPromo variant="compact" />
           </div>
