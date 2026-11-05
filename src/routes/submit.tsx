@@ -681,7 +681,7 @@ export default function SubmitPage() {
 
   if (result) {
     return (
-      <div className="mx-auto max-w-3xl px-4 sm:px-5 py-20 space-y-8">
+      <div className="mx-auto max-w-2xl px-4 sm:px-5 py-20 space-y-6">
         <SEO 
           title="Submit Your Novel | Urdu Novel Bank Writer Portal" 
           description="Ready to publish? Submit your Urdu novel manuscript through our secure writer portal. Share your stories with a growing community of readers." 

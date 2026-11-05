@@ -322,7 +322,7 @@ export default function Index() {
         </section>
       </FadeIn>
 
-      <section className="mx-auto max-w-6xl px-5 pb-20">
+      <section className="mx-auto max-w-3xl px-5 pb-20">
         <FadeIn>
           <TrustpilotPromo variant="banner" />
         </FadeIn>

@@ -1,9 +1,10 @@
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { cn } from "@/lib/utils";
-import { ExternalLink, Star } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 
 export interface TrustpilotPromoProps {
   variant?: "banner" | "compact" | "card";
+  headline?: string;
   className?: string;
 }
 
@@ -25,7 +26,11 @@ function TrustpilotStarIcon({ className }: { className?: string }) {
   );
 }
 
-export function TrustpilotPromo({ variant = "banner", className }: TrustpilotPromoProps) {
+export function TrustpilotPromo({
+  variant = "banner",
+  headline = "Share your experience on Trustpilot",
+  className,
+}: TrustpilotPromoProps) {
   const { settings } = useSiteSettings();
 
   if (!settings.show_trustpilot || !settings.trustpilot_url) {
@@ -68,119 +73,52 @@ export function TrustpilotPromo({ variant = "banner", className }: TrustpilotPro
     );
   }
 
-  // ── Variant: Card (For Contact Page & Sidebar Strips) ──────────────────────
-  if (variant === "card") {
-    return (
-      <div
-        className={cn(
-          "relative overflow-hidden rounded-2xl border border-border bg-card p-6 sm:p-7 shadow-soft transition-all duration-300 hover:shadow-md",
-          className,
-        )}
-      >
-        {/* Subtle decorative background glow */}
-        <div className="absolute top-0 right-0 h-36 w-36 bg-[#00B67A]/5 rounded-bl-full pointer-events-none" />
-
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 relative z-10">
-          <div className="space-y-2.5">
-            <div className="flex items-center flex-wrap gap-2.5">
-              <div className="flex items-center gap-1">
-                {[...Array(5)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="size-6 bg-[#00B67A] text-white p-1 rounded-xs flex items-center justify-center shadow-xs"
-                  >
-                    <StarSvg className="size-full text-white fill-white" />
-                  </div>
-                ))}
-              </div>
-              <div className="flex items-center gap-1 font-bold text-sm sm:text-base tracking-tight text-foreground">
-                <span>Trustpilot</span>
-                <TrustpilotStarIcon className="size-4 text-[#00B67A]" />
-              </div>
-            </div>
-
-            <h3 className="font-display text-lg sm:text-xl font-bold text-foreground tracking-tight">
-              Share your experience on Trustpilot
-            </h3>
-
-            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-xl">
-              Your honest feedback helps fellow Urdu writers discover a transparent, respectful
-              publishing home.
-            </p>
-
-            <p
-              className="urdu text-sm sm:text-base text-foreground/85 pt-0.5 leading-relaxed"
-              dir="rtl"
-            >
-              اپنا تجربہ ٹرسٹ پائلٹ پر شیئر کریں — آپ کی رائے نئے لکھاریوں کی رہنمائی اور حوصلہ
-              افزائی کرتی ہے۔
-            </p>
-          </div>
-
-          <div className="shrink-0">
-            <a
-              href={reviewUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-[#00B67A] hover:bg-[#009e6a] text-white font-medium px-5 py-2.5 rounded-xl shadow-sm hover:shadow transition-all group text-sm"
-            >
-              <span>Write a Review</span>
-              <ExternalLink className="size-4 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-            </a>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ── Variant: Banner (Default — For Home Page & Post-Submission Success) ─────
+  // ── Variants: Banner & Card (Calm, cohesive card design matching portal aesthetic) ─
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-2xl border border-border/80 bg-gradient-to-br from-card via-card to-[#00B67A]/5 p-6 sm:p-8 md:p-10 shadow-soft transition-all duration-300 hover:shadow-elegant",
+        "relative overflow-hidden rounded-2xl border border-border/80 bg-card p-4 sm:p-5 md:p-6 shadow-soft transition-all duration-300 hover:shadow-md",
         className,
       )}
     >
-      {/* Ambient background glow accents */}
-      <div className="absolute -top-16 -right-16 size-48 bg-[#00B67A]/8 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-16 -left-16 size-48 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+      {/* Subtle corner decorative accent */}
+      <div className="absolute top-0 right-0 size-28 bg-[#00B67A]/5 rounded-bl-full pointer-events-none" />
 
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 sm:gap-8 relative z-10">
-        {/* Left / Top Information */}
-        <div className="space-y-3.5 text-left">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6 relative z-10">
+        <div className="space-y-2 text-left">
           {/* Trustpilot-style 5-star row & wordmark */}
-          <div className="flex items-center flex-wrap gap-3">
-            <div className="flex items-center gap-1.5">
+          <div className="flex items-center flex-wrap gap-2 sm:gap-2.5">
+            <div className="flex items-center gap-1">
               {[...Array(5)].map((_, i) => (
                 <div
                   key={i}
-                  className="size-6 sm:size-7 bg-[#00B67A] text-white p-1.5 rounded-xs flex items-center justify-center shadow-xs"
+                  className="size-5 sm:size-5.5 bg-[#00B67A] text-white p-1 rounded-xs flex items-center justify-center shadow-xs"
                 >
                   <StarSvg className="size-full text-white fill-white" />
                 </div>
               ))}
             </div>
 
-            <div className="flex items-center gap-1 font-bold text-base sm:text-lg tracking-tight text-foreground">
+            <div className="flex items-center gap-1 font-bold text-xs sm:text-sm tracking-tight text-foreground">
               <span>Trustpilot</span>
-              <TrustpilotStarIcon className="size-5 text-[#00B67A]" />
+              <TrustpilotStarIcon className="size-3.5 sm:size-4 text-[#00B67A]" />
             </div>
           </div>
 
           {/* Headline */}
-          <h3 className="font-display text-xl sm:text-2xl md:text-3xl font-bold text-foreground tracking-tight leading-snug">
-            Published or submitted with us? Share your experience!
+          <h3 className="font-display text-base sm:text-lg font-semibold text-foreground tracking-tight leading-snug">
+            {headline}
           </h3>
 
           {/* Subtext (English) */}
-          <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-2xl">
-            Your feedback helps fellow Urdu writers discover a transparent, respectful publishing
-            home.
+          <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-xl">
+            Your honest feedback helps fellow Urdu writers discover a transparent, respectful
+            publishing home.
           </p>
 
           {/* Subtext (Urdu RTL) */}
           <p
-            className="urdu text-base sm:text-lg md:text-xl text-foreground/85 leading-relaxed pt-1"
+            className="urdu text-sm sm:text-base text-foreground/85 pt-0.5 leading-relaxed"
             dir="rtl"
           >
             اپنا تجربہ ٹرسٹ پائلٹ پر شیئر کریں — آپ کی رائے نئے لکھاریوں کی رہنمائی اور حوصلہ افزائی
@@ -188,17 +126,16 @@ export function TrustpilotPromo({ variant = "banner", className }: TrustpilotPro
           </p>
         </div>
 
-        {/* Right / Bottom CTA Button */}
-        <div className="shrink-0 pt-2 md:pt-0">
+        {/* CTA Button */}
+        <div className="shrink-0 pt-1 sm:pt-0 self-start sm:self-center">
           <a
             href={reviewUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-[#00B67A] hover:bg-[#009e6a] text-white font-medium px-5 sm:px-6 py-3 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-2.5 group cursor-pointer"
+            className="inline-flex items-center gap-2 bg-[#00B67A] hover:bg-[#009e6a] text-white font-medium px-4 py-2 sm:px-4.5 sm:py-2.5 rounded-xl shadow-xs hover:shadow transition-all duration-200 group text-xs sm:text-sm cursor-pointer whitespace-nowrap"
           >
-            <Star className="size-4 fill-white text-white transition-transform duration-200 group-hover:rotate-12" />
-            <span className="font-semibold text-sm sm:text-base">Write a Review</span>
-            <ExternalLink className="size-4 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+            <span>Write a Review</span>
+            <ExternalLink className="size-3.5 sm:size-4 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </a>
         </div>
       </div>
