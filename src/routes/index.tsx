@@ -15,25 +15,52 @@ import { FadeIn } from "@/components/portal/FadeIn";
 import { SEO } from "@/components/SEO";
 import { TrustpilotPromo } from "@/components/portal/TrustpilotPromo";
 
-
 const steps = [
-  { icon: FileText, title: "Read the guidelines", to: "/guidelines", text: "Formats, formatting, covers and content rules — in one page." },
-  { icon: BookOpen, title: "Prepare your manuscript", to: "/process", text: "Unicode Urdu file, clear chapters, complete story where possible." },
-  { icon: ArrowRight, title: "Submit your novel", to: "/submit", text: "One short form. You receive a unique Submission ID instantly." },
-  { icon: Search, title: "Track your status", to: "/track", text: "Follow every stage with your ID and email address." },
+  {
+    icon: FileText,
+    title: "Read the guidelines",
+    to: "/guidelines",
+    text: "Formats, formatting, covers and content rules — in one page.",
+  },
+  {
+    icon: BookOpen,
+    title: "Prepare your manuscript",
+    to: "/process",
+    text: "Unicode Urdu file, clear chapters, complete story where possible.",
+  },
+  {
+    icon: ArrowRight,
+    title: "Submit your novel",
+    to: "/submit",
+    text: "One short form. You receive a unique Submission ID instantly.",
+  },
+  {
+    icon: Search,
+    title: "Track your status",
+    to: "/track",
+    text: "Follow every stage with your ID and email address.",
+  },
 ] as const;
+
+type SpotlightListItem = {
+  id: string;
+  slug: string;
+  spotlight_label: string | null;
+  created_at: string;
+  display_name: string;
+};
 
 export default function Index() {
   const [writers, setWriters] = useState<PublicWriterRow[]>([]);
-  const [latestSpotlight, setLatestSpotlight] = useState<any | null>(null);
+  const [latestSpotlight, setLatestSpotlight] = useState<SpotlightListItem | null>(null);
 
   useEffect(() => {
     async function loadData() {
       const [writersRes, spotlightsRes] = await Promise.all([
         getPublicWriters(),
-        getSpotlightsList()
+        getSpotlightsList(),
       ]);
-      
+
       if (writersRes.success && writersRes.data.length > 0) {
         const shuffled = [...writersRes.data];
         for (let i = shuffled.length - 1; i > 0; i--) {
@@ -42,7 +69,7 @@ export default function Index() {
         }
         setWriters(shuffled.slice(0, 8));
       }
-      
+
       if (spotlightsRes.success && spotlightsRes.data.length > 0) {
         setLatestSpotlight(spotlightsRes.data[0]);
       }
@@ -52,9 +79,9 @@ export default function Index() {
 
   return (
     <div>
-      <SEO 
-        title="Urdu Novel Bank — Writer & Publication Portal | Submit Your Urdu Novel" 
-        description="Submit your Urdu novel to Urdu Novel Bank. Our writer portal offers an easy submission process, real-time tracking, and a transparent publication journey." 
+      <SEO
+        title="Urdu Novel Bank — Writer & Publication Portal | Submit Your Urdu Novel"
+        description="Submit your Urdu novel to Urdu Novel Bank. Our writer portal offers an easy submission process, real-time tracking, and a transparent publication journey."
       />
       <section className="bg-hero text-primary-foreground">
         <div className="mx-auto max-w-6xl px-5 pt-12 pb-20 sm:pt-8 sm:pb-10">
@@ -72,10 +99,17 @@ export default function Index() {
             from screening to publication — no messages lost, no guessing.
           </p>
           <div className="mt-9 sm:mt-5 flex gap-3">
-            <Button asChild className="bg-foreground text-background hover:bg-foreground/90 h-[40px] px-4 text-[11px] sm:h-9 sm:px-6 sm:text-[13px] shadow-elegant border-transparent">
+            <Button
+              asChild
+              className="bg-foreground text-background hover:bg-foreground/90 h-[40px] px-4 text-[11px] sm:h-9 sm:px-6 sm:text-[13px] shadow-elegant border-transparent"
+            >
               <Link to="/submit">Submit Your Novel</Link>
             </Button>
-            <Button asChild variant="outline" className="border-transparent bg-card/95 text-foreground hover:bg-card hover:text-foreground h-[40px] px-4 text-[11px] sm:h-9 sm:px-6 sm:text-[13px] shadow-soft font-semibold">
+            <Button
+              asChild
+              variant="outline"
+              className="border-transparent bg-card/95 text-foreground hover:bg-card hover:text-foreground h-[40px] px-4 text-[11px] sm:h-9 sm:px-6 sm:text-[13px] shadow-soft font-semibold"
+            >
               <Link to="/track">Track Submission</Link>
             </Button>
           </div>
@@ -194,42 +228,54 @@ export default function Index() {
             <FadeIn className="flex flex-col md:flex-row items-center gap-8 md:gap-10 lg:gap-16">
               <div className="w-full md:flex-1 space-y-6">
                 <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-3.5 py-1.5 text-xs font-bold tracking-[0.15em] text-amber-700 dark:text-amber-400 uppercase shadow-sm">
-                  <Star className="h-3.5 w-3.5" /> 
-                  {latestSpotlight.spotlight_label ? `${latestSpotlight.spotlight_label} Spotlight` : "Monthly Spotlight"}
+                  <Star className="h-3.5 w-3.5" />
+                  {latestSpotlight.spotlight_label
+                    ? `${latestSpotlight.spotlight_label} Spotlight`
+                    : "Monthly Spotlight"}
                 </div>
                 <h3 className="text-3xl sm:text-4xl font-serif font-bold text-foreground">
                   {latestSpotlight.display_name}
                 </h3>
                 <p className="text-muted-foreground text-lg leading-relaxed max-w-lg">
-                  Dive into the journey and works of our New highlighted author. Read their story, discover their published novels, and connect with their writing.
+                  Dive into the journey and works of our New highlighted author. Read their story,
+                  discover their published novels, and connect with their writing.
                 </p>
                 <div className="flex flex-nowrap items-center gap-3 sm:gap-6 pt-2 overflow-hidden w-full">
-                  <Button asChild className="h-9 sm:h-11 px-4 sm:px-6 shadow-elegant bg-primary hover:bg-primary/90 text-primary-foreground text-xs sm:text-sm whitespace-nowrap shrink-0">
+                  <Button
+                    asChild
+                    className="h-9 sm:h-11 px-4 sm:px-6 shadow-elegant bg-primary hover:bg-primary/90 text-primary-foreground text-xs sm:text-sm whitespace-nowrap shrink-0"
+                  >
                     <Link to={`/spotlights/${latestSpotlight.slug}`}>
-                      Read the Spotlight <ArrowRight className="ml-1.5 sm:ml-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      Read the Spotlight{" "}
+                      <ArrowRight className="ml-1.5 sm:ml-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     </Link>
                   </Button>
-                  <Link to="/spotlights" className="text-xs sm:text-sm font-medium text-muted-foreground hover:text-primary transition-colors underline-offset-4 hover:underline whitespace-nowrap shrink-0 truncate">
+                  <Link
+                    to="/spotlights"
+                    className="text-xs sm:text-sm font-medium text-muted-foreground hover:text-primary transition-colors underline-offset-4 hover:underline whitespace-nowrap shrink-0 truncate"
+                  >
                     <span className="sm:hidden">View All &rarr;</span>
                     <span className="hidden sm:inline">View All Spotlights &rarr;</span>
                   </Link>
                 </div>
               </div>
-              <Link 
+              <Link
                 to={`/spotlights/${latestSpotlight.slug}`}
                 className="w-full md:w-5/12 aspect-square md:aspect-auto md:h-80 bg-card rounded-2xl border border-border shadow-soft flex items-center justify-center relative overflow-hidden group cursor-pointer transition-transform duration-300 hover:scale-[1.02] hover:shadow-lg"
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 via-transparent to-primary/5 transition-opacity group-hover:opacity-70" />
                 <div className="relative text-center p-8 space-y-5">
-                   <div className="mx-auto h-24 w-24 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-4xl font-serif text-white shadow-md">
-                      {latestSpotlight.display_name.charAt(0).toUpperCase()}
-                   </div>
-                   <div>
-                     <div className="font-serif text-2xl font-semibold text-foreground">{latestSpotlight.display_name}</div>
-                     <div className="text-xs uppercase tracking-[0.2em] text-amber-600 dark:text-amber-500 font-bold mt-1">
-                       {latestSpotlight.spotlight_label || "Featured Writer"}
-                     </div>
-                   </div>
+                  <div className="mx-auto h-24 w-24 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-4xl font-serif text-white shadow-md">
+                    {latestSpotlight.display_name.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <div className="font-serif text-2xl font-semibold text-foreground">
+                      {latestSpotlight.display_name}
+                    </div>
+                    <div className="text-xs uppercase tracking-[0.2em] text-amber-600 dark:text-amber-500 font-bold mt-1">
+                      {latestSpotlight.spotlight_label || "Featured Writer"}
+                    </div>
+                  </div>
                 </div>
               </Link>
             </FadeIn>
@@ -246,25 +292,35 @@ export default function Index() {
               Meet the writers bringing their stories to Urdu Novel Bank.
             </p>
           </FadeIn>
-          
+
           <div className="flex flex-wrap justify-center gap-8 md:gap-12">
             {writers.map((w, i) => (
               <FadeIn key={w.pen_name} delayMs={i * 50}>
                 <Link
-                  to={w.is_featured && w.featured_slug ? `/writers/featured/${w.featured_slug}` : `/writers?q=${encodeURIComponent(w.pen_name || w.full_name)}`}
+                  to={
+                    w.is_featured && w.featured_slug
+                      ? `/writers/featured/${w.featured_slug}`
+                      : `/writers?q=${encodeURIComponent(w.pen_name || w.full_name)}`
+                  }
                   className="flex flex-col items-center gap-3 group cursor-pointer block transition-transform duration-300 hover:-translate-y-1"
                 >
                   <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-full bg-muted border border-border flex items-center justify-center text-2xl sm:text-3xl font-serif text-muted-foreground shadow-sm transition-all duration-300 group-hover:scale-105 group-hover:shadow-md group-hover:border-primary/30 group-hover:bg-primary/5 group-hover:text-primary">
                     {w.pen_name.charAt(0).toUpperCase()}
                   </div>
-                  <span className="text-sm sm:text-base font-medium text-foreground transition-colors group-hover:text-primary">{w.pen_name}</span>
+                  <span className="text-sm sm:text-base font-medium text-foreground transition-colors group-hover:text-primary">
+                    {w.pen_name}
+                  </span>
                 </Link>
               </FadeIn>
             ))}
           </div>
-          
+
           <FadeIn delayMs={300} className="mt-14 text-center">
-            <Button asChild variant="outline" className="h-11 px-8 rounded-full shadow-soft hover:bg-card">
+            <Button
+              asChild
+              variant="outline"
+              className="h-11 px-8 rounded-full shadow-soft hover:bg-card"
+            >
               <Link to="/writers">Browse All Writers &rarr;</Link>
             </Button>
           </FadeIn>
@@ -286,7 +342,11 @@ export default function Index() {
           </FadeIn>
           <FadeIn delayMs={100} className="lg:col-span-2">
             <h2 className="text-2xl font-semibold">Common questions</h2>
-            <Accordion type="single" collapsible className="mt-4 rounded-xl border border-border bg-card px-5">
+            <Accordion
+              type="single"
+              collapsible
+              className="mt-4 rounded-xl border border-border bg-card px-5"
+            >
               {faqs.slice(0, 5).map((f) => (
                 <AccordionItem key={f.q} value={f.q}>
                   <AccordionTrigger className="text-left text-sm font-medium">
@@ -305,8 +365,8 @@ export default function Index() {
         </div>
       </section>
 
-      <FadeIn>
-        <section className="mx-auto max-w-4xl px-5 py-20 text-center">
+      <FadeIn className="-mb-24">
+        <section className="mx-auto max-w-4xl px-5 pt-20 pb-12 sm:pb-14 text-center">
           <h2 className="text-3xl font-semibold text-balance">Ready to send your novel?</h2>
           <p className="mt-3 text-muted-foreground">
             Prepare your manuscript, fill the form, and keep your Submission ID safe.
@@ -319,14 +379,12 @@ export default function Index() {
               <Link to="/policy">Read the Policy</Link>
             </Button>
           </div>
+
+          <div className="mt-12 sm:mt-14 w-full max-w-3xl mx-auto">
+            <TrustpilotPromo variant="banner" />
+          </div>
         </section>
       </FadeIn>
-
-      <section className="mx-auto max-w-3xl px-5 pb-20">
-        <FadeIn>
-          <TrustpilotPromo variant="banner" />
-        </FadeIn>
-      </section>
     </div>
   );
 }
