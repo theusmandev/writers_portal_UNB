@@ -365,8 +365,8 @@ export default function Index() {
         </div>
       </section>
 
-      <FadeIn className="-mb-24">
-        <section className="mx-auto max-w-4xl px-5 pt-20 pb-12 sm:pb-14 text-center">
+      <FadeIn>
+        <section className="mx-auto max-w-4xl px-5 pt-20 pb-16 text-center">
           <h2 className="text-3xl font-semibold text-balance">Ready to send your novel?</h2>
           <p className="mt-3 text-muted-foreground">
             Prepare your manuscript, fill the form, and keep your Submission ID safe.
@@ -380,8 +380,8 @@ export default function Index() {
             </Button>
           </div>
 
-          <div className="mt-12 sm:mt-14 w-full max-w-3xl mx-auto">
-            <TrustpilotPromo variant="banner" />
+          <div className="w-full max-w-3xl mx-auto">
+            <TrustpilotPromo variant="banner" className="mt-40" />
           </div>
         </section>
       </FadeIn>
