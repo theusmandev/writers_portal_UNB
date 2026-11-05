@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { SEO } from "@/components/SEO";
+import { BrandLogo } from "@/components/portal/BrandLogo";
 
 export default function AdminLoginPage() {
   const { session, loading, signIn } = useAdminAuth();
@@ -37,15 +38,11 @@ export default function AdminLoginPage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
-      <SEO 
-        noindex 
-        title="Admin Login | UNB" 
-        description="Internal admin login" 
-      />
+      <SEO noindex title="Admin Login | UNB" description="Internal admin login" />
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="mb-8 flex flex-col items-center gap-3">
-          <img src="/unb-logo.png" alt="Urdu Novel Bank" className="h-14 w-14 md:h-16 md:w-16 object-cover rounded-full shadow-md border border-stone-200 mx-auto" />
+          <BrandLogo className="h-14 w-14 md:h-16 md:w-16 rounded-full shadow-md mx-auto shrink-0" />
           <div className="text-center">
             <h1 className="text-xl font-semibold">Admin Sign In</h1>
             <p className="mt-1 text-sm text-muted-foreground">Urdu Novel Bank — Writer Portal</p>

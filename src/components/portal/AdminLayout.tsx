@@ -1,8 +1,20 @@
 import { useState, useEffect } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
-import { LayoutDashboard, FileText, Users, Newspaper, LogOut, BookOpen, Settings, Menu, Star, ExternalLink } from "lucide-react";
+import {
+  LayoutDashboard,
+  FileText,
+  Users,
+  Newspaper,
+  LogOut,
+  BookOpen,
+  Settings,
+  Menu,
+  Star,
+  ExternalLink,
+} from "lucide-react";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { SEO } from "@/components/SEO";
+import { BrandLogo } from "@/components/portal/BrandLogo";
 
 const navItems = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
@@ -32,7 +44,7 @@ export function AdminLayout() {
     <>
       {/* Logo */}
       <div className="flex items-center gap-2.5 border-b border-border px-4 py-4">
-        <img src="/unb-logo.png" alt="UNB Admin" className="h-10 w-10 object-cover rounded-full shadow-sm border border-stone-200" />
+        <BrandLogo className="h-10 w-10 rounded-full shadow-sm shrink-0" />
         <div>
           <p className="text-sm font-semibold leading-tight">UNB Portal</p>
           <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Admin</p>
@@ -89,16 +101,12 @@ export function AdminLayout() {
 
   return (
     <div className="fixed inset-0 flex overflow-hidden flex-col md:flex-row bg-background">
-      <SEO 
-        noindex 
-        title="Admin Portal | UNB" 
-        description="Internal admin portal" 
-      />
+      <SEO noindex title="Admin Portal | UNB" description="Internal admin portal" />
 
       {/* ── Mobile Top Bar ── */}
       <div className="flex items-center justify-between border-b border-border bg-card px-4 py-3 md:hidden">
         <div className="flex items-center gap-2.5">
-          <img src="/unb-logo.png" alt="UNB Admin" className="h-10 w-10 object-cover rounded-full shadow-sm border border-stone-200" />
+          <BrandLogo className="h-10 w-10 rounded-full shadow-sm shrink-0" />
           <div>
             <p className="text-sm font-semibold leading-tight">UNB Portal</p>
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Admin</p>
@@ -121,7 +129,7 @@ export function AdminLayout() {
       {isMobileMenuOpen && (
         <div className="fixed inset-0 z-50 flex md:hidden">
           {/* Overlay */}
-          <div 
+          <div
             className="fixed inset-0 bg-background/80 backdrop-blur-sm"
             onClick={() => setIsMobileMenuOpen(false)}
           />

@@ -1,8 +1,16 @@
 import { Link } from "react-router-dom";
 import { site } from "@/data/content";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
-import { FaWhatsapp, FaYoutube, FaInstagram, FaFacebookF, FaPinterestP, FaTelegram } from "react-icons/fa6";
+import {
+  FaWhatsapp,
+  FaYoutube,
+  FaInstagram,
+  FaFacebookF,
+  FaPinterestP,
+  FaTelegram,
+} from "react-icons/fa6";
 import { TrustpilotPromo } from "@/components/portal/TrustpilotPromo";
+import { BrandLogo } from "@/components/portal/BrandLogo";
 
 export function SiteFooter() {
   const { settings } = useSiteSettings();
@@ -10,9 +18,21 @@ export function SiteFooter() {
   const mainSiteUrl = settings.main_website_url || site.mainSite;
 
   const socialLinks = [
-    { icon: FaFacebookF, url: "https://www.facebook.com/people/Urdu-novel-Bank/100090906471153/", label: "Follow us on Facebook" },
-    { icon: FaWhatsapp, url: "https://whatsapp.com/channel/0029VaurdEY0wajrnyeAl50Y", label: "Follow us on WhatsApp" },
-    { icon: FaPinterestP, url: "https://www.pinterest.com/urdunovelbanks/", label: "Follow us on Pinterest" },
+    {
+      icon: FaFacebookF,
+      url: "https://www.facebook.com/people/Urdu-novel-Bank/100090906471153/",
+      label: "Follow us on Facebook",
+    },
+    {
+      icon: FaWhatsapp,
+      url: "https://whatsapp.com/channel/0029VaurdEY0wajrnyeAl50Y",
+      label: "Follow us on WhatsApp",
+    },
+    {
+      icon: FaPinterestP,
+      url: "https://www.pinterest.com/urdunovelbanks/",
+      label: "Follow us on Pinterest",
+    },
     { icon: FaInstagram, url: instagramUrl, label: "Follow us on Instagram" },
     { icon: FaYoutube, url: "https://youtube.com/@urdunovelbank", label: "Follow us on YouTube" },
     { icon: FaTelegram, url: "https://t.me/urdunovelbank", label: "Follow us on Telegram" },
@@ -22,7 +42,7 @@ export function SiteFooter() {
       <div className="mx-auto grid max-w-6xl gap-10 px-5 py-14 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
         <div className="sm:col-span-2 md:col-span-3 lg:col-span-2">
           <div className="flex items-center gap-3 mb-4">
-            <img src="/unb-logo.png" alt="Urdu Novel Bank" className="h-12 w-12 md:h-14 md:w-14 object-cover rounded-full shadow-md" />
+            <BrandLogo className="h-12 w-12 md:h-14 md:w-14 rounded-full shadow-md shrink-0" />
             <h3 className="font-display text-lg font-semibold">{site.name}</h3>
           </div>
           <p className="urdu mt-2 max-w-sm text-sm opacity-80">{site.taglineUrdu}</p>
