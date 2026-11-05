@@ -13,6 +13,7 @@ import {
 import { faqs, processStages, site } from "@/data/content";
 import { FadeIn } from "@/components/portal/FadeIn";
 import { SEO } from "@/components/SEO";
+import { TrustpilotPromo } from "@/components/portal/TrustpilotPromo";
 
 
 const steps = [
@@ -320,6 +321,12 @@ export default function Index() {
           </div>
         </section>
       </FadeIn>
+
+      <section className="mx-auto max-w-6xl px-5 pb-20">
+        <FadeIn>
+          <TrustpilotPromo variant="banner" />
+        </FadeIn>
+      </section>
     </div>
   );
 }

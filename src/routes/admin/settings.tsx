@@ -42,6 +42,8 @@ export default function AdminSettings() {
   const [instagramHandle, setInstagramHandle] = useState("");
   const [instagramUrl, setInstagramUrl] = useState("");
   const [showFloatingWidget, setShowFloatingWidget] = useState(true);
+  const [trustpilotUrl, setTrustpilotUrl] = useState("");
+  const [showTrustpilot, setShowTrustpilot] = useState(true);
 
   const [notificationEnabled, setNotificationEnabled] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState("");
@@ -87,6 +89,8 @@ export default function AdminSettings() {
       setInstagramHandle(siteSettingsResult.data.instagram_handle || "");
       setInstagramUrl(siteSettingsResult.data.instagram_url || "");
       setShowFloatingWidget(siteSettingsResult.data.show_floating_widget !== false);
+      setTrustpilotUrl(siteSettingsResult.data.trustpilot_url || "");
+      setShowTrustpilot(siteSettingsResult.data.show_trustpilot !== false);
     }
     
     setLoadingExceptions(true);
@@ -151,6 +155,8 @@ export default function AdminSettings() {
       instagram_handle: instagramHandle,
       instagram_url: instagramUrl,
       show_floating_widget: showFloatingWidget,
+      trustpilot_url: trustpilotUrl,
+      show_trustpilot: showTrustpilot,
     });
     if (result.success) {
       await queryClient.invalidateQueries({ queryKey: SITE_SETTINGS_QUERY_KEY });
@@ -169,6 +175,8 @@ export default function AdminSettings() {
       instagram_handle: instagramHandle,
       instagram_url: instagramUrl,
       show_floating_widget: showFloatingWidget,
+      trustpilot_url: trustpilotUrl,
+      show_trustpilot: showTrustpilot,
     });
     if (result.success) {
       await queryClient.invalidateQueries({ queryKey: SITE_SETTINGS_QUERY_KEY });
@@ -450,11 +458,45 @@ export default function AdminSettings() {
                 required
               />
             </div>
+
+            <div className="space-y-2 sm:col-span-2">
+              <label htmlFor="trustpilot-url" className="text-sm font-medium leading-none">
+                Trustpilot Review URL
+              </label>
+              <Input
+                id="trustpilot-url"
+                type="url"
+                placeholder="https://www.trustpilot.com/review/urdunovelbanks.com"
+                value={trustpilotUrl}
+                onChange={(e) => setTrustpilotUrl(e.target.value)}
+                disabled={loading || savingContact}
+              />
+              <p className="text-xs text-muted-foreground">
+                Your portal&apos;s Trustpilot review invitation link. Used in review banners and the footer badge.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between pt-2 border-t border-border/60">
+            <div className="space-y-0.5">
+              <label htmlFor="trustpilot-toggle" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Show Trustpilot Review Prompts
+              </label>
+              <p className="text-sm text-muted-foreground">
+                Display Trustpilot review banners and footer badge across the portal.
+              </p>
+            </div>
+            <Switch
+              id="trustpilot-toggle"
+              checked={showTrustpilot}
+              onCheckedChange={setShowTrustpilot}
+              disabled={loading || savingContact}
+            />
           </div>
           
           <Button type="submit" disabled={loading || savingContact} className="w-full sm:w-auto">
             <Save className="mr-2 h-4 w-4" />
-            {savingContact ? "Saving..." : "Save Contact Settings"}
+            {savingContact ? "Saving..." : "Save Settings"}
           </Button>
         </form>
       </div>

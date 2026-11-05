@@ -101,6 +101,8 @@ export type SiteSettings = {
   instagram_handle?: string;
   instagram_url?: string;
   show_floating_widget?: boolean;
+  trustpilot_url?: string;
+  show_trustpilot?: boolean;
 };
 
 export type ContactAndWidgetSettings = {
@@ -109,6 +111,8 @@ export type ContactAndWidgetSettings = {
   instagram_handle: string;
   instagram_url: string;
   show_floating_widget: boolean;
+  trustpilot_url?: string;
+  show_trustpilot?: boolean;
 };
 
 export type NotificationSettings = {
@@ -945,6 +949,8 @@ export const defaultSiteSettings: SiteSettingsRow = {
   instagram_handle: "@urdunovelbank",
   instagram_url: "https://www.instagram.com/urdunovelbank",
   show_floating_widget: true,
+  trustpilot_url: "https://www.trustpilot.com/review/urdunovelbanks.com",
+  show_trustpilot: true,
 };
 
 export async function getSiteSettings(): Promise<ApiResult<SiteSettingsRow>> {
@@ -995,6 +1001,8 @@ export async function updateContactAndWidgetSettings(
         instagram_handle: settings.instagram_handle.trim(),
         instagram_url: settings.instagram_url.trim(),
         show_floating_widget: settings.show_floating_widget,
+        ...(settings.trustpilot_url !== undefined ? { trustpilot_url: settings.trustpilot_url.trim() } : {}),
+        ...(settings.show_trustpilot !== undefined ? { show_trustpilot: settings.show_trustpilot } : {}),
       })
       .eq("id", 1);
 

@@ -13,6 +13,7 @@ import { genres, site, getMissingFileMessage } from "@/data/content";
 import { isDemoMode, submitNovel, uploadFileToScript, updateSubmissionFiles, sendNotificationEmail, getWriterInfoByEmail, uploadEpisodeFile, saveEpisodeRecord, getSubmissionSettings, checkEpisodeMinimumException, type SubmissionRecord } from "@/services/portalApi";
 import { SEO } from "@/components/SEO";
 import { supabase } from "@/lib/supabase";
+import { TrustpilotPromo } from "@/components/portal/TrustpilotPromo";
 
 
 
@@ -680,7 +681,7 @@ export default function SubmitPage() {
 
   if (result) {
     return (
-      <div className="mx-auto max-w-2xl px-4 sm:px-5 py-20">
+      <div className="mx-auto max-w-3xl px-4 sm:px-5 py-20 space-y-8">
         <SEO 
           title="Submit Your Novel | Urdu Novel Bank Writer Portal" 
           description="Ready to publish? Submit your Urdu novel manuscript through our secure writer portal. Share your stories with a growing community of readers." 
@@ -745,6 +746,8 @@ export default function SubmitPage() {
             </Button>
           </div>
         </div>
+
+        <TrustpilotPromo variant="banner" />
       </div>
     );
   }

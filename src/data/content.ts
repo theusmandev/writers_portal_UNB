@@ -16,6 +16,7 @@ export const site = {
   mainSite: "https://www.urdunovelbanks.com",
   email: "urdunovelbankofficial@gmail.com",
   reviewWindow: "within 7 days",
+  trustpilotUrl: "https://www.trustpilot.com/review/urdunovelbanks.com",
 };
 
 export type ProcessStage = {
@@ -344,10 +345,12 @@ export type SubmissionStatus = (typeof submissionStatuses)[number];
 
 export function getMissingFileMessage(failedFiles: string[], code: string): string {
   let fileStr = "file";
-  if (failedFiles.length === 1) {
-    fileStr = failedFiles[0] ?? "file";
-  } else if (failedFiles.length === 2) {
-    fileStr = `${failedFiles[0] ?? ""} and ${failedFiles[1] ?? ""}`;
+  const first = failedFiles[0];
+  const second = failedFiles[1];
+  if (failedFiles.length === 1 && first) {
+    fileStr = first;
+  } else if (failedFiles.length === 2 && first && second) {
+    fileStr = `${first} and ${second}`;
   } else if (failedFiles.length > 2) {
     const last = failedFiles[failedFiles.length - 1] ?? "";
     const initial = failedFiles.slice(0, failedFiles.length - 1).join(", ");

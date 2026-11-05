@@ -4,6 +4,7 @@ import { PageHero } from "@/components/portal/PageHero";
 import { site } from "@/data/content";
 import { FadeIn } from "@/components/portal/FadeIn";
 import { SEO } from "@/components/SEO";
+import { TrustpilotPromo } from "@/components/portal/TrustpilotPromo";
 
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 
@@ -78,6 +79,10 @@ export default function ContactPage() {
             سے متعلق سوالات یا اصلاح کے لیے ای میل کریں، اور براہِ کرم اپنا
             سبمیشن آئی ڈی ضرور لکھیں تاکہ ہم جلد جواب دے سکیں۔
           </p>
+        </FadeIn>
+
+        <FadeIn className="mt-8">
+          <TrustpilotPromo variant="card" />
         </FadeIn>
       </div>
     </div>

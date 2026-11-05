@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { site } from "@/data/content";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { FaWhatsapp, FaYoutube, FaInstagram, FaFacebookF, FaPinterestP, FaTelegram } from "react-icons/fa6";
+import { TrustpilotPromo } from "@/components/portal/TrustpilotPromo";
 
 export function SiteFooter() {
   const { settings } = useSiteSettings();
@@ -26,6 +27,9 @@ export function SiteFooter() {
           </div>
           <p className="urdu mt-2 max-w-sm text-sm opacity-80">{site.taglineUrdu}</p>
           <p className="mt-3 max-w-sm text-sm opacity-80">{site.tagline}</p>
+          <div className="mt-5">
+            <TrustpilotPromo variant="compact" />
+          </div>
         </div>
         <div>
           <p className="text-sm font-semibold">For Writers</p>

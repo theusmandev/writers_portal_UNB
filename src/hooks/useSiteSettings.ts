@@ -20,11 +20,21 @@ export function useSiteSettings() {
   });
 
   // Safe fallback settings object ensuring components never crash
-  const settings: SiteSettingsRow = query.data ?? {
-    ...defaultSiteSettings,
-    support_email: site.email,
-    main_website_url: site.mainSite,
-  };
+  const rawData = query.data;
+  const settings: SiteSettingsRow = rawData
+    ? {
+        ...defaultSiteSettings,
+        ...rawData,
+        trustpilot_url: rawData.trustpilot_url || defaultSiteSettings.trustpilot_url || site.trustpilotUrl,
+        show_trustpilot: rawData.show_trustpilot ?? defaultSiteSettings.show_trustpilot ?? true,
+      }
+    : {
+        ...defaultSiteSettings,
+        support_email: site.email,
+        main_website_url: site.mainSite,
+        trustpilot_url: site.trustpilotUrl,
+        show_trustpilot: true,
+      };
 
   return {
     ...query,

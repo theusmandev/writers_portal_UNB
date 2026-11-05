@@ -208,6 +208,8 @@ export interface Database {
           instagram_handle: string;
           instagram_url: string;
           show_floating_widget: boolean;
+          trustpilot_url: string;
+          show_trustpilot: boolean;
         };
         Insert: Omit<Database["public"]["Tables"]["site_settings"]["Row"], "id"> & { id?: number };
         Update: Partial<Database["public"]["Tables"]["site_settings"]["Insert"]>;
