@@ -1,6 +1,15 @@
 import { useEffect, useState, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { ExternalLink, BookOpen, User, AlertCircle, Star, Search, X, RotateCcw } from "lucide-react";
+import {
+  ExternalLink,
+  BookOpen,
+  User,
+  AlertCircle,
+  Star,
+  Search,
+  X,
+  RotateCcw,
+} from "lucide-react";
 import { PageHero } from "@/components/portal/PageHero";
 import { WriterCard } from "@/components/portal/WriterCard";
 import { supabase } from "@/lib/supabase";
@@ -70,7 +79,7 @@ export default function WritersPage() {
       result = result.filter(
         (w) =>
           (w.pen_name && w.pen_name.toLowerCase().includes(q)) ||
-          (w.full_name && w.full_name.toLowerCase().includes(q))
+          (w.full_name && w.full_name.toLowerCase().includes(q)),
       );
     }
 
@@ -102,9 +111,9 @@ export default function WritersPage() {
 
   return (
     <div>
-      <SEO 
-        title="Our Published Writers | Urdu Novel Bank" 
-        description="Explore the directory of talented writers published by Urdu Novel Bank. Discover the authors behind your favorite Urdu stories and novels." 
+      <SEO
+        title="Our Published Writers | Urdu Novel Bank"
+        description="Explore the directory of talented writers published by Urdu Novel Bank. Discover the authors behind your favorite Urdu stories and novels."
       />
       <PageHero
         eyebrow="Published Authors"
@@ -141,12 +150,16 @@ export default function WritersPage() {
             <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div className="text-lg font-medium">
                 {debouncedQuery.trim() ? (
-                  <>Showing {filteredAndSortedWriters.length} of {writers.length} Total Writers</>
+                  <>
+                    Showing {filteredAndSortedWriters.length} of {writers.length} Total Writers
+                  </>
                 ) : (
-                  <>{writers.length} Total {writers.length === 1 ? "Writer" : "Writers"}</>
+                  <>
+                    {writers.length} Total {writers.length === 1 ? "Writer" : "Writers"}
+                  </>
                 )}
               </div>
-              
+
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <div className="relative w-full sm:w-auto">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -161,6 +174,7 @@ export default function WritersPage() {
                       onClick={clearSearch}
                       className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground"
                       title="Clear search"
+                      aria-label="Clear search"
                     >
                       <X className="h-4 w-4" />
                     </button>
@@ -169,7 +183,10 @@ export default function WritersPage() {
 
                 <div className="flex flex-row items-center gap-3">
                   <div className="flex-1 sm:flex-none">
-                    <Select value={sortOption} onValueChange={(val) => setSortOption(val as SortOption)}>
+                    <Select
+                      value={sortOption}
+                      onValueChange={(val) => setSortOption(val as SortOption)}
+                    >
                       <SelectTrigger className="w-full sm:w-[160px]">
                         <SelectValue placeholder="Sort by" />
                       </SelectTrigger>
@@ -186,7 +203,10 @@ export default function WritersPage() {
                       checked={featuredFirst}
                       onCheckedChange={setFeaturedFirst}
                     />
-                    <Label htmlFor="featured-first" className="cursor-pointer whitespace-nowrap text-sm font-medium">
+                    <Label
+                      htmlFor="featured-first"
+                      className="cursor-pointer whitespace-nowrap text-sm font-medium"
+                    >
                       Featured First
                     </Label>
                   </div>
@@ -234,4 +254,3 @@ export default function WritersPage() {
     </div>
   );
 }
-

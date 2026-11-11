@@ -1,4 +1,4 @@
-import { sanitizeHtml } from "@/lib/sanitize";
+import { sanitizeHtml, optimizeCoverImageUrl } from "@/lib/sanitize";
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
@@ -39,80 +39,93 @@ type Novel = {
 
 function getSocialPlatform(url: string) {
   const lowerUrl = url.toLowerCase();
-  if (lowerUrl.includes("instagram.com")) return { 
-    name: "Instagram", 
-    Icon: Instagram, 
-    actionText: "Follow on Instagram", 
-    colorClass: "bg-gradient-to-tr from-amber-500 via-pink-500 to-purple-600 text-white",
-    accentClass: "bg-gradient-to-b from-amber-500 via-pink-500 to-purple-600"
-  };
-  if (lowerUrl.includes("facebook.com")) return { 
-    name: "Facebook", 
-    Icon: Facebook, 
-    actionText: "Follow on Facebook", 
-    colorClass: "bg-[#1877F2] text-white hover:bg-[#1877F2]/90",
-    accentClass: "bg-[#1877F2]"
-  };
-  if (lowerUrl.includes("twitter.com") || lowerUrl.includes("x.com")) return { 
-    name: "Twitter/X", 
-    Icon: Twitter, 
-    actionText: "Follow on X", 
-    colorClass: "bg-black text-white dark:bg-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90",
-    accentClass: "bg-black dark:bg-white"
-  };
-  if (lowerUrl.includes("youtube.com")) return { 
-    name: "YouTube", 
-    Icon: Youtube, 
-    actionText: "Subscribe on YouTube", 
-    colorClass: "bg-[#FF0000] text-white hover:bg-[#FF0000]/90",
-    accentClass: "bg-[#FF0000]"
-  };
-  if (lowerUrl.includes("tiktok.com")) return { 
-    name: "TikTok", 
-    Icon: Video, 
-    actionText: "Follow on TikTok", 
-    colorClass: "bg-black text-white dark:bg-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90",
-    accentClass: "bg-black dark:bg-white"
-  };
-  return { 
-    name: "Social Media Profile", 
-    Icon: LinkIcon, 
-    actionText: "Visit Profile", 
+  if (lowerUrl.includes("instagram.com"))
+    return {
+      name: "Instagram",
+      Icon: Instagram,
+      actionText: "Follow on Instagram",
+      colorClass: "bg-gradient-to-tr from-amber-500 via-pink-500 to-purple-600 text-white",
+      accentClass: "bg-gradient-to-b from-amber-500 via-pink-500 to-purple-600",
+    };
+  if (lowerUrl.includes("facebook.com"))
+    return {
+      name: "Facebook",
+      Icon: Facebook,
+      actionText: "Follow on Facebook",
+      colorClass: "bg-[#1877F2] text-white hover:bg-[#1877F2]/90",
+      accentClass: "bg-[#1877F2]",
+    };
+  if (lowerUrl.includes("twitter.com") || lowerUrl.includes("x.com"))
+    return {
+      name: "Twitter/X",
+      Icon: Twitter,
+      actionText: "Follow on X",
+      colorClass:
+        "bg-black text-white dark:bg-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90",
+      accentClass: "bg-black dark:bg-white",
+    };
+  if (lowerUrl.includes("youtube.com"))
+    return {
+      name: "YouTube",
+      Icon: Youtube,
+      actionText: "Subscribe on YouTube",
+      colorClass: "bg-[#FF0000] text-white hover:bg-[#FF0000]/90",
+      accentClass: "bg-[#FF0000]",
+    };
+  if (lowerUrl.includes("tiktok.com"))
+    return {
+      name: "TikTok",
+      Icon: Video,
+      actionText: "Follow on TikTok",
+      colorClass:
+        "bg-black text-white dark:bg-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90",
+      accentClass: "bg-black dark:bg-white",
+    };
+  return {
+    name: "Social Media Profile",
+    Icon: LinkIcon,
+    actionText: "Visit Profile",
     colorClass: "bg-primary text-primary-foreground hover:bg-primary/90",
-    accentClass: "bg-primary"
+    accentClass: "bg-primary",
   };
 }
 
 function extractHandle(url: string, platformName: string): string | null {
   try {
-    const urlObj = new URL(url.startsWith('http') ? url : `https://${url}`);
+    const urlObj = new URL(url.startsWith("http") ? url : `https://${url}`);
     let pathname = urlObj.pathname;
-    if (pathname.endsWith('/')) pathname = pathname.slice(0, -1);
-    const parts = pathname.split('/').filter(Boolean);
+    if (pathname.endsWith("/")) pathname = pathname.slice(0, -1);
+    const parts = pathname.split("/").filter(Boolean);
     const lastPart = parts[parts.length - 1];
-    
+
     if (!lastPart) return null;
-    
-    if (platformName === 'YouTube' || platformName === 'TikTok') {
-      const username = parts.find(p => p.startsWith('@'));
+
+    if (platformName === "YouTube" || platformName === "TikTok") {
+      const username = parts.find((p) => p.startsWith("@"));
       if (username) return username;
-      if (platformName === 'YouTube' && parts[0] === 'c') return `@${lastPart}`;
+      if (platformName === "YouTube" && parts[0] === "c") return `@${lastPart}`;
       return `@${lastPart}`;
     }
-    
-    if (['Instagram', 'Twitter/X', 'Facebook'].includes(platformName)) {
-      if (lastPart.toLowerCase() === 'profile.php' || lastPart.toLowerCase() === 'pages') return null;
-      return lastPart.startsWith('@') ? lastPart : `@${lastPart}`;
+
+    if (["Instagram", "Twitter/X", "Facebook"].includes(platformName)) {
+      if (lastPart.toLowerCase() === "profile.php" || lastPart.toLowerCase() === "pages")
+        return null;
+      return lastPart.startsWith("@") ? lastPart : `@${lastPart}`;
     }
     return null;
-  } catch(e) {
+  } catch (e) {
     return null;
   }
 }
 
 function NovelCoverCard({ novel }: { novel: Novel }) {
   const [imageError, setImageError] = useState(false);
-  const isNew = novel.novel_status === 'Ongoing' || (novel.novel_status === 'Complete' && novel.novel_published_at ? (new Date().getTime() - new Date(novel.novel_published_at).getTime()) <= 7 * 24 * 60 * 60 * 1000 : false);
+  const isNew =
+    novel.novel_status === "Ongoing" ||
+    (novel.novel_status === "Complete" && novel.novel_published_at
+      ? new Date().getTime() - new Date(novel.novel_published_at).getTime() <=
+        7 * 24 * 60 * 60 * 1000
+      : false);
 
   const resolvedUrl = novel.resolved_published_url || novel.published_url;
 
@@ -121,15 +134,21 @@ function NovelCoverCard({ novel }: { novel: Novel }) {
       <div className="relative aspect-[2/3] w-full overflow-hidden bg-muted/40">
         {!imageError && novel.public_cover_image_url ? (
           <img
-            src={novel.public_cover_image_url}
+            src={optimizeCoverImageUrl(novel.public_cover_image_url, 420)}
             alt={`Cover of ${novel.novel_title}`}
+            loading="lazy"
+            decoding="async"
+            width={300}
+            height={450}
             className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
             onError={() => setImageError(true)}
           />
         ) : (
           <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-muted/20">
             <BookOpen className="mb-3 h-8 w-8 text-muted-foreground/30" />
-            <span className="font-serif text-sm font-medium text-muted-foreground line-clamp-3">{novel.novel_title}</span>
+            <span className="font-serif text-sm font-medium text-muted-foreground line-clamp-3">
+              {novel.novel_title}
+            </span>
           </div>
         )}
       </div>
@@ -143,9 +162,12 @@ function NovelCoverCard({ novel }: { novel: Novel }) {
               New
             </span>
           )}
-          {novel.novel_status === 'Ongoing' && (
-            <span className={`inline-flex items-center rounded-full px-1.5 sm:px-2 py-0.5 text-[8px] sm:text-[9px] font-bold uppercase tracking-wider ${novel.is_completed ? 'bg-emerald-100 text-emerald-800' : 'bg-primary/10 text-primary'}`}>
-              {novel.is_completed ? 'Completed' : 'Ongoing'} • {novel.published_episode_count} {novel.published_episode_count === 1 ? 'ep' : 'eps'}
+          {novel.novel_status === "Ongoing" && (
+            <span
+              className={`inline-flex items-center rounded-full px-1.5 sm:px-2 py-0.5 text-[8px] sm:text-[9px] font-bold uppercase tracking-wider ${novel.is_completed ? "bg-emerald-100 text-emerald-800" : "bg-primary/10 text-primary"}`}
+            >
+              {novel.is_completed ? "Completed" : "Ongoing"} • {novel.published_episode_count}{" "}
+              {novel.published_episode_count === 1 ? "ep" : "eps"}
             </span>
           )}
           {novel.genre && (
@@ -160,9 +182,11 @@ function NovelCoverCard({ novel }: { novel: Novel }) {
               href={resolvedUrl}
               target="_blank"
               rel="noopener noreferrer"
+              aria-label={`Read Urdu novel ${novel.novel_title} online`}
               className="inline-flex w-full items-center justify-center gap-1 sm:gap-1.5 rounded-lg sm:rounded-xl bg-primary/10 px-2 py-1.5 sm:px-3 sm:py-2 text-[9px] sm:text-[10px] font-semibold text-primary transition-colors hover:bg-primary/20"
             >
-              Read <span className="hidden sm:inline">&nbsp;Novel</span> <ExternalLink className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+              Read <span className="hidden sm:inline">&nbsp;Novel</span>{" "}
+              <ExternalLink className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
             </a>
           ) : (
             <span className="inline-flex w-full items-center justify-center rounded-lg sm:rounded-xl bg-muted px-2 py-1.5 sm:px-3 sm:py-2 text-[9px] sm:text-[10px] font-semibold text-muted-foreground">
@@ -226,7 +250,9 @@ export default function SpotlightPage() {
 
       const listRes = await getSpotlightsList();
       if (listRes.success) {
-        const filtered = listRes.data.filter((s: any) => s.slug !== slug).slice(0, 3);
+        const filtered = (listRes.data as SpotlightSummary[])
+          .filter((s) => s.slug !== slug)
+          .slice(0, 3);
         setMoreSpotlights(filtered as SpotlightSummary[]);
       }
 
@@ -239,10 +265,7 @@ export default function SpotlightPage() {
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <SEO
-          title="Writer Spotlight — Urdu Novel Bank"
-          description="Loading writer spotlight."
-        />
+        <SEO title="Writer Spotlight — Urdu Novel Bank" description="Loading writer spotlight." />
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
@@ -263,17 +286,13 @@ export default function SpotlightPage() {
         </div>
 
         <div className="space-y-2">
-          <h1 className="font-display text-2xl font-bold tracking-tight">
-            Spotlight Not Found
-          </h1>
+          <h1 className="font-display text-2xl font-bold tracking-tight">Spotlight Not Found</h1>
           <p className="max-w-sm text-sm text-muted-foreground">
             {fetchError
               ? "Something went wrong while loading this page. Please try again later."
               : "This spotlight doesn't exist, is no longer active, or hasn't been published yet."}
           </p>
-          {fetchError && (
-            <p className="text-xs text-muted-foreground/60">{fetchError}</p>
-          )}
+          {fetchError && <p className="text-xs text-muted-foreground/60">{fetchError}</p>}
         </div>
 
         <Link
@@ -294,9 +313,7 @@ export default function SpotlightPage() {
 
   const socialLink = spotlight.social_media_link?.trim() || null;
   const socialHref =
-    socialLink && !socialLink.includes("://")
-      ? `https://${socialLink}`
-      : socialLink;
+    socialLink && !socialLink.includes("://") ? `https://${socialLink}` : socialLink;
 
   const handleShare = async () => {
     const url = window.location.href;
@@ -327,18 +344,22 @@ export default function SpotlightPage() {
 
   let seoDescription = `Read the featured spotlight for ${spotlight.display_name} on Urdu Novel Bank.`;
   if (spotlight.spotlight_content) {
-    const plainText = spotlight.spotlight_content.replace(/<[^>]+>/g, '').trim();
+    const plainText = spotlight.spotlight_content.replace(/<[^>]+>/g, "").trim();
     if (plainText) {
-      seoDescription = plainText.length > 155 ? plainText.substring(0, 155).trim() + "..." : plainText;
+      seoDescription =
+        plainText.length > 155 ? plainText.substring(0, 155).trim() + "..." : plainText;
     }
   }
 
-  const seoImage = novelsWithCovers.length > 0 ? novelsWithCovers[0].public_cover_image_url || undefined : undefined;
-  const pageTitle = spotlight.spotlight_label 
+  const seoImage =
+    novelsWithCovers.length > 0
+      ? novelsWithCovers[0].public_cover_image_url || undefined
+      : undefined;
+  const pageTitle = spotlight.spotlight_label
     ? `${spotlight.display_name} - ${spotlight.spotlight_label}`
     : spotlight.display_name;
 
-  const badgeLabel = spotlight.spotlight_label 
+  const badgeLabel = spotlight.spotlight_label
     ? `${spotlight.spotlight_label} Spotlight`
     : "Writer Spotlight";
 
@@ -354,12 +375,12 @@ export default function SpotlightPage() {
       {/* ── Spotlight Hero ── */}
       <div className="relative overflow-hidden bg-background py-20 sm:py-28 lg:py-32 border-b border-border">
         {/* Spotlight Beam Visual */}
-        <div 
+        <div
           className="pointer-events-none absolute inset-x-0 top-0 h-full overflow-hidden flex justify-center"
           aria-hidden="true"
         >
-          <svg 
-            viewBox="0 0 800 600" 
+          <svg
+            viewBox="0 0 800 600"
             className="absolute top-0 w-full max-w-[800px] h-[600px] opacity-80 dark:opacity-60"
             preserveAspectRatio="xMidYMin slice"
           >
@@ -380,33 +401,39 @@ export default function SpotlightPage() {
               <rect x="-3" y="10" width="6" height="25" className="fill-primary" />
               <circle cx="0" cy="35" r="5" className="fill-primary" />
             </g>
-            
+
             {/* Lamp and Beam */}
             <g transform="translate(520, 35) rotate(15)">
               {/* Ambient beam */}
-              <path 
-                d="M-22,27 L-400,600 L400,600 L22,27 Z" 
-                fill="url(#spotlight-beam)" 
-              />
+              <path d="M-22,27 L-400,600 L400,600 L22,27 Z" fill="url(#spotlight-beam)" />
               {/* Bright center beam */}
-              <path 
-                d="M-12,27 L-160,600 L160,600 L12,27 Z" 
-                fill="url(#spotlight-beam-core)" 
-              />
-              
+              <path d="M-12,27 L-160,600 L160,600 L12,27 Z" fill="url(#spotlight-beam-core)" />
+
               {/* Can-light Housing - Short & Wide */}
               {/* Hinge mount */}
               <path d="M-6,0 L6,0 L12,8 L-12,8 Z" className="fill-primary" />
-              
+
               {/* Main wide body */}
               <path d="M-16,8 L16,8 L22,22 L-22,22 Z" className="fill-primary" />
               {/* Horizontal heat sink ridges for detail */}
-              <path d="M-18,12 L18,12" stroke="currentColor" strokeWidth="1.5" className="text-background" opacity="0.6" />
-              <path d="M-20,17 L20,17" stroke="currentColor" strokeWidth="1.5" className="text-background" opacity="0.6" />
-              
+              <path
+                d="M-18,12 L18,12"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                className="text-background"
+                opacity="0.6"
+              />
+              <path
+                d="M-20,17 L20,17"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                className="text-background"
+                opacity="0.6"
+              />
+
               {/* Front bezel */}
               <rect x="-24" y="22" width="48" height="5" rx="1.5" className="fill-primary" />
-              
+
               {/* Bulb glow */}
               <ellipse cx="0" cy="27" rx="20" ry="4" fill="#fde68a" opacity="0.8" />
             </g>
@@ -420,7 +447,7 @@ export default function SpotlightPage() {
               {badgeLabel}
             </div>
           </div>
-          
+
           <h1 className="font-serif text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl lg:text-7xl">
             {spotlight.display_name}
           </h1>
@@ -429,7 +456,6 @@ export default function SpotlightPage() {
 
       {/* ── Body ── */}
       <div className="mx-auto max-w-3xl px-5 py-12 md:py-16 space-y-12">
-
         {/* Top bar: Back link & Share */}
         <div className="flex items-center justify-between">
           <Link
@@ -440,8 +466,8 @@ export default function SpotlightPage() {
             All Spotlights
           </Link>
 
-          <a 
-            href="https://portal.urdunovelbanks.com/updates/initial-push-new-writers-monthly-spotlight" 
+          <a
+            href="https://portal.urdunovelbanks.com/updates/initial-push-new-writers-monthly-spotlight"
             className="text-[10px] sm:text-[11px] font-medium text-muted-foreground hover:text-foreground underline underline-offset-4 transition-colors text-center px-1"
           >
             Why this Spotlight?
@@ -469,10 +495,10 @@ export default function SpotlightPage() {
         {sanitizedContent ? (
           <section aria-label="Spotlight content" className="relative mt-8">
             <h2 className="sr-only">Spotlight Content</h2>
-            
+
             {/* Decorative quote mark */}
-            <div 
-              className={`absolute -top-10 text-[10rem] text-primary/10 font-serif select-none pointer-events-none leading-none ${isUrdu ? '-right-4' : '-left-6'}`}
+            <div
+              className={`absolute -top-10 text-[10rem] text-primary/10 font-serif select-none pointer-events-none leading-none ${isUrdu ? "-right-4" : "-left-6"}`}
               aria-hidden="true"
             >
               &ldquo;
@@ -502,7 +528,7 @@ export default function SpotlightPage() {
             <h2 className="mb-6 text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
               Published Novels
             </h2>
-            
+
             {novelsWithCovers.length > 0 && (
               <div className="mb-6 grid grid-cols-3 gap-3 md:grid-cols-4 md:gap-4">
                 {novelsWithCovers.map((novel, idx) => (
@@ -514,97 +540,106 @@ export default function SpotlightPage() {
             {novelsWithoutCovers.length > 0 && (
               <ul className="space-y-3">
                 {novelsWithoutCovers.map((novel, idx) => {
-                  const isNew = novel.novel_status === 'Ongoing' || (novel.novel_status === 'Complete' && novel.novel_published_at ? (new Date().getTime() - new Date(novel.novel_published_at).getTime()) <= 7 * 24 * 60 * 60 * 1000 : false);
+                  const isNew =
+                    novel.novel_status === "Ongoing" ||
+                    (novel.novel_status === "Complete" && novel.novel_published_at
+                      ? new Date().getTime() - new Date(novel.novel_published_at).getTime() <=
+                        7 * 24 * 60 * 60 * 1000
+                      : false);
                   const resolvedUrl = novel.resolved_published_url || novel.published_url;
-                  
+
                   return (
-                  <li
-                    key={`list-${idx}`}
-                    className="flex items-start gap-3 rounded-xl border border-border bg-card px-5 py-4 shadow-soft"
-                  >
-                    <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                    <div className="flex-1 min-w-0">
-                      {resolvedUrl ? (
-                        <a
-                          href={resolvedUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="font-semibold text-primary hover:underline underline-offset-2 inline-flex items-center gap-1"
-                        >
-                          {novel.novel_title}
-                          <ExternalLink className="h-3.5 w-3.5 shrink-0" />
-                        </a>
-                      ) : (
-                        <span className="font-semibold">{novel.novel_title}</span>
-                      )}
-                      {isNew && (
-                        <span className="ml-2 inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-600 align-middle">
-                          New
-                        </span>
-                      )}
-                      {novel.novel_status === 'Ongoing' && (
-                        <span className={`ml-2 inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider align-middle ${novel.is_completed ? 'bg-emerald-100 text-emerald-800' : 'bg-primary/10 text-primary'}`}>
-                          {novel.is_completed ? 'Completed' : 'Ongoing'} • {novel.published_episode_count} {novel.published_episode_count === 1 ? 'episode' : 'episodes'}
-                        </span>
-                      )}
-                      {novel.genre && (
-                        <span className="ml-1.5 text-xs text-muted-foreground align-middle">
-                          · {novel.genre}
-                        </span>
-                      )}
-                    </div>
-                  </li>
-                )})}
+                    <li
+                      key={`list-${idx}`}
+                      className="flex items-start gap-3 rounded-xl border border-border bg-card px-5 py-4 shadow-soft"
+                    >
+                      <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                      <div className="flex-1 min-w-0">
+                        {resolvedUrl ? (
+                          <a
+                            href={resolvedUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label={`Read Urdu novel ${novel.novel_title} online`}
+                            className="font-semibold text-primary hover:underline underline-offset-2 inline-flex items-center gap-1"
+                          >
+                            {novel.novel_title}
+                            <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+                          </a>
+                        ) : (
+                          <span className="font-semibold">{novel.novel_title}</span>
+                        )}
+                        {isNew && (
+                          <span className="ml-2 inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-600 align-middle">
+                            New
+                          </span>
+                        )}
+                        {novel.novel_status === "Ongoing" && (
+                          <span
+                            className={`ml-2 inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider align-middle ${novel.is_completed ? "bg-emerald-100 text-emerald-800" : "bg-primary/10 text-primary"}`}
+                          >
+                            {novel.is_completed ? "Completed" : "Ongoing"} •{" "}
+                            {novel.published_episode_count}{" "}
+                            {novel.published_episode_count === 1 ? "episode" : "episodes"}
+                          </span>
+                        )}
+                        {novel.genre && (
+                          <span className="ml-1.5 text-xs text-muted-foreground align-middle">
+                            · {novel.genre}
+                          </span>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </section>
         )}
 
         {/* ── Social media link ── */}
-        {socialHref && (() => {
-          const { name, Icon, actionText, colorClass, accentClass } = getSocialPlatform(socialHref);
-          const handle = extractHandle(socialHref, name);
+        {socialHref &&
+          (() => {
+            const { name, Icon, actionText, colorClass, accentClass } =
+              getSocialPlatform(socialHref);
+            const handle = extractHandle(socialHref, name);
 
-          return (
-            <section aria-label="Social media">
-              <div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-soft w-full">
-                <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${accentClass}`} />
-                
-                <div className="p-6 pl-8">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Icon className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
-                      Connect With
-                    </span>
-                  </div>
+            return (
+              <section aria-label="Social media">
+                <div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-soft w-full">
+                  <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${accentClass}`} />
 
-                  <h3 className="font-serif italic text-3xl font-medium text-foreground mb-1">
-                    {spotlight.display_name}
-                  </h3>
+                  <div className="p-6 pl-8">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Icon className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                        Connect With
+                      </span>
+                    </div>
 
-                  {handle && (
-                    <p className="text-sm font-medium text-primary mb-4">
-                      {handle}
+                    <h2 className="font-serif italic text-3xl font-medium text-foreground mb-1">
+                      {spotlight.display_name}
+                    </h2>
+
+                    {handle && <p className="text-sm font-medium text-primary mb-4">{handle}</p>}
+
+                    <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+                      Stay in touch with the writer for exclusive novel updates and new releases.
                     </p>
-                  )}
 
-                  <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-                    Stay in touch with the writer for exclusive novel updates and new releases.
-                  </p>
-
-                  <a
-                    href={socialHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`block w-full rounded-xl px-4 py-3 text-center text-sm font-semibold transition-transform hover:scale-[1.02] active:scale-[0.98] ${colorClass}`}
-                  >
-                    {actionText}
-                  </a>
+                    <a
+                      href={socialHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`block w-full rounded-xl px-4 py-3 text-center text-sm font-semibold transition-transform hover:scale-[1.02] active:scale-[0.98] ${colorClass}`}
+                    >
+                      {actionText}
+                    </a>
+                  </div>
                 </div>
-              </div>
-            </section>
-          );
-        })()}
+              </section>
+            );
+          })()}
 
         {/* ── Read More Spotlights ── */}
         {moreSpotlights.length > 0 && (
@@ -614,7 +649,13 @@ export default function SpotlightPage() {
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
               {moreSpotlights.map((s, i) => (
-                <SpotlightCard key={s.id} spotlight={s} delayMs={i * 100} layout="grid" />
+                <SpotlightCard
+                  key={s.id}
+                  spotlight={s}
+                  delayMs={i * 100}
+                  layout="grid"
+                  headingLevel="h3"
+                />
               ))}
             </div>
           </section>

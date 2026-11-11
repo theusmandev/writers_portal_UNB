@@ -115,7 +115,12 @@ export function SiteFooter() {
               </Link>
             </li>
             <li>
-              <a href={mainSiteUrl} className="hover:text-primary-glow transition-colors">
+              <a
+                href={mainSiteUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-primary-glow transition-colors"
+              >
                 Main Website
               </a>
             </li>

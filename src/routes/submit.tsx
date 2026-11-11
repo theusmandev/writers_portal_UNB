@@ -2,7 +2,18 @@ import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import DOMPurify from "dompurify";
 import { z } from "zod";
-import { CheckCircle2, Info, Loader2, FileText, Image, Copy, Check, Plus, Trash2, XCircle } from "lucide-react";
+import {
+  CheckCircle2,
+  Info,
+  Loader2,
+  FileText,
+  Image,
+  Copy,
+  Check,
+  Plus,
+  Trash2,
+  XCircle,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,22 +21,32 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PageHero } from "@/components/portal/PageHero";
 import { genres, site, getMissingFileMessage } from "@/data/content";
-import { isDemoMode, submitNovel, uploadFileToScript, updateSubmissionFiles, sendNotificationEmail, getWriterInfoByEmail, uploadEpisodeFile, saveEpisodeRecord, getSubmissionSettings, checkEpisodeMinimumException, type SubmissionRecord } from "@/services/portalApi";
+import {
+  isDemoMode,
+  submitNovel,
+  uploadFileToScript,
+  updateSubmissionFiles,
+  sendNotificationEmail,
+  getWriterInfoByEmail,
+  uploadEpisodeFile,
+  saveEpisodeRecord,
+  getSubmissionSettings,
+  checkEpisodeMinimumException,
+  type SubmissionRecord,
+} from "@/services/portalApi";
 import { SEO } from "@/components/SEO";
 import { supabase } from "@/lib/supabase";
 import { TrustpilotPromo } from "@/components/portal/TrustpilotPromo";
-
-
 
 const MAX_FILE_MB = 25;
 const ALLOWED_DOC = [".doc", ".docx", ".pdf", ".txt", ".rtf", ".inp", ".ipf"];
 const ALLOWED_IMG = [".jpg", ".jpeg", ".png"];
 
 function formatBytes(bytes: number, decimals = 1) {
-  if (!+bytes) return '0 Bytes';
+  if (!+bytes) return "0 Bytes";
   const k = 1024;
   const dm = decimals < 0 ? 0 : decimals;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+  const sizes = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
 }
@@ -42,10 +63,15 @@ const schema = z.object({
     .regex(/^[+0-9\s-]+$/, "Only digits, spaces, + and - are allowed"),
   location: z.string().trim().max(100).optional(),
   bio: z.string().trim().max(600).optional(),
-  socialMediaLink: z.string().trim().optional().transform(val => {
-    if (!val) return val;
-    return val.includes('://') ? val : `https://${val}`;
-  }).pipe(z.string().url("Please enter a valid URL").optional().or(z.literal(""))),
+  socialMediaLink: z
+    .string()
+    .trim()
+    .optional()
+    .transform((val) => {
+      if (!val) return val;
+      return val.includes("://") ? val : `https://${val}`;
+    })
+    .pipe(z.string().url("Please enter a valid URL").optional().or(z.literal(""))),
   novelTitle: z.string().trim().min(2, "Please enter the novel title").max(150),
   genre: z.string().min(1, "Please choose a genre"),
   novelStatus: z.enum(["Complete", "Ongoing"]),
@@ -121,7 +147,9 @@ function RotatingWaitText() {
   }, []);
 
   return (
-    <span className={`transition-opacity duration-300 ease-in-out ${fade ? "opacity-100" : "opacity-0"}`}>
+    <span
+      className={`transition-opacity duration-300 ease-in-out ${fade ? "opacity-100" : "opacity-0"}`}
+    >
       {WAITING_MESSAGES[index]}
     </span>
   );
@@ -132,7 +160,7 @@ export default function SubmitPage() {
   const [errors, setErrors] = useState<Errors>({});
   const [manuscript, setManuscript] = useState<File | null>(null);
   const [cover, setCover] = useState<File | null>(null);
-  
+
   type EpisodeSlot = {
     id: string;
     file: File | null;
@@ -140,7 +168,7 @@ export default function SubmitPage() {
   };
   const [minEpisodes, setMinEpisodes] = useState(3);
   const [episodes, setEpisodes] = useState<EpisodeSlot[]>(
-    Array.from({ length: 3 }, (_, i) => ({ id: crypto.randomUUID(), file: null, number: i + 1 }))
+    Array.from({ length: 3 }, (_, i) => ({ id: crypto.randomUUID(), file: null, number: i + 1 })),
   );
 
   // Check minimum episodes based on email and novel status
@@ -150,7 +178,14 @@ export default function SubmitPage() {
     const adjustEpisodes = (prev: EpisodeSlot[], targetMin: number) => {
       if (prev.length < targetMin) {
         const diff = targetMin - prev.length;
-        return [...prev, ...Array.from({ length: diff }, (_, i) => ({ id: crypto.randomUUID(), file: null, number: prev.length + i + 1 }))];
+        return [
+          ...prev,
+          ...Array.from({ length: diff }, (_, i) => ({
+            id: crypto.randomUUID(),
+            file: null,
+            number: prev.length + i + 1,
+          })),
+        ];
       } else if (prev.length > targetMin) {
         const next = [...prev];
         for (let i = next.length - 1; i >= 0 && next.length > targetMin; i--) {
@@ -168,7 +203,7 @@ export default function SubmitPage() {
       if (!form.email || !/^\S+@\S+\.\S+$/.test(form.email)) {
         if (minEpisodes !== 3) {
           setMinEpisodes(3);
-          setEpisodes(prev => adjustEpisodes(prev, 3));
+          setEpisodes((prev) => adjustEpisodes(prev, 3));
         }
         return;
       }
@@ -177,10 +212,10 @@ export default function SubmitPage() {
       const newMin = isExempt ? 1 : 3;
       if (newMin !== minEpisodes) {
         setMinEpisodes(newMin);
-        setEpisodes(prev => adjustEpisodes(prev, newMin));
+        setEpisodes((prev) => adjustEpisodes(prev, newMin));
       }
     };
-    
+
     // Simple debounce
     const timer = setTimeout(checkMin, 500);
     return () => {
@@ -190,22 +225,30 @@ export default function SubmitPage() {
   }, [form.email, form.novelStatus, minEpisodes]);
 
   const addEpisode = () => {
-    setEpisodes(prev => [...prev, { id: crypto.randomUUID(), file: null, number: prev.length + 1 }]);
+    setEpisodes((prev) => [
+      ...prev,
+      { id: crypto.randomUUID(), file: null, number: prev.length + 1 },
+    ]);
   };
 
   const removeEpisode = (idToRemove: string) => {
     if (episodes.length <= minEpisodes) return;
-    setEpisodes(prev => {
-      const next = prev.filter(ep => ep.id !== idToRemove);
+    setEpisodes((prev) => {
+      const next = prev.filter((ep) => ep.id !== idToRemove);
       return next.map((ep, idx) => ({ ...ep, number: idx + 1 }));
     });
   };
 
   const setEpisodeFile = (id: string, file: File | null) => {
-    setEpisodes(prev => prev.map(ep => ep.id === id ? { ...ep, file } : ep));
+    setEpisodes((prev) => prev.map((ep) => (ep.id === id ? { ...ep, file } : ep)));
   };
 
-  const [agree, setAgree] = useState({ guidelines: false, policy: false, rights: false, contentPolicy: false });
+  const [agree, setAgree] = useState({
+    guidelines: false,
+    policy: false,
+    rights: false,
+    contentPolicy: false,
+  });
   const [submitting, setSubmitting] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -215,7 +258,10 @@ export default function SubmitPage() {
   // Auto-fill state
   const [autoFillEmail, setAutoFillEmail] = useState("");
   const [autoFillLoading, setAutoFillLoading] = useState(false);
-  const [autoFillMessage, setAutoFillMessage] = useState<{ text: string; type: "success" | "info" | "error" } | null>(null);
+  const [autoFillMessage, setAutoFillMessage] = useState<{
+    text: string;
+    type: "success" | "info" | "error";
+  } | null>(null);
 
   // Settings state
   const [settingsLoading, setSettingsLoading] = useState(true);
@@ -225,7 +271,10 @@ export default function SubmitPage() {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [gateEmail, setGateEmail] = useState("");
   const [gateLoading, setGateLoading] = useState(false);
-  const [gateMessage, setGateMessage] = useState<{text: string, type: "error"|"success"} | null>(null);
+  const [gateMessage, setGateMessage] = useState<{
+    text: string;
+    type: "error" | "success";
+  } | null>(null);
 
   const formTopRef = useRef<HTMLElement>(null);
 
@@ -233,7 +282,7 @@ export default function SubmitPage() {
     if (isUnlocked && formTopRef.current) {
       // Add a slight delay to ensure layout is fully updated before scrolling
       setTimeout(() => {
-        formTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        formTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 50);
     }
   }, [isUnlocked]);
@@ -255,10 +304,10 @@ export default function SubmitPage() {
       setAutoFillMessage({ text: "Please enter a valid email address.", type: "error" });
       return;
     }
-    
+
     setAutoFillLoading(true);
     setAutoFillMessage(null);
-    
+
     const res = await getWriterInfoByEmail(autoFillEmail);
     if (res.success && res.data) {
       setForm((prev) => ({
@@ -270,11 +319,14 @@ export default function SubmitPage() {
         bio: res.data.bio || prev.bio,
         socialMediaLink: res.data.social_media_link || prev.socialMediaLink,
       }));
-      setAutoFillMessage({ text: "Your info has been auto-filled! You can still edit it below if needed.", type: "success" });
+      setAutoFillMessage({
+        text: "Your info has been auto-filled! You can still edit it below if needed.",
+        type: "success",
+      });
     } else {
-      setAutoFillMessage({ 
-        text: "We couldn't find a previous submission with this email — no problem, just fill in your details below.", 
-        type: "info" 
+      setAutoFillMessage({
+        text: "We couldn't find a previous submission with this email — no problem, just fill in your details below.",
+        type: "info",
       });
     }
     setAutoFillLoading(false);
@@ -288,33 +340,40 @@ export default function SubmitPage() {
     setGateLoading(true);
     setGateMessage(null);
     try {
-      const { data, error } = await supabase.rpc("is_existing_writer", { p_email: gateEmail.trim() });
+      const { data, error } = await supabase.rpc("is_existing_writer", {
+        p_email: gateEmail.trim(),
+      });
       if (error) throw error;
       if (data) {
         setAutoFillEmail(gateEmail.trim());
         setIsUnlocked(true);
       } else {
-        setGateMessage({ 
-          text: "اس ای میل سے کوئی پرانا ریکارڈ نہیں ملا۔ نئے ناولز کی وصولی فی الحال بند ہے، براہ کرم بعد میں دوبارہ چیک کریں۔", 
-          type: "error" 
+        setGateMessage({
+          text: "اس ای میل سے کوئی پرانا ریکارڈ نہیں ملا۔ نئے ناولز کی وصولی فی الحال بند ہے، براہ کرم بعد میں دوبارہ چیک کریں۔",
+          type: "error",
         });
       }
-    } catch (err: any) {
-      setGateMessage({ text: "ای میل چیک کرنے میں مسئلہ ہوا۔ براہ کرم دوبارہ کوشش کریں۔", type: "error" });
+    } catch {
+      setGateMessage({
+        text: "ای میل چیک کرنے میں مسئلہ ہوا۔ براہ کرم دوبارہ کوشش کریں۔",
+        type: "error",
+      });
     } finally {
       setGateLoading(false);
     }
   }
 
-
   const copyToClipboard = () => {
     if (result?.submissionId) {
-      navigator.clipboard.writeText(result.submissionId).then(() => {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      }).catch(() => {
-        // Fallback for browsers without Clipboard API
-      });
+      navigator.clipboard
+        .writeText(result.submissionId)
+        .then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        })
+        .catch(() => {
+          // Fallback for browsers without Clipboard API
+        });
     }
   };
 
@@ -323,14 +382,18 @@ export default function SubmitPage() {
   const [manuscriptProgress, setManuscriptProgress] = useState(0);
   const [coverStatus, setCoverStatus] = useState<UploadStepState>("pending");
   const [coverProgress, setCoverProgress] = useState(0);
-  const [retryTrigger, setRetryTrigger] = useState<{ resolve: (action: "retry" | "skip") => void, type: "manuscript" | "cover" } | null>(null);
+  const [retryTrigger, setRetryTrigger] = useState<{
+    resolve: (action: "retry" | "skip") => void;
+    type: "manuscript" | "cover";
+  } | null>(null);
 
   const [episodeStatuses, setEpisodeStatuses] = useState<Record<string, UploadStepState>>({});
   const [episodeProgresses, setEpisodeProgresses] = useState<Record<string, number>>({});
-  const [episodeRetryTriggers, setEpisodeRetryTriggers] = useState<Record<string, { resolve: (action: "retry" | "skip") => void }>>({});
+  const [episodeRetryTriggers, setEpisodeRetryTriggers] = useState<
+    Record<string, { resolve: (action: "retry" | "skip") => void }>
+  >({});
 
-  const set = (key: keyof typeof empty, value: string) =>
-    setForm((f) => ({ ...f, [key]: value }));
+  const set = (key: keyof typeof empty, value: string) => setForm((f) => ({ ...f, [key]: value }));
 
   function validateFile(file: File | null, allowed: string[], required: boolean, key: string) {
     if (!file) return required ? "Please attach your manuscript file" : undefined;
@@ -367,7 +430,7 @@ export default function SubmitPage() {
     if (!parsed.success) {
       for (const issue of parsed.error.issues) next[String(issue.path[0])] = issue.message;
     }
-    
+
     if (form.novelStatus === "Ongoing") {
       let epError = false;
       const nextEps = [...episodes];
@@ -390,7 +453,7 @@ export default function SubmitPage() {
       const manuscriptError = validateFile(manuscript, ALLOWED_DOC, true, "manuscript");
       if (manuscriptError) next["manuscript"] = manuscriptError;
     }
-    
+
     const coverError = validateFile(cover, ALLOWED_IMG, false, "cover");
     if (coverError) next["cover"] = coverError;
     if (!agree.guidelines || !agree.policy || !agree.rights || !agree.contentPolicy)
@@ -435,15 +498,15 @@ export default function SubmitPage() {
     async function performUpload(file: File, type: "manuscript" | "cover") {
       const setStatus = type === "manuscript" ? setManuscriptStatus : setCoverStatus;
       const setProgress = type === "manuscript" ? setManuscriptProgress : setCoverProgress;
-      
+
       while (true) {
         setStatus("uploading");
         setProgress(0);
         setUploadStatus(`Uploading ${type === "manuscript" ? "manuscript" : "cover image"}...`);
-        
+
         const controller = new AbortController();
         const timeoutMs = 90000 + (file.size / (1024 * 1024)) * 30000;
-        
+
         let retryResolve: ((action: "retry" | "skip") => void) | null = null;
         const retryPromise = new Promise<"retry" | "skip">((resolve) => {
           retryResolve = resolve;
@@ -456,18 +519,20 @@ export default function SubmitPage() {
             resolve: (action) => {
               controller.abort();
               retryResolve!(action);
-            }
+            },
           });
         }, timeoutMs);
 
         const stopSim = simulateProgress(file.size, setProgress);
-        
+
         try {
           const res = await Promise.race([
             uploadFileToScript(code, type, file, controller.signal),
-            retryPromise.then((action) => { throw new Error(action === "skip" ? "SKIP_UPLOAD" : "MANUAL_RETRY"); })
+            retryPromise.then((action) => {
+              throw new Error(action === "skip" ? "SKIP_UPLOAD" : "MANUAL_RETRY");
+            }),
           ]);
-          
+
           clearTimeout(timeoutId);
           stopSim();
           setRetryTrigger(null);
@@ -484,40 +549,52 @@ export default function SubmitPage() {
             setStatus("timeout");
             // Treat as timeout to allow retry
             const action = await new Promise<"retry" | "skip">((resolve) => {
-              setRetryTrigger({ type, resolve: (a) => { controller.abort(); resolve(a); } });
+              setRetryTrigger({
+                type,
+                resolve: (a) => {
+                  controller.abort();
+                  resolve(a);
+                },
+              });
             });
             if (action === "skip") {
               setStatus("error");
               await updateSubmissionFiles(code, {
-                [type === "manuscript" ? "manuscriptUploadFailed" : "coverUploadFailed"]: true
+                [type === "manuscript" ? "manuscriptUploadFailed" : "coverUploadFailed"]: true,
               });
               return false;
             }
             continue;
           }
-        } catch (err: any) {
+        } catch (err: unknown) {
           clearTimeout(timeoutId);
           stopSim();
           setRetryTrigger(null);
-          
-          if (err.message === "MANUAL_RETRY") {
+
+          if ((err as Error)?.message === "MANUAL_RETRY") {
             continue;
           } else if (err.message === "SKIP_UPLOAD") {
             setStatus("error");
             await updateSubmissionFiles(code, {
-              [type === "manuscript" ? "manuscriptUploadFailed" : "coverUploadFailed"]: true
+              [type === "manuscript" ? "manuscriptUploadFailed" : "coverUploadFailed"]: true,
             });
             return false;
           } else {
             setStatus("timeout");
             // Treat as timeout to allow retry
             const action = await new Promise<"retry" | "skip">((resolve) => {
-              setRetryTrigger({ type, resolve: (a) => { controller.abort(); resolve(a); } });
+              setRetryTrigger({
+                type,
+                resolve: (a) => {
+                  controller.abort();
+                  resolve(a);
+                },
+              });
             });
             if (action === "skip") {
               setStatus("error");
               await updateSubmissionFiles(code, {
-                [type === "manuscript" ? "manuscriptUploadFailed" : "coverUploadFailed"]: true
+                [type === "manuscript" ? "manuscriptUploadFailed" : "coverUploadFailed"]: true,
               });
               return false;
             }
@@ -529,85 +606,114 @@ export default function SubmitPage() {
 
     async function performEpisodeUpload(ep: EpisodeSlot) {
       if (!ep.file) return false;
-      
+
       while (true) {
-        setEpisodeStatuses(prev => ({ ...prev, [ep.id]: "uploading" }));
-        setEpisodeProgresses(prev => ({ ...prev, [ep.id]: 0 }));
-        
+        setEpisodeStatuses((prev) => ({ ...prev, [ep.id]: "uploading" }));
+        setEpisodeProgresses((prev) => ({ ...prev, [ep.id]: 0 }));
+
         const controller = new AbortController();
         const timeoutMs = 90000 + (ep.file.size / (1024 * 1024)) * 30000;
-        
+
         let retryResolve: ((action: "retry" | "skip") => void) | null = null;
         const retryPromise = new Promise<"retry" | "skip">((resolve) => {
           retryResolve = resolve;
         });
 
         const timeoutId = setTimeout(() => {
-          setEpisodeStatuses(prev => ({ ...prev, [ep.id]: "timeout" }));
-          setEpisodeRetryTriggers(prev => ({
+          setEpisodeStatuses((prev) => ({ ...prev, [ep.id]: "timeout" }));
+          setEpisodeRetryTriggers((prev) => ({
             ...prev,
             [ep.id]: {
               resolve: (action) => {
                 controller.abort();
                 retryResolve!(action);
-              }
-            }
+              },
+            },
           }));
         }, timeoutMs);
 
-        const stopSim = simulateProgress(ep.file.size, (p) => setEpisodeProgresses(prev => ({ ...prev, [ep.id]: p })));
-        
+        const stopSim = simulateProgress(ep.file.size, (p) =>
+          setEpisodeProgresses((prev) => ({ ...prev, [ep.id]: p })),
+        );
+
         try {
           const res = await Promise.race([
             uploadEpisodeFile(code, ep.number, ep.file, controller.signal),
-            retryPromise.then((action) => { throw new Error(action === "skip" ? "SKIP_UPLOAD" : "MANUAL_RETRY"); })
+            retryPromise.then((action) => {
+              throw new Error(action === "skip" ? "SKIP_UPLOAD" : "MANUAL_RETRY");
+            }),
           ]);
-          
+
           clearTimeout(timeoutId);
           stopSim();
-          setEpisodeRetryTriggers(prev => { const n = {...prev}; delete n[ep.id]; return n; });
+          setEpisodeRetryTriggers((prev) => {
+            const n = { ...prev };
+            delete n[ep.id];
+            return n;
+          });
 
           if (res.success) {
-            await saveEpisodeRecord(code, ep.number, res.fileUrl || null, res.fileId || null, ep.file.name, false);
-            setEpisodeStatuses(prev => ({ ...prev, [ep.id]: "done" }));
-            setEpisodeProgresses(prev => ({ ...prev, [ep.id]: 100 }));
+            await saveEpisodeRecord(
+              code,
+              ep.number,
+              res.fileUrl || null,
+              res.fileId || null,
+              ep.file.name,
+              false,
+            );
+            setEpisodeStatuses((prev) => ({ ...prev, [ep.id]: "done" }));
+            setEpisodeProgresses((prev) => ({ ...prev, [ep.id]: 100 }));
             return true;
           } else {
-            setEpisodeStatuses(prev => ({ ...prev, [ep.id]: "timeout" }));
+            setEpisodeStatuses((prev) => ({ ...prev, [ep.id]: "timeout" }));
             const action = await new Promise<"retry" | "skip">((resolve) => {
-              setEpisodeRetryTriggers(prev => ({
+              setEpisodeRetryTriggers((prev) => ({
                 ...prev,
-                [ep.id]: { resolve: (a) => { controller.abort(); resolve(a); } }
+                [ep.id]: {
+                  resolve: (a) => {
+                    controller.abort();
+                    resolve(a);
+                  },
+                },
               }));
             });
             if (action === "skip") {
-              setEpisodeStatuses(prev => ({ ...prev, [ep.id]: "error" }));
+              setEpisodeStatuses((prev) => ({ ...prev, [ep.id]: "error" }));
               await saveEpisodeRecord(code, ep.number, null, null, ep.file.name, true);
               return false;
             }
             continue;
           }
-        } catch (err: any) {
+        } catch (err: unknown) {
           clearTimeout(timeoutId);
           stopSim();
-          setEpisodeRetryTriggers(prev => { const n = {...prev}; delete n[ep.id]; return n; });
-          
-          if (err.message === "MANUAL_RETRY") {
+          setEpisodeRetryTriggers((prev) => {
+            const n = { ...prev };
+            delete n[ep.id];
+            return n;
+          });
+
+          if ((err as Error)?.message === "MANUAL_RETRY") {
             continue;
           } else if (err.message === "SKIP_UPLOAD") {
-            setEpisodeStatuses(prev => ({ ...prev, [ep.id]: "error" }));
+            setEpisodeStatuses((prev) => ({ ...prev, [ep.id]: "error" }));
             await saveEpisodeRecord(code, ep.number, null, null, ep.file.name, true);
             return false;
           } else {
-            setEpisodeStatuses(prev => ({ ...prev, [ep.id]: "timeout" }));
+            setEpisodeStatuses((prev) => ({ ...prev, [ep.id]: "timeout" }));
             const action = await new Promise<"retry" | "skip">((resolve) => {
-              setEpisodeRetryTriggers(prev => ({
+              setEpisodeRetryTriggers((prev) => ({
                 ...prev,
-                [ep.id]: { resolve: (a) => { controller.abort(); resolve(a); } }
+                [ep.id]: {
+                  resolve: (a) => {
+                    controller.abort();
+                    resolve(a);
+                  },
+                },
               }));
             });
             if (action === "skip") {
-              setEpisodeStatuses(prev => ({ ...prev, [ep.id]: "error" }));
+              setEpisodeStatuses((prev) => ({ ...prev, [ep.id]: "error" }));
               await saveEpisodeRecord(code, ep.number, null, null, ep.file.name, true);
               return false;
             }
@@ -624,10 +730,10 @@ export default function SubmitPage() {
       } else if (form.novelStatus === "Ongoing") {
         setUploadStatus("Uploading episodes...");
         let completedEps = 0;
-        
-        const tasks = episodes.map(ep => async () => {
+
+        const tasks = episodes.map((ep) => async () => {
           if (ep.file) {
-            setEpisodeStatuses(prev => ({ ...prev, [ep.id]: "pending" }));
+            setEpisodeStatuses((prev) => ({ ...prev, [ep.id]: "pending" }));
             const ok = await performEpisodeUpload(ep);
             if (!ok) failedFiles.push(`episode ${ep.number}`);
             completedEps++;
@@ -657,7 +763,9 @@ export default function SubmitPage() {
         writerName: form.penName || form.fullName,
         novelTitle: form.novelTitle,
         submissionCode: code,
-        ...(failedFiles.length > 0 && { missingFiles: failedFiles.length === 2 ? "manuscript and cover" : failedFiles[0] }),
+        ...(failedFiles.length > 0 && {
+          missingFiles: failedFiles.length === 2 ? "manuscript and cover" : failedFiles[0],
+        }),
         ...(form.novelStatus === "Ongoing" && { episodeCount: episodes.length }),
       };
       await sendNotificationEmail("received", emailPayload);
@@ -669,12 +777,17 @@ export default function SubmitPage() {
     setResult({
       ...record,
       episodeCount: form.novelStatus === "Ongoing" ? episodes.length : undefined,
-      episodes: form.novelStatus === "Ongoing" 
-        ? episodes.map(ep => ({ episode_number: ep.number, upload_failed: failedFiles.includes(`episode ${ep.number}`) }))
-        : undefined,
-      note: failedFiles.length > 0
-        ? `⚠️ File upload failed. ${getMissingFileMessage(failedFiles, code)}`
-        : undefined,
+      episodes:
+        form.novelStatus === "Ongoing"
+          ? episodes.map((ep) => ({
+              episode_number: ep.number,
+              upload_failed: failedFiles.includes(`episode ${ep.number}`),
+            }))
+          : undefined,
+      note:
+        failedFiles.length > 0
+          ? `⚠️ File upload failed. ${getMissingFileMessage(failedFiles, code)}`
+          : undefined,
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -682,24 +795,29 @@ export default function SubmitPage() {
   if (result) {
     return (
       <div className="mx-auto max-w-2xl px-4 sm:px-5 py-20 space-y-6">
-        <SEO 
-          title="Submit Your Novel | Urdu Novel Bank Writer Portal" 
-          description="Ready to publish? Submit your Urdu novel manuscript through our secure writer portal. Share your stories with a growing community of readers." 
+        <SEO
+          title="Submit Your Novel | Urdu Novel Bank Writer Portal"
+          description="Ready to publish? Submit your Urdu novel manuscript through our secure writer portal. Share your stories with a growing community of readers."
         />
         <div className="rounded-2xl border border-border bg-card p-5 sm:p-8 text-center shadow-elegant">
           <CheckCircle2 className="mx-auto size-10 text-primary" />
           <h1 className="mt-4 text-2xl font-semibold">Submission Successful</h1>
           <p className="urdu mt-1 text-xl text-muted-foreground">
-            {result.episodeCount && result.episodeCount > 0 
-              ? `آپ کے ناول کی ${result.episodeCount} اقساط موصول ہو گئی ہیں` 
+            {result.episodeCount && result.episodeCount > 0
+              ? `آپ کے ناول کی ${result.episodeCount} اقساط موصول ہو گئی ہیں`
               : "آپ کا ناول موصول ہو گیا ہے"}
           </p>
           <p className="mt-4 text-sm text-muted-foreground">
-            Thank you for submitting <span className="font-medium text-foreground break-words [word-break:break-word]">{result.novelTitle}</span>.
-            Please save your Submission ID — you will need it to track your novel.
+            Thank you for submitting{" "}
+            <span className="font-medium text-foreground break-words [word-break:break-word]">
+              {result.novelTitle}
+            </span>
+            . Please save your Submission ID — you will need it to track your novel.
           </p>
           <div className="mt-6 flex flex-col items-center justify-center rounded-xl border border-dashed border-primary/40 bg-primary/5 p-4 sm:p-5 relative">
-            <p className="text-xs tracking-[0.2em] text-muted-foreground uppercase">Submission ID</p>
+            <p className="text-xs tracking-[0.2em] text-muted-foreground uppercase">
+              Submission ID
+            </p>
             <div className="mt-1 flex items-center gap-2 sm:gap-3">
               <p className="font-display text-2xl sm:text-3xl tracking-tight sm:tracking-normal font-semibold text-primary">
                 {result.submissionId}
@@ -708,6 +826,7 @@ export default function SubmitPage() {
                 onClick={copyToClipboard}
                 className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
                 title="Copy Submission ID"
+                aria-label="Copy Submission ID"
               >
                 {copied ? <Check className="size-5 text-green-500" /> : <Copy className="size-5" />}
               </button>
@@ -716,14 +835,26 @@ export default function SubmitPage() {
           {result.episodes && result.episodes.length > 0 && (
             <div className="mt-5 rounded-xl border border-border bg-muted/30 p-4 sm:p-5 text-left">
               <p className="font-semibold text-sm mb-3">
-                Episodes Submitted: {result.episodes.filter(e => !e.upload_failed).length} of {result.episodeCount}
+                Episodes Submitted: {result.episodes.filter((e) => !e.upload_failed).length} of{" "}
+                {result.episodeCount}
               </p>
               <div className="flex flex-wrap gap-3">
-                {result.episodes.map(ep => (
-                  <div key={ep.episode_number} className={`flex items-center gap-1.5 text-sm ${ep.upload_failed ? 'text-destructive' : 'text-green-600'}`}>
-                    {ep.upload_failed ? <XCircle className="size-4 shrink-0" /> : <CheckCircle2 className="size-4 shrink-0" />}
-                    <span className={ep.upload_failed ? "line-through opacity-70" : ""}>Episode {ep.episode_number}</span>
-                    {ep.upload_failed && <span className="text-xs ml-1 no-underline opacity-100">(failed)</span>}
+                {result.episodes.map((ep) => (
+                  <div
+                    key={ep.episode_number}
+                    className={`flex items-center gap-1.5 text-sm ${ep.upload_failed ? "text-destructive" : "text-green-600"}`}
+                  >
+                    {ep.upload_failed ? (
+                      <XCircle className="size-4 shrink-0" />
+                    ) : (
+                      <CheckCircle2 className="size-4 shrink-0" />
+                    )}
+                    <span className={ep.upload_failed ? "line-through opacity-70" : ""}>
+                      Episode {ep.episode_number}
+                    </span>
+                    {ep.upload_failed && (
+                      <span className="text-xs ml-1 no-underline opacity-100">(failed)</span>
+                    )}
                   </div>
                 ))}
               </div>
@@ -735,11 +866,17 @@ export default function SubmitPage() {
             </div>
           )}
           <p className="mt-6 text-sm text-muted-foreground leading-relaxed break-words px-2 sm:px-0">
-            A confirmation email will be sent to <span className="font-medium text-foreground">{result.email}</span>.<br className="hidden sm:inline" /> Next stage: initial screening.
+            A confirmation email will be sent to{" "}
+            <span className="font-medium text-foreground">{result.email}</span>.
+            <br className="hidden sm:inline" /> Next stage: initial screening.
           </p>
           <div className="mt-7 flex flex-wrap justify-center gap-3">
             <Button asChild>
-              <Link to={`/track?code=${result.submissionId}&email=${encodeURIComponent(result.email)}`}>Track Submission</Link>
+              <Link
+                to={`/track?code=${result.submissionId}&email=${encodeURIComponent(result.email)}`}
+              >
+                Track Submission
+              </Link>
             </Button>
             <Button asChild variant="outline">
               <Link to="/process">See What Happens Next</Link>
@@ -755,9 +892,9 @@ export default function SubmitPage() {
   if (settingsLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <SEO 
-          title="Submit Your Novel | Urdu Novel Bank Writer Portal" 
-          description="Ready to publish? Submit your Urdu novel manuscript through our secure writer portal. Share your stories with a growing community of readers." 
+        <SEO
+          title="Submit Your Novel | Urdu Novel Bank Writer Portal"
+          description="Ready to publish? Submit your Urdu novel manuscript through our secure writer portal. Share your stories with a growing community of readers."
         />
         <Loader2 className="size-8 animate-spin text-primary" />
       </div>
@@ -767,9 +904,9 @@ export default function SubmitPage() {
   if (isPaused && !isUnlocked) {
     return (
       <div>
-        <SEO 
-          title="Submit Your Novel | Urdu Novel Bank Writer Portal" 
-          description="Ready to publish? Submit your Urdu novel manuscript through our secure writer portal. Share your stories with a growing community of readers." 
+        <SEO
+          title="Submit Your Novel | Urdu Novel Bank Writer Portal"
+          description="Ready to publish? Submit your Urdu novel manuscript through our secure writer portal. Share your stories with a growing community of readers."
         />
         <PageHero
           eyebrow="Notice"
@@ -780,12 +917,16 @@ export default function SubmitPage() {
         <div className="mx-auto max-w-2xl px-4 sm:px-5 py-20">
           <div className="rounded-2xl border border-border bg-card p-8 text-center shadow-elegant">
             <Info className="mx-auto size-10 text-primary" />
-            <h2 className="mt-4 text-2xl font-semibold">We are not accepting new submissions at this time</h2>
-            <div 
+            <h2 className="mt-4 text-2xl font-semibold">
+              We are not accepting new submissions at this time
+            </h2>
+            <div
               className="prose prose-stone prose-lg max-w-none dark:prose-invert mx-auto mt-4 text-left leading-loose text-muted-foreground urdu"
               dir="auto"
-              dangerouslySetInnerHTML={{ 
-                __html: DOMPurify.sanitize(pauseMessage, { ADD_ATTR: ['target', 'style', 'data-align', 'dir', 'class', 'id'] }) 
+              dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(pauseMessage, {
+                  ADD_ATTR: ["target", "style", "data-align", "dir", "class", "id"],
+                }),
               }}
             />
             <div className="mt-8 flex flex-wrap justify-center gap-3">
@@ -801,8 +942,12 @@ export default function SubmitPage() {
             </div>
 
             <div className="mt-12 pt-8 border-t border-border flex flex-col items-center text-center">
-              <h3 className="text-xl font-semibold mb-2 urdu" dir="rtl">کیا آپ پہلے بھی ناول جمع کروا چکے ہیں؟</h3>
-              <p className="text-base text-muted-foreground mb-5 urdu" dir="rtl">نیا ناول سبمٹ کرنے کے لئے نیچے اپنی ای میل درج کریں۔</p>
+              <h3 className="text-xl font-semibold mb-2 urdu" dir="rtl">
+                کیا آپ پہلے بھی ناول جمع کروا چکے ہیں؟
+              </h3>
+              <p className="text-base text-muted-foreground mb-5 urdu" dir="rtl">
+                نیا ناول سبمٹ کرنے کے لئے نیچے اپنی ای میل درج کریں۔
+              </p>
               <div className="flex flex-col sm:flex-row justify-center items-center gap-3 w-full max-w-sm">
                 <Input
                   type="email"
@@ -812,7 +957,7 @@ export default function SubmitPage() {
                   className="bg-background w-full"
                   onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleGateCheck())}
                 />
-                <Button 
+                <Button
                   onClick={handleGateCheck}
                   disabled={gateLoading}
                   className="w-full sm:w-auto shrink-0"
@@ -822,7 +967,10 @@ export default function SubmitPage() {
                 </Button>
               </div>
               {gateMessage && (
-                <p className={`mt-4 text-base font-medium urdu ${gateMessage.type === "error" ? "text-destructive" : "text-primary"}`} dir="rtl">
+                <p
+                  className={`mt-4 text-base font-medium urdu ${gateMessage.type === "error" ? "text-destructive" : "text-primary"}`}
+                  dir="rtl"
+                >
                   {gateMessage.text}
                 </p>
               )}
@@ -835,9 +983,9 @@ export default function SubmitPage() {
 
   return (
     <div>
-      <SEO 
-        title="Submit Your Novel | Urdu Novel Bank Writer Portal" 
-        description="Ready to publish? Submit your Urdu novel manuscript through our secure writer portal. Share your stories with a growing community of readers." 
+      <SEO
+        title="Submit Your Novel | Urdu Novel Bank Writer Portal"
+        description="Ready to publish? Submit your Urdu novel manuscript through our secure writer portal. Share your stories with a growing community of readers."
       />
       <PageHero
         eyebrow="Submission"
@@ -862,12 +1010,17 @@ export default function SubmitPage() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-8" noValidate>
-          <section ref={formTopRef} className="rounded-xl border border-border bg-card p-4 sm:p-6 shadow-soft">
+          <section
+            ref={formTopRef}
+            className="rounded-xl border border-border bg-card p-4 sm:p-6 shadow-soft"
+          >
             <div className="flex items-center justify-between">
               <h2 className="font-display text-lg font-semibold">Writer Information</h2>
-              <span className="text-xs text-muted-foreground"><span className="text-red-500">*</span> Required field</span>
+              <span className="text-xs text-muted-foreground">
+                <span className="text-red-500">*</span> Required field
+              </span>
             </div>
-            
+
             {/* Auto-fill Prompt */}
             <div className="mt-4 mb-6 rounded-lg border border-primary/20 bg-primary/5 p-4 sm:p-5">
               <Label htmlFor="autoFillEmail" className="text-sm font-medium text-foreground">
@@ -883,9 +1036,9 @@ export default function SubmitPage() {
                   className="bg-background max-w-sm"
                   onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAutoFill())}
                 />
-                <Button 
-                  type="button" 
-                  variant="secondary" 
+                <Button
+                  type="button"
+                  variant="secondary"
                   onClick={handleAutoFill}
                   disabled={autoFillLoading}
                   className="sm:w-auto"
@@ -894,48 +1047,128 @@ export default function SubmitPage() {
                   Auto-fill My Info
                 </Button>
               </div>
-              {autoFillMessage && (
-                autoFillMessage.type === 'info' ? (
+              {autoFillMessage &&
+                (autoFillMessage.type === "info" ? (
                   <div className="p-3 rounded-md mt-4 text-sm flex items-start gap-2 bg-sky-50 border border-sky-200 text-sky-800 dark:bg-sky-950/30 dark:border-sky-900/50 dark:text-sky-300">
                     <Info className="h-4 w-4 shrink-0 mt-0.5" />
                     <p>{autoFillMessage.text}</p>
                   </div>
                 ) : (
-                  <p className={`mt-3 text-sm ${
-                    autoFillMessage.type === 'success' ? 'text-primary font-medium' :
-                    autoFillMessage.type === 'error' ? 'text-destructive' :
-                    'text-muted-foreground'
-                  }`}>
+                  <p
+                    className={`mt-3 text-sm ${
+                      autoFillMessage.type === "success"
+                        ? "text-primary font-medium"
+                        : autoFillMessage.type === "error"
+                          ? "text-destructive"
+                          : "text-muted-foreground"
+                    }`}
+                  >
                     {autoFillMessage.text}
                   </p>
-                )
-              )}
+                ))}
             </div>
 
             <div className="mt-5 grid gap-5 sm:grid-cols-2">
-              <Field id="fullName" label={<>Full name <span className="text-red-500">*</span></>} error={errors["fullName"]}>
-                <Input id="fullName" value={form.fullName} onChange={(e) => set("fullName", e.target.value)} />
+              <Field
+                id="fullName"
+                label={
+                  <>
+                    Full name <span className="text-red-500">*</span>
+                  </>
+                }
+                error={errors["fullName"]}
+              >
+                <Input
+                  id="fullName"
+                  value={form.fullName}
+                  onChange={(e) => set("fullName", e.target.value)}
+                />
               </Field>
-              <Field id="penName" label={<>Pen name <span className="text-red-500">*</span></>} hint="The name shown with your novel" error={errors["penName"]}>
-                <Input id="penName" value={form.penName} onChange={(e) => set("penName", e.target.value)} />
+              <Field
+                id="penName"
+                label={
+                  <>
+                    Pen name <span className="text-red-500">*</span>
+                  </>
+                }
+                hint="The name shown with your novel"
+                error={errors["penName"]}
+              >
+                <Input
+                  id="penName"
+                  value={form.penName}
+                  onChange={(e) => set("penName", e.target.value)}
+                />
               </Field>
-              <Field id="email" label={<>Email address <span className="text-red-500">*</span></>} error={errors["email"]}>
-                <Input id="email" type="email" value={form.email} onChange={(e) => set("email", e.target.value)} />
+              <Field
+                id="email"
+                label={
+                  <>
+                    Email address <span className="text-red-500">*</span>
+                  </>
+                }
+                error={errors["email"]}
+              >
+                <Input
+                  id="email"
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => set("email", e.target.value)}
+                />
               </Field>
-              <Field id="whatsapp" label={<>WhatsApp number <span className="text-red-500">*</span></>} hint="Kept private — visible only to our team" error={errors["whatsapp"]}>
-                <Input id="whatsapp" inputMode="tel" placeholder="+92 300 0000000" value={form.whatsapp} onChange={(e) => set("whatsapp", e.target.value)} />
+              <Field
+                id="whatsapp"
+                label={
+                  <>
+                    WhatsApp number <span className="text-red-500">*</span>
+                  </>
+                }
+                hint="Kept private — visible only to our team"
+                error={errors["whatsapp"]}
+              >
+                <Input
+                  id="whatsapp"
+                  inputMode="tel"
+                  placeholder="+92 300 0000000"
+                  value={form.whatsapp}
+                  onChange={(e) => set("whatsapp", e.target.value)}
+                />
               </Field>
               <Field id="location" label="City / country (optional)" error={errors["location"]}>
-                <Input id="location" value={form.location} onChange={(e) => set("location", e.target.value)} />
+                <Input
+                  id="location"
+                  value={form.location}
+                  onChange={(e) => set("location", e.target.value)}
+                />
               </Field>
               <div className="sm:col-span-2">
-                <Field id="bio" label="Short writer bio (optional)" hint="2–4 lines, Urdu or English — This will show on Your Writer Profile." error={errors["bio"]}>
-                  <Textarea id="bio" rows={3} value={form.bio} onChange={(e) => set("bio", e.target.value)} />
+                <Field
+                  id="bio"
+                  label="Short writer bio (optional)"
+                  hint="2–4 lines, Urdu or English — This will show on Your Writer Profile."
+                  error={errors["bio"]}
+                >
+                  <Textarea
+                    id="bio"
+                    rows={3}
+                    value={form.bio}
+                    onChange={(e) => set("bio", e.target.value)}
+                  />
                 </Field>
               </div>
               <div className="sm:col-span-2">
-                <Field id="socialMediaLink" label="Social Media Link (optional)" hint="We will add this Social Media Handle on Your Novel Post." error={errors["socialMediaLink"]}>
-                  <Input id="socialMediaLink" placeholder="e.g. facebook.com/yourprofile or instagram.com/yourprofile" value={form.socialMediaLink} onChange={(e) => set("socialMediaLink", e.target.value)} />
+                <Field
+                  id="socialMediaLink"
+                  label="Social Media Link (optional)"
+                  hint="We will add this Social Media Handle on Your Novel Post."
+                  error={errors["socialMediaLink"]}
+                >
+                  <Input
+                    id="socialMediaLink"
+                    placeholder="e.g. facebook.com/yourprofile or instagram.com/yourprofile"
+                    value={form.socialMediaLink}
+                    onChange={(e) => set("socialMediaLink", e.target.value)}
+                  />
                 </Field>
               </div>
             </div>
@@ -944,10 +1177,30 @@ export default function SubmitPage() {
           <section className="rounded-xl border border-border bg-card p-4 sm:p-6 shadow-soft">
             <h2 className="font-display text-lg font-semibold">Novel Information</h2>
             <div className="mt-5 grid gap-5 sm:grid-cols-2">
-              <Field id="novelTitle" label={<>Novel title <span className="text-red-500">*</span></>} error={errors["novelTitle"]}>
-                <Input id="novelTitle" value={form.novelTitle} onChange={(e) => set("novelTitle", e.target.value)} />
+              <Field
+                id="novelTitle"
+                label={
+                  <>
+                    Novel title <span className="text-red-500">*</span>
+                  </>
+                }
+                error={errors["novelTitle"]}
+              >
+                <Input
+                  id="novelTitle"
+                  value={form.novelTitle}
+                  onChange={(e) => set("novelTitle", e.target.value)}
+                />
               </Field>
-              <Field id="genre" label={<>Genre <span className="text-red-500">*</span></>} error={errors["genre"]}>
+              <Field
+                id="genre"
+                label={
+                  <>
+                    Genre <span className="text-red-500">*</span>
+                  </>
+                }
+                error={errors["genre"]}
+              >
                 <select
                   id="genre"
                   value={form.genre}
@@ -962,7 +1215,15 @@ export default function SubmitPage() {
                   ))}
                 </select>
               </Field>
-              <Field id="novelStatus" label={<>Novel status <span className="text-red-500">*</span></>} error={errors["novelStatus"]}>
+              <Field
+                id="novelStatus"
+                label={
+                  <>
+                    Novel status <span className="text-red-500">*</span>
+                  </>
+                }
+                error={errors["novelStatus"]}
+              >
                 <select
                   id="novelStatus"
                   value={form.novelStatus}
@@ -973,7 +1234,15 @@ export default function SubmitPage() {
                   <option value="Ongoing">Ongoing</option>
                 </select>
               </Field>
-              <Field id="language" label={<>Language <span className="text-red-500">*</span></>} error={errors["language"]}>
+              <Field
+                id="language"
+                label={
+                  <>
+                    Language <span className="text-red-500">*</span>
+                  </>
+                }
+                error={errors["language"]}
+              >
                 <select
                   id="language"
                   value={form.language}
@@ -987,11 +1256,20 @@ export default function SubmitPage() {
               <div className="sm:col-span-2">
                 <Field
                   id="synopsis"
-                  label={<>Short description / synopsis <span className="text-red-500">*</span></>}
+                  label={
+                    <>
+                      Short description / synopsis <span className="text-red-500">*</span>
+                    </>
+                  }
                   hint="At least 50 characters. Urdu is welcome."
                   error={errors["synopsis"]}
                 >
-                  <Textarea id="synopsis" rows={5} value={form.synopsis} onChange={(e) => set("synopsis", e.target.value)} />
+                  <Textarea
+                    id="synopsis"
+                    rows={5}
+                    value={form.synopsis}
+                    onChange={(e) => set("synopsis", e.target.value)}
+                  />
                 </Field>
               </div>
             </div>
@@ -1003,7 +1281,11 @@ export default function SubmitPage() {
               {form.novelStatus === "Complete" ? (
                 <Field
                   id="manuscript"
-                  label={<>Manuscript <span className="text-red-500">*</span></>}
+                  label={
+                    <>
+                      Manuscript <span className="text-red-500">*</span>
+                    </>
+                  }
                   hint={`Preferred formats: .doc or .docx (editable) — .pdf, .txt, and InPage (.inp/.ipf) also accepted. Max ${MAX_FILE_MB} MB.`}
                   error={errors["manuscript"]}
                 >
@@ -1017,7 +1299,9 @@ export default function SubmitPage() {
                     {manuscript && (
                       <div className="flex items-center gap-2 rounded-md bg-muted/50 p-2 text-sm text-muted-foreground">
                         <CheckCircle2 className="size-4 text-green-500 shrink-0" />
-                        <span className="truncate max-w-[200px]" title={manuscript.name}>{manuscript.name}</span>
+                        <span className="truncate max-w-[200px]" title={manuscript.name}>
+                          {manuscript.name}
+                        </span>
                         <span className="text-xs shrink-0">({formatBytes(manuscript.size)})</span>
                       </div>
                     )}
@@ -1026,23 +1310,34 @@ export default function SubmitPage() {
               ) : (
                 <div className="sm:col-span-2 space-y-4">
                   <div className="space-y-1.5">
-                    <Label>Episodes (Minimum {minEpisodes}) <span className="text-red-500">*</span></Label>
+                    <Label>
+                      Episodes (Minimum {minEpisodes}) <span className="text-red-500">*</span>
+                    </Label>
                     <p className="text-xs text-muted-foreground">
-                      {minEpisodes === 1 
-                        ? "You're approved to submit with 1 or more episodes. Attach each episode as a separate file below." 
-                        : `At least ${minEpisodes} episodes are required to submit an ongoing novel. Attach each episode as a separate file below.`}
-                      {" "}Formats: .docx, .pdf, .txt, InPage. Max {MAX_FILE_MB} MB per file.
+                      {minEpisodes === 1
+                        ? "You're approved to submit with 1 or more episodes. Attach each episode as a separate file below."
+                        : `At least ${minEpisodes} episodes are required to submit an ongoing novel. Attach each episode as a separate file below.`}{" "}
+                      Formats: .docx, .pdf, .txt, InPage. Max {MAX_FILE_MB} MB per file.
                     </p>
-                    {errors["episodes"] && <p className="text-xs text-destructive">{errors["episodes"]}</p>}
+                    {errors["episodes"] && (
+                      <p className="text-xs text-destructive">{errors["episodes"]}</p>
+                    )}
                   </div>
-                  
+
                   <div className="space-y-4">
                     {episodes.map((ep) => (
-                      <div key={ep.id} className="flex flex-col sm:flex-row gap-3 items-start sm:items-center rounded-lg border border-border p-4">
+                      <div
+                        key={ep.id}
+                        className="flex flex-col sm:flex-row gap-3 items-start sm:items-center rounded-lg border border-border p-4"
+                      >
                         <div className="flex-1 w-full">
                           <Field
                             id={`episode-${ep.id}`}
-                            label={<>Episode {ep.number} <span className="text-red-500">*</span></>}
+                            label={
+                              <>
+                                Episode {ep.number} <span className="text-red-500">*</span>
+                              </>
+                            }
                             error={errors[`episode_${ep.id}`]}
                           >
                             <Input
@@ -1054,8 +1349,12 @@ export default function SubmitPage() {
                             {ep.file && (
                               <div className="mt-2 flex items-center gap-2 rounded-md bg-muted/50 p-2 text-sm text-muted-foreground">
                                 <CheckCircle2 className="size-4 text-green-500 shrink-0" />
-                                <span className="truncate max-w-[200px]" title={ep.file.name}>{ep.file.name}</span>
-                                <span className="text-xs shrink-0">({formatBytes(ep.file.size)})</span>
+                                <span className="truncate max-w-[200px]" title={ep.file.name}>
+                                  {ep.file.name}
+                                </span>
+                                <span className="text-xs shrink-0">
+                                  ({formatBytes(ep.file.size)})
+                                </span>
                               </div>
                             )}
                           </Field>
@@ -1075,7 +1374,7 @@ export default function SubmitPage() {
                       </div>
                     ))}
                   </div>
-                  
+
                   <Button
                     type="button"
                     variant="outline"
@@ -1103,7 +1402,9 @@ export default function SubmitPage() {
                   {cover && (
                     <div className="flex items-center gap-2 rounded-md bg-muted/50 p-2 text-sm text-muted-foreground">
                       <CheckCircle2 className="size-4 text-green-500 shrink-0" />
-                      <span className="truncate max-w-[200px]" title={cover.name}>{cover.name}</span>
+                      <span className="truncate max-w-[200px]" title={cover.name}>
+                        {cover.name}
+                      </span>
                       <span className="text-xs shrink-0">({formatBytes(cover.size)})</span>
                     </div>
                   )}
@@ -1124,7 +1425,8 @@ export default function SubmitPage() {
                 },
                 {
                   key: "contentPolicy" as const,
-                  label: "I confirm that my novel does not contain any bold, explicit, inappropriate, or abusive content. I understand that submitting such content may result in my permanent removal from Urdu Novel Bank.",
+                  label:
+                    "I confirm that my novel does not contain any bold, explicit, inappropriate, or abusive content. I understand that submitting such content may result in my permanent removal from Urdu Novel Bank.",
                 },
               ].map((item) => (
                 <label key={item.key} className="flex items-start gap-3 text-sm">
@@ -1133,7 +1435,9 @@ export default function SubmitPage() {
                     onCheckedChange={(v) => setAgree((a) => ({ ...a, [item.key]: v === true }))}
                     className="mt-0.5"
                   />
-                  <span className="text-muted-foreground">{item.label} <span className="text-red-500">*</span></span>
+                  <span className="text-muted-foreground">
+                    {item.label} <span className="text-red-500">*</span>
+                  </span>
                 </label>
               ))}
             </div>
@@ -1141,173 +1445,244 @@ export default function SubmitPage() {
 
             <Button type="submit" size="lg" className="mt-6 w-full sm:w-auto" disabled={submitting}>
               {submitting && <Loader2 className="size-4 animate-spin" />}
-              {submitting ? (uploadStatus || "Submitting…") : "Submit Novel"}
+              {submitting ? uploadStatus || "Submitting…" : "Submit Novel"}
             </Button>
             <p className="mt-3 text-xs text-muted-foreground">
               Submission and publication at {site.name} are completely free.
             </p>
           </section>
-          
-          {submitting && (manuscriptStatus !== "pending" || coverStatus !== "pending" || Object.keys(episodeStatuses).length > 0) && (
-            <section className="mt-8 rounded-xl border border-primary/20 bg-primary/5 p-4 sm:p-6 shadow-sm">
-              <h3 className="mb-4 text-sm font-semibold text-primary">Uploading Files</h3>
-              <div className="space-y-5">
-                {form.novelStatus === "Complete" && manuscript && (
-                  <div className="space-y-2.5">
-                    <div className="flex justify-between text-xs">
-                      <span className="flex items-center gap-1.5 text-muted-foreground">
-                        <FileText className="h-3.5 w-3.5" />
-                        {manuscriptStatus === "done" ? (
-                          "Manuscript uploaded"
-                        ) : manuscriptStatus === "error" ? (
-                          "Upload failed"
-                        ) : manuscriptStatus === "timeout" ? (
-                          "Upload stalled"
-                        ) : manuscriptStatus === "uploading" && manuscriptProgress >= 85 ? (
-                          <RotatingWaitText />
-                        ) : (
-                          "Uploading manuscript..."
-                        )}
-                      </span>
-                      <span className={`font-medium ${manuscriptStatus === "error" || manuscriptStatus === "timeout" ? "text-destructive" : "text-foreground"}`}>
-                        {manuscriptStatus === "error" || manuscriptStatus === "timeout" ? "Error" : `${manuscriptProgress}%`}
-                      </span>
-                    </div>
-                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-primary/20">
-                      <div
-                        className={`h-full transition-all duration-300 ease-out ${
-                          manuscriptStatus === "error" || manuscriptStatus === "timeout" ? "bg-destructive" : "bg-primary"
-                        } ${manuscriptStatus === "uploading" && manuscriptProgress >= 85 ? "progress-waiting" : ""}`}
-                        style={{ width: `${manuscriptProgress}%` }}
-                      />
-                    </div>
-                    {manuscriptStatus === "timeout" && retryTrigger?.type === "manuscript" && (
-                      <div className="mt-2 flex flex-col lg:flex-row lg:items-center justify-between gap-3 lg:gap-4 rounded-md bg-muted/50 px-3 py-3 lg:py-2 text-xs">
-                        <span className="text-muted-foreground">This is taking longer than expected — your connection may be slow.</span>
-                        <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
-                          <Button type="button" size="sm" variant="outline" onClick={() => retryTrigger.resolve("skip")} className="h-auto py-2 sm:h-7 sm:py-0 text-xs border-muted text-muted-foreground hover:bg-muted/50 hover:text-foreground w-full sm:w-auto">
-                            Skip and submit without this file
-                          </Button>
-                          <Button type="button" size="sm" variant="outline" onClick={() => retryTrigger.resolve("retry")} className="h-auto py-2 sm:h-7 sm:py-0 text-xs w-full sm:w-auto">
-                            Try Again
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-                
-                {form.novelStatus === "Ongoing" && episodes.length > 0 && (
-                  <div className="space-y-4">
-                    {episodes.map(ep => {
-                      const status = episodeStatuses[ep.id] || "pending";
-                      if (status === "pending" && !episodeProgresses[ep.id]) return null;
-                      const progress = episodeProgresses[ep.id] || 0;
-                      const retry = episodeRetryTriggers[ep.id];
-                      
-                      return (
-                        <div key={ep.id} className="space-y-2.5">
-                          <div className="flex justify-between text-xs">
-                            <span className="flex items-center gap-1.5 text-muted-foreground">
-                              <FileText className="h-3.5 w-3.5" />
-                              {status === "done" ? (
-                                `Episode ${ep.number} uploaded`
-                              ) : status === "error" ? (
-                                `Episode ${ep.number} failed`
-                              ) : status === "timeout" ? (
-                                `Episode ${ep.number} stalled`
-                              ) : status === "uploading" && progress >= 85 ? (
-                                <RotatingWaitText />
-                              ) : (
-                                `Uploading Episode ${ep.number}...`
-                              )}
-                            </span>
-                            <span className={`font-medium ${status === "error" || status === "timeout" ? "text-destructive" : "text-foreground"}`}>
-                              {status === "error" || status === "timeout" ? "Error" : `${progress}%`}
-                            </span>
-                          </div>
-                          <div className="h-1.5 w-full overflow-hidden rounded-full bg-primary/20">
-                            <div
-                              className={`h-full transition-all duration-300 ease-out ${
-                                status === "error" || status === "timeout" ? "bg-destructive" : "bg-primary"
-                              } ${status === "uploading" && progress >= 85 ? "progress-waiting" : ""}`}
-                              style={{ width: `${progress}%` }}
-                            />
-                          </div>
-                          {status === "timeout" && retry && (
-                            <div className="mt-2 flex flex-col lg:flex-row lg:items-center justify-between gap-3 lg:gap-4 rounded-md bg-muted/50 px-3 py-3 lg:py-2 text-xs">
-                              <span className="text-muted-foreground">This is taking longer than expected — your connection may be slow.</span>
-                              <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
-                                <Button type="button" size="sm" variant="outline" onClick={() => {
-                                  retry.resolve("skip");
-                                  setEpisodeRetryTriggers(prev => { const n = {...prev}; delete n[ep.id]; return n; });
-                                }} className="h-auto py-2 sm:h-7 sm:py-0 text-xs border-muted text-muted-foreground hover:bg-muted/50 hover:text-foreground w-full sm:w-auto">
-                                  Skip and submit without this file
-                                </Button>
-                                <Button type="button" size="sm" variant="outline" onClick={() => {
-                                  retry.resolve("retry");
-                                  setEpisodeRetryTriggers(prev => { const n = {...prev}; delete n[ep.id]; return n; });
-                                }} className="h-auto py-2 sm:h-7 sm:py-0 text-xs w-full sm:w-auto">
-                                  Try Again
-                                </Button>
-                              </div>
-                            </div>
+
+          {submitting &&
+            (manuscriptStatus !== "pending" ||
+              coverStatus !== "pending" ||
+              Object.keys(episodeStatuses).length > 0) && (
+              <section className="mt-8 rounded-xl border border-primary/20 bg-primary/5 p-4 sm:p-6 shadow-sm">
+                <h3 className="mb-4 text-sm font-semibold text-primary">Uploading Files</h3>
+                <div className="space-y-5">
+                  {form.novelStatus === "Complete" && manuscript && (
+                    <div className="space-y-2.5">
+                      <div className="flex justify-between text-xs">
+                        <span className="flex items-center gap-1.5 text-muted-foreground">
+                          <FileText className="h-3.5 w-3.5" />
+                          {manuscriptStatus === "done" ? (
+                            "Manuscript uploaded"
+                          ) : manuscriptStatus === "error" ? (
+                            "Upload failed"
+                          ) : manuscriptStatus === "timeout" ? (
+                            "Upload stalled"
+                          ) : manuscriptStatus === "uploading" && manuscriptProgress >= 85 ? (
+                            <RotatingWaitText />
+                          ) : (
+                            "Uploading manuscript..."
                           )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-                
-                {cover && (
-                  <div className="space-y-2.5">
-                    <div className="flex justify-between text-xs">
-                      <span className="flex items-center gap-1.5 text-muted-foreground">
-                        <Image className="h-3.5 w-3.5" />
-                        {coverStatus === "done" ? (
-                          "Cover uploaded"
-                        ) : coverStatus === "error" ? (
-                          "Upload failed"
-                        ) : coverStatus === "timeout" ? (
-                          "Upload stalled"
-                        ) : coverStatus === "pending" ? (
-                          "Waiting to upload cover..."
-                        ) : coverStatus === "uploading" && coverProgress >= 85 ? (
-                          <RotatingWaitText />
-                        ) : (
-                          "Uploading cover..."
-                        )}
-                      </span>
-                      <span className={`font-medium ${coverStatus === "error" || coverStatus === "timeout" ? "text-destructive" : "text-foreground"}`}>
-                        {coverStatus === "error" || coverStatus === "timeout" ? "Error" : `${coverProgress}%`}
-                      </span>
-                    </div>
-                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-primary/20">
-                      <div
-                        className={`h-full transition-all duration-300 ease-out ${
-                          coverStatus === "error" || coverStatus === "timeout" ? "bg-destructive" : "bg-primary"
-                        } ${coverStatus === "uploading" && coverProgress >= 85 ? "progress-waiting" : ""}`}
-                        style={{ width: `${coverProgress}%` }}
-                      />
-                    </div>
-                    {coverStatus === "timeout" && retryTrigger?.type === "cover" && (
-                      <div className="mt-2 flex flex-col lg:flex-row lg:items-center justify-between gap-3 lg:gap-4 rounded-md bg-muted/50 px-3 py-3 lg:py-2 text-xs">
-                        <span className="text-muted-foreground">This is taking longer than expected — your connection may be slow.</span>
-                        <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
-                          <Button type="button" size="sm" variant="outline" onClick={() => retryTrigger.resolve("skip")} className="h-auto py-2 sm:h-7 sm:py-0 text-xs border-muted text-muted-foreground hover:bg-muted/50 hover:text-foreground w-full sm:w-auto">
-                            Skip and submit without this file
-                          </Button>
-                          <Button type="button" size="sm" variant="outline" onClick={() => retryTrigger.resolve("retry")} className="h-auto py-2 sm:h-7 sm:py-0 text-xs w-full sm:w-auto">
-                            Try Again
-                          </Button>
-                        </div>
+                        </span>
+                        <span
+                          className={`font-medium ${manuscriptStatus === "error" || manuscriptStatus === "timeout" ? "text-destructive" : "text-foreground"}`}
+                        >
+                          {manuscriptStatus === "error" || manuscriptStatus === "timeout"
+                            ? "Error"
+                            : `${manuscriptProgress}%`}
+                        </span>
                       </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </section>
-          )}
+                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-primary/20">
+                        <div
+                          className={`h-full transition-all duration-300 ease-out ${
+                            manuscriptStatus === "error" || manuscriptStatus === "timeout"
+                              ? "bg-destructive"
+                              : "bg-primary"
+                          } ${manuscriptStatus === "uploading" && manuscriptProgress >= 85 ? "progress-waiting" : ""}`}
+                          style={{ width: `${manuscriptProgress}%` }}
+                        />
+                      </div>
+                      {manuscriptStatus === "timeout" && retryTrigger?.type === "manuscript" && (
+                        <div className="mt-2 flex flex-col lg:flex-row lg:items-center justify-between gap-3 lg:gap-4 rounded-md bg-muted/50 px-3 py-3 lg:py-2 text-xs">
+                          <span className="text-muted-foreground">
+                            This is taking longer than expected — your connection may be slow.
+                          </span>
+                          <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={() => retryTrigger.resolve("skip")}
+                              className="h-auto py-2 sm:h-7 sm:py-0 text-xs border-muted text-muted-foreground hover:bg-muted/50 hover:text-foreground w-full sm:w-auto"
+                            >
+                              Skip and submit without this file
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={() => retryTrigger.resolve("retry")}
+                              className="h-auto py-2 sm:h-7 sm:py-0 text-xs w-full sm:w-auto"
+                            >
+                              Try Again
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {form.novelStatus === "Ongoing" && episodes.length > 0 && (
+                    <div className="space-y-4">
+                      {episodes.map((ep) => {
+                        const status = episodeStatuses[ep.id] || "pending";
+                        if (status === "pending" && !episodeProgresses[ep.id]) return null;
+                        const progress = episodeProgresses[ep.id] || 0;
+                        const retry = episodeRetryTriggers[ep.id];
+
+                        return (
+                          <div key={ep.id} className="space-y-2.5">
+                            <div className="flex justify-between text-xs">
+                              <span className="flex items-center gap-1.5 text-muted-foreground">
+                                <FileText className="h-3.5 w-3.5" />
+                                {status === "done" ? (
+                                  `Episode ${ep.number} uploaded`
+                                ) : status === "error" ? (
+                                  `Episode ${ep.number} failed`
+                                ) : status === "timeout" ? (
+                                  `Episode ${ep.number} stalled`
+                                ) : status === "uploading" && progress >= 85 ? (
+                                  <RotatingWaitText />
+                                ) : (
+                                  `Uploading Episode ${ep.number}...`
+                                )}
+                              </span>
+                              <span
+                                className={`font-medium ${status === "error" || status === "timeout" ? "text-destructive" : "text-foreground"}`}
+                              >
+                                {status === "error" || status === "timeout"
+                                  ? "Error"
+                                  : `${progress}%`}
+                              </span>
+                            </div>
+                            <div className="h-1.5 w-full overflow-hidden rounded-full bg-primary/20">
+                              <div
+                                className={`h-full transition-all duration-300 ease-out ${
+                                  status === "error" || status === "timeout"
+                                    ? "bg-destructive"
+                                    : "bg-primary"
+                                } ${status === "uploading" && progress >= 85 ? "progress-waiting" : ""}`}
+                                style={{ width: `${progress}%` }}
+                              />
+                            </div>
+                            {status === "timeout" && retry && (
+                              <div className="mt-2 flex flex-col lg:flex-row lg:items-center justify-between gap-3 lg:gap-4 rounded-md bg-muted/50 px-3 py-3 lg:py-2 text-xs">
+                                <span className="text-muted-foreground">
+                                  This is taking longer than expected — your connection may be slow.
+                                </span>
+                                <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      retry.resolve("skip");
+                                      setEpisodeRetryTriggers((prev) => {
+                                        const n = { ...prev };
+                                        delete n[ep.id];
+                                        return n;
+                                      });
+                                    }}
+                                    className="h-auto py-2 sm:h-7 sm:py-0 text-xs border-muted text-muted-foreground hover:bg-muted/50 hover:text-foreground w-full sm:w-auto"
+                                  >
+                                    Skip and submit without this file
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      retry.resolve("retry");
+                                      setEpisodeRetryTriggers((prev) => {
+                                        const n = { ...prev };
+                                        delete n[ep.id];
+                                        return n;
+                                      });
+                                    }}
+                                    className="h-auto py-2 sm:h-7 sm:py-0 text-xs w-full sm:w-auto"
+                                  >
+                                    Try Again
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {cover && (
+                    <div className="space-y-2.5">
+                      <div className="flex justify-between text-xs">
+                        <span className="flex items-center gap-1.5 text-muted-foreground">
+                          <Image className="h-3.5 w-3.5" />
+                          {coverStatus === "done" ? (
+                            "Cover uploaded"
+                          ) : coverStatus === "error" ? (
+                            "Upload failed"
+                          ) : coverStatus === "timeout" ? (
+                            "Upload stalled"
+                          ) : coverStatus === "pending" ? (
+                            "Waiting to upload cover..."
+                          ) : coverStatus === "uploading" && coverProgress >= 85 ? (
+                            <RotatingWaitText />
+                          ) : (
+                            "Uploading cover..."
+                          )}
+                        </span>
+                        <span
+                          className={`font-medium ${coverStatus === "error" || coverStatus === "timeout" ? "text-destructive" : "text-foreground"}`}
+                        >
+                          {coverStatus === "error" || coverStatus === "timeout"
+                            ? "Error"
+                            : `${coverProgress}%`}
+                        </span>
+                      </div>
+                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-primary/20">
+                        <div
+                          className={`h-full transition-all duration-300 ease-out ${
+                            coverStatus === "error" || coverStatus === "timeout"
+                              ? "bg-destructive"
+                              : "bg-primary"
+                          } ${coverStatus === "uploading" && coverProgress >= 85 ? "progress-waiting" : ""}`}
+                          style={{ width: `${coverProgress}%` }}
+                        />
+                      </div>
+                      {coverStatus === "timeout" && retryTrigger?.type === "cover" && (
+                        <div className="mt-2 flex flex-col lg:flex-row lg:items-center justify-between gap-3 lg:gap-4 rounded-md bg-muted/50 px-3 py-3 lg:py-2 text-xs">
+                          <span className="text-muted-foreground">
+                            This is taking longer than expected — your connection may be slow.
+                          </span>
+                          <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={() => retryTrigger.resolve("skip")}
+                              className="h-auto py-2 sm:h-7 sm:py-0 text-xs border-muted text-muted-foreground hover:bg-muted/50 hover:text-foreground w-full sm:w-auto"
+                            >
+                              Skip and submit without this file
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={() => retryTrigger.resolve("retry")}
+                              className="h-auto py-2 sm:h-7 sm:py-0 text-xs w-full sm:w-auto"
+                            >
+                              Try Again
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
         </form>
       </div>
     </div>

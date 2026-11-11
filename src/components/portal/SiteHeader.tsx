@@ -57,7 +57,10 @@ export function SiteHeader() {
             {nav.map((item) =>
               item.children ? (
                 <div key={item.label} className="group relative">
-                  <button className="flex items-center gap-1 rounded-md px-3 py-2 text-sm transition-colors text-muted-foreground hover:text-foreground hover:bg-secondary/10">
+                  <button
+                    aria-haspopup="true"
+                    className="flex items-center gap-1 rounded-md px-3 py-2 text-sm transition-colors text-muted-foreground hover:text-foreground hover:bg-secondary/10"
+                  >
                     {item.label}
                     <ChevronDown className="h-3.5 w-3.5 opacity-60 transition-transform group-hover:rotate-180" />
                   </button>

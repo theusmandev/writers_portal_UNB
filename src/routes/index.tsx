@@ -245,13 +245,17 @@ export default function Index() {
                     asChild
                     className="h-9 sm:h-11 px-4 sm:px-6 shadow-elegant bg-primary hover:bg-primary/90 text-primary-foreground text-xs sm:text-sm whitespace-nowrap shrink-0"
                   >
-                    <Link to={`/spotlights/${latestSpotlight.slug}`}>
+                    <Link
+                      to={`/spotlights/${latestSpotlight.slug}`}
+                      aria-label={`Read writer spotlight for ${latestSpotlight.display_name}`}
+                    >
                       Read the Spotlight{" "}
                       <ArrowRight className="ml-1.5 sm:ml-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     </Link>
                   </Button>
                   <Link
                     to="/spotlights"
+                    aria-label="View all monthly writer spotlights"
                     className="text-xs sm:text-sm font-medium text-muted-foreground hover:text-primary transition-colors underline-offset-4 hover:underline whitespace-nowrap shrink-0 truncate"
                   >
                     <span className="sm:hidden">View All &rarr;</span>
@@ -261,6 +265,7 @@ export default function Index() {
               </div>
               <Link
                 to={`/spotlights/${latestSpotlight.slug}`}
+                aria-label={`View writer spotlight for ${latestSpotlight.display_name}`}
                 className="w-full md:w-5/12 aspect-square md:aspect-auto md:h-80 bg-card rounded-2xl border border-border shadow-soft flex items-center justify-center relative overflow-hidden group cursor-pointer transition-transform duration-300 hover:scale-[1.02] hover:shadow-lg"
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 via-transparent to-primary/5 transition-opacity group-hover:opacity-70" />

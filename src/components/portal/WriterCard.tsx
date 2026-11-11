@@ -47,16 +47,18 @@ export function WriterCard({ writer, hideFeaturedBadge }: WriterCardProps) {
         </div>
         <div className="min-w-0 flex-1">
           {/* Name — links to the featured page for featured writers, plain text otherwise */}
-          {writer.is_featured && writer.featured_slug ? (
-            <Link
-              to={`/writers/featured/${writer.featured_slug}`}
-              className="truncate font-semibold leading-tight hover:text-primary hover:underline underline-offset-2 transition-colors block"
-            >
-              {writer.full_name}
-            </Link>
-          ) : (
-            <h2 className="truncate font-semibold leading-tight">{writer.full_name}</h2>
-          )}
+          <h2 className="truncate font-semibold leading-tight">
+            {writer.is_featured && writer.featured_slug ? (
+              <Link
+                to={`/writers/featured/${writer.featured_slug}`}
+                className="hover:text-primary hover:underline underline-offset-2 transition-colors"
+              >
+                {writer.full_name}
+              </Link>
+            ) : (
+              writer.full_name
+            )}
+          </h2>
           {writer.pen_name && writer.pen_name !== writer.full_name && (
             <p className="truncate text-xs text-muted-foreground">{writer.pen_name}</p>
           )}
@@ -86,7 +88,7 @@ export function WriterCard({ writer, hideFeaturedBadge }: WriterCardProps) {
       <div className="flex-1 px-5 py-4 flex flex-col">
         {writer.bio ? (
           <div>
-            <p 
+            <p
               ref={bioRef}
               className={`text-sm text-muted-foreground leading-relaxed break-words whitespace-pre-wrap ${isBioExpanded ? "" : "line-clamp-4"}`}
             >
@@ -95,6 +97,11 @@ export function WriterCard({ writer, hideFeaturedBadge }: WriterCardProps) {
             {showBioToggle && (
               <button
                 onClick={() => setIsBioExpanded(!isBioExpanded)}
+                aria-label={
+                  isBioExpanded
+                    ? `Show less biography for ${writer.full_name}`
+                    : `Read full biography for ${writer.full_name}`
+                }
                 className="mt-2 text-[11px] font-semibold text-primary hover:underline focus:outline-none"
               >
                 {isBioExpanded ? "Show less" : "Read more"}
@@ -114,44 +121,61 @@ export function WriterCard({ writer, hideFeaturedBadge }: WriterCardProps) {
           </p>
           <ul className="space-y-1.5">
             {displayedNovels.map((novel) => {
-              const isNew = novel.novel_status === 'Ongoing' || (novel.novel_status === 'Complete' && novel.novel_published_at ? (new Date().getTime() - new Date(novel.novel_published_at).getTime()) <= 7 * 24 * 60 * 60 * 1000 : false);
+              const isNew =
+                novel.novel_status === "Ongoing" ||
+                (novel.novel_status === "Complete" && novel.novel_published_at
+                  ? new Date().getTime() - new Date(novel.novel_published_at).getTime() <=
+                    7 * 24 * 60 * 60 * 1000
+                  : false);
               return (
-              <li key={novel.id} className="flex items-start gap-2 text-sm">
-                <BookOpen className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
-                <span className="flex-1 leading-snug">
-                  {novel.resolved_published_url ? (
-                    <a
-                      href={novel.resolved_published_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-medium text-primary hover:underline underline-offset-2 inline-flex items-center gap-1"
-                    >
-                      {novel.novel_title}
-                      <ExternalLink className="h-3 w-3 shrink-0" />
-                    </a>
-                  ) : (
-                    <span className="font-medium">{novel.novel_title}</span>
-                  )}
-                  {isNew && (
-                    <span className="ml-2 inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-600 align-middle">
-                      New
-                    </span>
-                  )}
-                  {novel.novel_status === 'Ongoing' && (
-                    <span className={`ml-2 inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider align-middle ${novel.is_completed ? 'bg-emerald-100 text-emerald-800' : 'bg-primary/10 text-primary'}`}>
-                      {novel.is_completed ? 'Completed' : 'Ongoing'} • {novel.published_episode_count} {novel.published_episode_count === 1 ? 'episode' : 'episodes'}
-                    </span>
-                  )}
-                  {novel.genre && (
-                    <span className="ml-1.5 text-xs text-muted-foreground align-middle">· {novel.genre}</span>
-                  )}
-                </span>
-              </li>
-            )})}
+                <li key={novel.id} className="flex items-start gap-2 text-sm">
+                  <BookOpen className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+                  <span className="flex-1 leading-snug">
+                    {novel.resolved_published_url ? (
+                      <a
+                        href={novel.resolved_published_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-medium text-primary hover:underline underline-offset-2 inline-flex items-center gap-1"
+                      >
+                        {novel.novel_title}
+                        <ExternalLink className="h-3 w-3 shrink-0" />
+                      </a>
+                    ) : (
+                      <span className="font-medium">{novel.novel_title}</span>
+                    )}
+                    {isNew && (
+                      <span className="ml-2 inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-600 align-middle">
+                        New
+                      </span>
+                    )}
+                    {novel.novel_status === "Ongoing" && (
+                      <span
+                        className={`ml-2 inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider align-middle ${novel.is_completed ? "bg-emerald-100 text-emerald-800" : "bg-primary/10 text-primary"}`}
+                      >
+                        {novel.is_completed ? "Completed" : "Ongoing"} •{" "}
+                        {novel.published_episode_count}{" "}
+                        {novel.published_episode_count === 1 ? "episode" : "episodes"}
+                      </span>
+                    )}
+                    {novel.genre && (
+                      <span className="ml-1.5 text-xs text-muted-foreground align-middle">
+                        · {novel.genre}
+                      </span>
+                    )}
+                  </span>
+                </li>
+              );
+            })}
           </ul>
           {hiddenNovelsCount > 0 && (
             <button
               onClick={() => setIsNovelsExpanded(!isNovelsExpanded)}
+              aria-label={
+                isNovelsExpanded
+                  ? `Show fewer novels by ${writer.full_name}`
+                  : `Show ${hiddenNovelsCount} more novels by ${writer.full_name}`
+              }
               className="mt-2.5 text-[11px] font-semibold text-primary hover:underline focus:outline-none"
             >
               {isNovelsExpanded ? "Show less" : `+${hiddenNovelsCount} more`}
@@ -164,9 +188,14 @@ export function WriterCard({ writer, hideFeaturedBadge }: WriterCardProps) {
       {writer.social_media_link && (
         <div className="border-t border-border/50 px-5 py-3 mt-auto bg-muted/10">
           <a
-            href={writer.social_media_link.includes('://') ? writer.social_media_link : `https://${writer.social_media_link}`}
+            href={
+              writer.social_media_link.includes("://")
+                ? writer.social_media_link
+                : `https://${writer.social_media_link}`
+            }
             target="_blank"
             rel="noopener noreferrer"
+            aria-label={`Visit ${writer.full_name}'s social media profile`}
             className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
           >
             <ExternalLink className="h-3.5 w-3.5" />
