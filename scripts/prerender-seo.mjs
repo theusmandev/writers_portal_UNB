@@ -878,10 +878,12 @@ function renderHtmlForRoute(baseTemplate, route) {
   }
 
   // 7. Inject crawler semantic HTML into <div id="root">
+  // Styled with accessible visually-hidden CSS (sr-only) so search engines & screen readers parse
+  // all semantic content & links immediately, while human users see zero flash of unstyled text before React mounts.
   if (route.fallbackHtml) {
     const semanticFallback = `
       <div id="root">
-        <main class="seo-crawler-content" style="max-width: 900px; margin: 0 auto; padding: 2rem 1rem; font-family: system-ui, -apple-system, sans-serif;">
+        <main class="seo-crawler-content" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: normal; border: 0;">
           ${route.fallbackHtml}
         </main>
       </div>`;
