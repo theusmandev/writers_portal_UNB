@@ -785,6 +785,7 @@ function handleBroadcastEmail(body) {
 
     // Process optional attachments (inline Base64 or Google Drive file references)
     var attachmentBlobs = [];
+    var attachmentNames = [];
     if (body.attachments && Array.isArray(body.attachments)) {
       for (var i = 0; i < body.attachments.length; i++) {
         var att = body.attachments[i];
@@ -803,6 +804,7 @@ function handleBroadcastEmail(body) {
               driveBlob.setName(String(att.fileName).trim());
             }
             attachmentBlobs.push(driveBlob);
+            attachmentNames.push(driveBlob.getName());
           } catch (driveErr) {
             return {
               success: false,
@@ -814,19 +816,36 @@ function handleBroadcastEmail(body) {
         else if (att.base64Data) {
           try {
             var rawBase64 = String(att.base64Data);
-            var commaIdx = rawBase64.indexOf(',');
-            var cleanBase64 = commaIdx !== -1 ? rawBase64.substring(commaIdx + 1) : rawBase64;
+            // Robustly strip data URL prefix (e.g., "data:application/pdf;base64,") and any whitespace/newlines
+            var cleanBase64 = rawBase64.replace(/^data:[^;]+;base64,/, '').replace(/\s/g, '');
+            var commaIdx = cleanBase64.indexOf(',');
+            if (commaIdx !== -1) {
+              cleanBase64 = cleanBase64.substring(commaIdx + 1).replace(/\s/g, '');
+            }
+            if (!cleanBase64) {
+              return {
+                success: false,
+                error: 'Attachment (' + (att.fileName || 'unnamed') + ') has empty base64 data.'
+              };
+            }
             var decodedBytes = Utilities.base64Decode(cleanBase64);
             var fileName = att.fileName ? String(att.fileName).trim() : 'attachment';
-            var mimeType = att.mimeType ? String(att.mimeType).trim() : 'application/octet-stream';
+            var mimeType = (att.mimeType && String(att.mimeType).trim()) ? String(att.mimeType).trim() : 'application/octet-stream';
             var fileBlob = Utilities.newBlob(decodedBytes, mimeType, fileName);
             attachmentBlobs.push(fileBlob);
+            attachmentNames.push(fileName);
           } catch (blobErr) {
             return {
               success: false,
               error: 'Failed to process attachment (' + (att.fileName || 'unnamed') + '): ' + blobErr.message
             };
           }
+        }
+        else {
+          return {
+            success: false,
+            error: 'Attachment (' + (att.fileName || 'unnamed') + ') is missing both base64Data and driveFileId.'
+          };
         }
       }
     }
@@ -854,6 +873,8 @@ function handleBroadcastEmail(body) {
     return {
       success: true,
       message: 'Broadcast email sent to ' + writerEmail,
+      attachedCount: attachmentBlobs.length,
+      attachedFiles: attachmentNames,
       remainingQuota: remaining
     };
   } catch (err) {

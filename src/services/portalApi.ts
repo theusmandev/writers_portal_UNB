@@ -1719,9 +1719,13 @@ export async function checkEmailQuota(): Promise<{
   }
 }
 
-export async function sendBroadcastEmailToRecipient(
-  payload: BroadcastEmailPayload,
-): Promise<{ success: boolean; remainingQuota?: number; error?: string }> {
+export async function sendBroadcastEmailToRecipient(payload: BroadcastEmailPayload): Promise<{
+  success: boolean;
+  remainingQuota?: number;
+  attachedCount?: number;
+  attachedFiles?: string[];
+  error?: string;
+}> {
   const scriptUrl = import.meta.env["VITE_PORTAL_API_URL"] as string | undefined;
   if (!scriptUrl) {
     return {
@@ -1749,6 +1753,8 @@ export async function sendBroadcastEmailToRecipient(
       return {
         success: false,
         remainingQuota: typeof data?.remainingQuota === "number" ? data.remainingQuota : undefined,
+        attachedCount: typeof data?.attachedCount === "number" ? data.attachedCount : undefined,
+        attachedFiles: Array.isArray(data?.attachedFiles) ? data.attachedFiles : undefined,
         error: data?.error || "Failed to send broadcast email.",
       };
     }
@@ -1756,6 +1762,8 @@ export async function sendBroadcastEmailToRecipient(
     return {
       success: true,
       remainingQuota: typeof data.remainingQuota === "number" ? data.remainingQuota : undefined,
+      attachedCount: typeof data?.attachedCount === "number" ? data.attachedCount : undefined,
+      attachedFiles: Array.isArray(data?.attachedFiles) ? data.attachedFiles : undefined,
     };
   } catch (err: unknown) {
     return {

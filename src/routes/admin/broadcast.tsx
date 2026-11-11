@@ -47,7 +47,9 @@ function readFileAsBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
-      resolve(reader.result as string);
+      const res = (reader.result as string) || "";
+      const clean = res.replace(/^data:[^;]+;base64,/, "").replace(/\s/g, "");
+      resolve(clean);
     };
     reader.onerror = (err) => reject(err);
     reader.readAsDataURL(file);
@@ -406,7 +408,28 @@ export default function AdminBroadcastPage() {
 
     setSendingTest(false);
     if (res.success) {
-      toast.success(`Test email sent successfully to ${testEmail}!`);
+      if (attachments.length > 0) {
+        if (typeof res.attachedCount === "number") {
+          if (res.attachedCount > 0) {
+            toast.success(
+              `Test email sent successfully to ${testEmail} (with ${res.attachedCount} attachment${res.attachedCount > 1 ? "s" : ""})!`,
+            );
+          } else {
+            toast.warning(
+              `Test email was sent, but 0 attachments were received by the server. Please redeploy Code.gs as a New Version in Google Apps Script!`,
+              { duration: 8000 },
+            );
+          }
+        } else {
+          toast.warning(
+            `Test email was sent, but 0 attachments were processed. Your Google Apps Script deployment is running an older version — please copy Code.gs and redeploy as a "New Version" in Google Apps Script!`,
+            { duration: 10000 },
+          );
+        }
+      } else {
+        toast.success(`Test email sent successfully to ${testEmail}!`);
+      }
+
       if (typeof res.remainingQuota === "number") {
         setQuota(res.remainingQuota);
       }
@@ -465,6 +488,13 @@ export default function AdminBroadcastPage() {
         ctaUrl: ctaUrl.trim() || undefined,
         attachments: attachments.length > 0 ? attachments : undefined,
       });
+
+      if (i === 0 && attachments.length > 0 && res.success && res.attachedCount === undefined) {
+        toast.warning(
+          "Notice: Google Apps Script did not report attachment processing. Please ensure Code.gs is redeployed as a New Version.",
+          { duration: 8000 },
+        );
+      }
 
       if (typeof res.remainingQuota === "number") {
         latestQuota = res.remainingQuota;
