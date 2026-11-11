@@ -1658,6 +1658,14 @@ export async function getSpotlightBySlug(slug: string) {
 
 // ── Public: Broadcast Emails & Quota Meter ──────────────────────────────────
 
+export interface BroadcastAttachment {
+  fileName: string;
+  mimeType: string;
+  base64Data?: string;
+  driveFileId?: string;
+  sizeBytes?: number;
+}
+
 export interface BroadcastEmailPayload {
   writerEmail: string;
   writerName?: string;
@@ -1669,6 +1677,7 @@ export interface BroadcastEmailPayload {
   duaUr?: string;
   ctaText?: string;
   ctaUrl?: string;
+  attachments?: BroadcastAttachment[];
 }
 
 export async function checkEmailQuota(): Promise<{

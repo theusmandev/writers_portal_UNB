@@ -19,6 +19,12 @@ import {
   Pause,
   RotateCcw,
   BookOpen,
+  Paperclip,
+  FileText,
+  UploadCloud,
+  HardDrive,
+  X,
+  Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,8 +39,27 @@ import {
   getBroadcastLogs,
   createBroadcastLog,
   type BroadcastRecipient,
+  type BroadcastAttachment,
 } from "@/services/portalApi";
 import type { EmailBroadcastLogRow } from "@/lib/supabase.types";
+
+function readFileAsBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      resolve(reader.result as string);
+    };
+    reader.onerror = (err) => reject(err);
+    reader.readAsDataURL(file);
+  });
+}
+
+function formatFileSize(bytes?: number): string {
+  if (!bytes) return "";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 const SUBMISSION_STATUSES = [
   "Published",
@@ -74,6 +99,9 @@ export default function AdminBroadcastPage() {
   const [ctaUrl, setCtaUrl] = useState("");
   const [showOptionalFields, setShowOptionalFields] = useState(false);
   const [copiedTag, setCopiedTag] = useState<string | null>(null);
+  const [attachments, setAttachments] = useState<BroadcastAttachment[]>([]);
+  const [driveInput, setDriveInput] = useState("");
+  const [isReadingFiles, setIsReadingFiles] = useState(false);
 
   // ── Preview & Test State ─────────────────────────────────────
   const [previewRecipientEmail, setPreviewRecipientEmail] = useState<string>("");
@@ -253,6 +281,90 @@ export default function AdminBroadcastPage() {
     setTimeout(() => setCopiedTag(null), 2000);
   }
 
+  // ── Attachment Handlers ───────────────────────────────────────
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsReadingFiles(true);
+    const currentTotalBytes = attachments.reduce((acc, a) => acc + (a.sizeBytes || 0), 0);
+    let runningBytes = currentTotalBytes;
+    const newAttachments: BroadcastAttachment[] = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (file.size > 8 * 1024 * 1024) {
+        toast.error(
+          `"${file.name}" is over 8 MB. Please attach large files via Google Drive link.`,
+        );
+        continue;
+      }
+      if (runningBytes + file.size > 8 * 1024 * 1024) {
+        toast.error(
+          `Cannot add "${file.name}". Total attachment size would exceed the 8 MB limit.`,
+        );
+        break;
+      }
+
+      try {
+        const base64Data = await readFileAsBase64(file);
+        runningBytes += file.size;
+        newAttachments.push({
+          fileName: file.name,
+          mimeType: file.type || "application/octet-stream",
+          base64Data,
+          sizeBytes: file.size,
+        });
+      } catch {
+        toast.error(`Failed to read "${file.name}".`);
+      }
+    }
+
+    if (newAttachments.length > 0) {
+      setAttachments((prev) => [...prev, ...newAttachments]);
+      toast.success(
+        `Added ${newAttachments.length} attachment${newAttachments.length > 1 ? "s" : ""}`,
+      );
+    }
+    setIsReadingFiles(false);
+    e.target.value = "";
+  }
+
+  function handleAddDriveFile() {
+    const input = driveInput.trim();
+    if (!input) return;
+
+    const match = input.match(/[-\w]{25,}/);
+    if (!match) {
+      toast.error("Please enter a valid Google Drive file link or file ID.");
+      return;
+    }
+
+    const driveId = match[0];
+    if (attachments.some((a) => a.driveFileId === driveId)) {
+      toast.error("This Google Drive file is already attached.");
+      return;
+    }
+
+    const shortId = driveId.length > 10 ? `${driveId.slice(0, 5)}...${driveId.slice(-4)}` : driveId;
+    const fileName = `Drive File (${shortId})`;
+
+    setAttachments((prev) => [
+      ...prev,
+      {
+        fileName,
+        mimeType: "application/octet-stream",
+        driveFileId: driveId,
+      },
+    ]);
+    setDriveInput("");
+    toast.success("Google Drive file attached!");
+  }
+
+  function handleRemoveAttachment(index: number) {
+    setAttachments((prev) => prev.filter((_, i) => i !== index));
+  }
+
   // ── Send Test Email ───────────────────────────────────────────
   async function handleSendTest() {
     if (!testEmail.trim() || !testEmail.includes("@")) {
@@ -289,6 +401,7 @@ export default function AdminBroadcastPage() {
       duaUr: resolvedDuaUr,
       ctaText: ctaText.trim() || undefined,
       ctaUrl: ctaUrl.trim() || undefined,
+      attachments: attachments.length > 0 ? attachments : undefined,
     });
 
     setSendingTest(false);
@@ -350,6 +463,7 @@ export default function AdminBroadcastPage() {
         duaUr: resolvedDuaUr,
         ctaText: ctaText.trim() || undefined,
         ctaUrl: ctaUrl.trim() || undefined,
+        attachments: attachments.length > 0 ? attachments : undefined,
       });
 
       if (typeof res.remainingQuota === "number") {
@@ -922,6 +1036,112 @@ export default function AdminBroadcastPage() {
               )}
             </div>
 
+            {/* Attachments Section */}
+            <div className="space-y-2.5 p-3.5 rounded-lg border border-border/70 bg-muted/20">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                  <Paperclip className="h-3.5 w-3.5 text-primary" />
+                  Email Attachments
+                  <span className="text-[11px] text-muted-foreground font-normal">
+                    (PDF, Word, Images, Guidelines — max 8 MB total)
+                  </span>
+                </label>
+                {attachments.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setAttachments([])}
+                    className="text-[11px] text-destructive hover:underline"
+                  >
+                    Remove All
+                  </button>
+                )}
+              </div>
+
+              {/* Upload from Device + Google Drive Link inputs */}
+              <div className="flex flex-col sm:flex-row gap-2">
+                {/* Device Upload */}
+                <label className="flex items-center justify-center gap-2 px-3 py-2 rounded-md border border-dashed border-border hover:border-primary/50 bg-background text-xs cursor-pointer transition-colors shrink-0">
+                  <UploadCloud className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium text-foreground">
+                    {isReadingFiles ? "Reading files…" : "Upload from Device"}
+                  </span>
+                  <input
+                    type="file"
+                    multiple
+                    disabled={isReadingFiles}
+                    onChange={(e) => void handleFileUpload(e)}
+                    className="hidden"
+                    accept=".pdf,.doc,.docx,.epub,.txt,.png,.jpg,.jpeg,.zip"
+                  />
+                </label>
+
+                {/* Google Drive Link input */}
+                <div className="flex flex-1 gap-1.5">
+                  <div className="relative flex-1">
+                    <Input
+                      type="text"
+                      placeholder="Or paste Google Drive link / file ID"
+                      value={driveInput}
+                      onChange={(e) => setDriveInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleAddDriveFile();
+                        }
+                      }}
+                      className="text-xs h-9 pl-7"
+                    />
+                    <HardDrive className="h-3.5 w-3.5 text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2" />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAddDriveFile}
+                    disabled={!driveInput.trim()}
+                    className="text-xs shrink-0 h-9 px-3"
+                  >
+                    <Plus className="h-3.5 w-3.5 mr-1" /> Attach Drive
+                  </Button>
+                </div>
+              </div>
+
+              {/* Attached File Chips */}
+              {attachments.length > 0 && (
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {attachments.map((att, idx) => (
+                    <div
+                      key={`${att.fileName}-${idx}`}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs bg-secondary/80 text-foreground border border-border shadow-2xs"
+                    >
+                      {att.driveFileId ? (
+                        <HardDrive className="h-3 w-3 text-amber-600 shrink-0" />
+                      ) : (
+                        <FileText className="h-3 w-3 text-primary shrink-0" />
+                      )}
+                      <span
+                        className="font-medium max-w-[180px] sm:max-w-[220px] truncate"
+                        title={att.fileName}
+                      >
+                        {att.fileName}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground">
+                        {att.driveFileId ? "(Google Drive)" : `(${formatFileSize(att.sizeBytes)})`}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveAttachment(idx)}
+                        className="ml-1 p-0.5 rounded hover:bg-muted text-muted-foreground hover:text-destructive transition-colors"
+                        title="Remove attachment"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* PRIMARY BROADCAST DISPATCH BUTTON */}
             <div className="pt-3 border-t border-border flex items-center justify-between">
               <span className="text-xs text-muted-foreground">
@@ -1040,6 +1260,38 @@ export default function AdminBroadcastPage() {
                 </div>
               )}
 
+              {/* Attachments Section in Preview */}
+              {attachments.length > 0 && (
+                <div className="my-4 p-3 rounded-lg bg-[#F5ECDC] border border-[#E8D9BE] font-sans">
+                  <div className="text-[11px] font-semibold text-[#6B5842] uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <Paperclip className="h-3.5 w-3.5 text-[#9F5405]" /> Attachments (
+                    {attachments.length})
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {attachments.map((att, idx) => (
+                      <div
+                        key={idx}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#FFF7EC] border border-[#D9C4A1] text-xs text-[#2E1F0F]"
+                      >
+                        {att.driveFileId ? (
+                          <HardDrive className="h-3 w-3 text-[#9F5405]" />
+                        ) : (
+                          <FileText className="h-3 w-3 text-[#9F5405]" />
+                        )}
+                        <span className="max-w-[180px] truncate">{att.fileName}</span>
+                        {att.sizeBytes ? (
+                          <span className="text-[10px] text-[#8C7359]">
+                            {formatFileSize(att.sizeBytes)}
+                          </span>
+                        ) : att.driveFileId ? (
+                          <span className="text-[10px] text-[#8C7359]">Drive</span>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Social / Support Footer */}
               <div className="pt-4 border-t border-[#E8D9BE] text-center font-sans text-xs text-[#6B5842] space-y-2">
                 <p>Have a question? Message us on Instagram — we're happy to help.</p>
@@ -1085,6 +1337,14 @@ export default function AdminBroadcastPage() {
                   {quota !== null ? `${quota} emails` : "Unknown"}
                 </span>
               </div>
+              {attachments.length > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Attachments:</span>
+                  <span className="font-medium text-foreground">
+                    {attachments.length} file{attachments.length > 1 ? "s" : ""}
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Quota Warnings */}

@@ -783,12 +783,66 @@ function handleBroadcastEmail(body) {
       ctaLink: ctaUrl
     });
 
-    MailApp.sendEmail({
+    // Process optional attachments (inline Base64 or Google Drive file references)
+    var attachmentBlobs = [];
+    if (body.attachments && Array.isArray(body.attachments)) {
+      for (var i = 0; i < body.attachments.length; i++) {
+        var att = body.attachments[i];
+        if (!att) continue;
+
+        // Option A: Google Drive file reference
+        if (att.driveFileId) {
+          try {
+            var rawDriveId = String(att.driveFileId).trim();
+            var driveIdMatch = rawDriveId.match(/[-\w]{25,}/);
+            var cleanDriveId = driveIdMatch ? driveIdMatch[0] : rawDriveId;
+            var driveFile = DriveApp.getFileById(cleanDriveId);
+            var driveBlob = driveFile.getBlob();
+            // If custom fileName with extension is supplied, rename the blob; otherwise keep the Drive file's original name
+            if (att.fileName && String(att.fileName).trim() && att.fileName.indexOf('.') !== -1) {
+              driveBlob.setName(String(att.fileName).trim());
+            }
+            attachmentBlobs.push(driveBlob);
+          } catch (driveErr) {
+            return {
+              success: false,
+              error: 'Failed to access Google Drive file (' + (att.fileName || att.driveFileId) + '): ' + driveErr.message
+            };
+          }
+        }
+        // Option B: Inline Base64 file
+        else if (att.base64Data) {
+          try {
+            var rawBase64 = String(att.base64Data);
+            var commaIdx = rawBase64.indexOf(',');
+            var cleanBase64 = commaIdx !== -1 ? rawBase64.substring(commaIdx + 1) : rawBase64;
+            var decodedBytes = Utilities.base64Decode(cleanBase64);
+            var fileName = att.fileName ? String(att.fileName).trim() : 'attachment';
+            var mimeType = att.mimeType ? String(att.mimeType).trim() : 'application/octet-stream';
+            var fileBlob = Utilities.newBlob(decodedBytes, mimeType, fileName);
+            attachmentBlobs.push(fileBlob);
+          } catch (blobErr) {
+            return {
+              success: false,
+              error: 'Failed to process attachment (' + (att.fileName || 'unnamed') + '): ' + blobErr.message
+            };
+          }
+        }
+      }
+    }
+
+    var sendOptions = {
       to: writerEmail,
       subject: subject,
       htmlBody: html,
       name: CONFIG.SENDER_NAME
-    });
+    };
+
+    if (attachmentBlobs.length > 0) {
+      sendOptions.attachments = attachmentBlobs;
+    }
+
+    MailApp.sendEmail(sendOptions);
 
     var remaining = 0;
     try {
