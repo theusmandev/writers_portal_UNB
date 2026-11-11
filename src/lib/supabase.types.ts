@@ -103,7 +103,10 @@ export interface Database {
           response_text: string;
           submitted_at: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["submission_responses"]["Row"], "id" | "submitted_at"> & {
+        Insert: Omit<
+          Database["public"]["Tables"]["submission_responses"]["Row"],
+          "id" | "submitted_at"
+        > & {
           id?: string;
           submitted_at?: string;
         };
@@ -141,7 +144,10 @@ export interface Database {
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["posts"]["Row"], "id" | "created_at" | "updated_at"> & {
+        Insert: Omit<
+          Database["public"]["Tables"]["posts"]["Row"],
+          "id" | "created_at" | "updated_at"
+        > & {
           id?: string;
           created_at?: string;
           updated_at?: string;
@@ -226,7 +232,10 @@ export interface Database {
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["writer_spotlights"]["Row"], "id" | "created_at" | "updated_at"> & {
+        Insert: Omit<
+          Database["public"]["Tables"]["writer_spotlights"]["Row"],
+          "id" | "created_at" | "updated_at"
+        > & {
           id?: string;
           created_at?: string;
           updated_at?: string;
@@ -239,8 +248,53 @@ export interface Database {
             isOneToOne: false;
             referencedRelation: "writers";
             referencedColumns: ["id"];
-          }
+          },
         ];
+      };
+      email_broadcast_logs: {
+        Row: {
+          id: string;
+          created_at: string;
+          subject: string;
+          heading_en: string | null;
+          heading_ur: string | null;
+          body_en: string | null;
+          body_ur: string | null;
+          audience_filter: string;
+          total_targeted: number;
+          sent_count: number;
+          failed_count: number;
+          remaining_quota: number | null;
+        };
+        Insert: {
+          id?: string;
+          created_at?: string;
+          subject: string;
+          heading_en?: string | null;
+          heading_ur?: string | null;
+          body_en?: string | null;
+          body_ur?: string | null;
+          audience_filter: string;
+          total_targeted?: number;
+          sent_count?: number;
+          failed_count?: number;
+          remaining_quota?: number | null;
+        };
+        Update: {
+          id?: string;
+          created_at?: string;
+          subject?: string;
+          heading_en?: string | null;
+          heading_ur?: string | null;
+          body_en?: string | null;
+          body_ur?: string | null;
+          audience_filter?: string;
+          total_targeted?: number;
+          sent_count?: number;
+          failed_count?: number;
+          remaining_quota?: number | null;
+        };
+        Relationships: [];
       };
     };
     Views: {
@@ -340,6 +394,9 @@ export type PostRow = Database["public"]["Tables"]["posts"]["Row"];
 export type PublicWriterRow = Database["public"]["Views"]["public_writers_view"]["Row"];
 export type SiteSettingsRow = Database["public"]["Tables"]["site_settings"]["Row"];
 export type WriterSpotlightRow = Database["public"]["Tables"]["writer_spotlights"]["Row"];
+export type EmailBroadcastLogRow = Database["public"]["Tables"]["email_broadcast_logs"]["Row"];
+export type EmailBroadcastLogInsert =
+  Database["public"]["Tables"]["email_broadcast_logs"]["Insert"];
 
 /** Shape returned by get_writer_dashboard_by_token() RPC.
  *  Only returned when token matches an is_featured=true writer.

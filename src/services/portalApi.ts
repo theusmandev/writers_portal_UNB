@@ -11,7 +11,17 @@
  */
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import type { SubmissionStatus } from "@/data/content";
-import type { WriterRow, SubmissionRow, PublicWriterRow, SiteSettingsRow, FeaturedWriterPublic, WriterDashboardData, WriterSpotlightRow } from "@/lib/supabase.types";
+import type {
+  WriterRow,
+  SubmissionRow,
+  PublicWriterRow,
+  SiteSettingsRow,
+  FeaturedWriterPublic,
+  WriterDashboardData,
+  WriterSpotlightRow,
+  EmailBroadcastLogRow,
+  EmailBroadcastLogInsert,
+} from "@/lib/supabase.types";
 
 // ── Public Types ──────────────────────────────────────────────────────────────
 
@@ -47,11 +57,11 @@ export type SubmissionRecord = {
   lastUpdated: string;
   status: SubmissionStatus;
   stage: string;
-  note?: string | undefined;        // admin_notes — internal update message
-  statusNote?: string | undefined;  // status_note — reason for Rejected / Action Required
+  note?: string | undefined; // admin_notes — internal update message
+  statusNote?: string | undefined; // status_note — reason for Rejected / Action Required
   publishedUrl?: string | undefined;
   resolvedPublishedUrl?: string | undefined;
-  hasResponse?: boolean;            // whether writer has already submitted a response
+  hasResponse?: boolean; // whether writer has already submitted a response
   manuscriptUrl?: string | null;
   coverUrl?: string | null;
   manuscriptUploadFailed?: boolean;
@@ -59,7 +69,14 @@ export type SubmissionRecord = {
   novelStatus?: string | undefined;
   isCompleted?: boolean;
   episodeCount?: number | undefined;
-  episodes?: Array<{ episode_number: number; upload_failed: boolean; drive_url?: string | null; published?: boolean }> | undefined;
+  episodes?:
+    | Array<{
+        episode_number: number;
+        upload_failed: boolean;
+        drive_url?: string | null;
+        published?: boolean;
+      }>
+    | undefined;
   estimatedPublishAt?: string | null;
 };
 
@@ -165,11 +182,14 @@ export async function uploadFileToScript(
   fileType: "manuscript" | "cover" | "image" | "episode",
   file: File,
   signal?: AbortSignal,
-  episodeNumber?: number
+  episodeNumber?: number,
 ): Promise<UploadFileResponse> {
   const scriptUrl = import.meta.env["VITE_PORTAL_API_URL"] as string | undefined;
   if (!scriptUrl) {
-    return { success: false, error: "Google Apps Script API URL (VITE_PORTAL_API_URL) is not configured." };
+    return {
+      success: false,
+      error: "Google Apps Script API URL (VITE_PORTAL_API_URL) is not configured.",
+    };
   }
 
   // Convert File to base64
@@ -258,7 +278,6 @@ export async function renamePostFolder(token: string, title: string): Promise<Ap
   }
 }
 
-
 // ── Public: updateSubmissionFiles ────────────────────────────────────────────
 // Updates the manuscript/cover Drive file references on a submission in Supabase.
 
@@ -271,18 +290,20 @@ export async function updateSubmissionFiles(
     coverId?: string;
     manuscriptUploadFailed?: boolean;
     coverUploadFailed?: boolean;
-  }
+  },
 ): Promise<ApiResult<null>> {
   if (!isSupabaseConfigured) {
     // Demo mode: update local store
     await new Promise((r) => setTimeout(r, 200));
     const all = readStore();
-    const idx = all.findIndex(r => r.submissionId === submissionCode);
+    const idx = all.findIndex((r) => r.submissionId === submissionCode);
     if (idx !== -1) {
       if (files.manuscriptUrl !== undefined) all[idx]!.manuscriptUrl = files.manuscriptUrl;
       if (files.coverUrl !== undefined) all[idx]!.coverUrl = files.coverUrl;
-      if (files.manuscriptUploadFailed !== undefined) all[idx]!.manuscriptUploadFailed = files.manuscriptUploadFailed;
-      if (files.coverUploadFailed !== undefined) all[idx]!.coverUploadFailed = files.coverUploadFailed;
+      if (files.manuscriptUploadFailed !== undefined)
+        all[idx]!.manuscriptUploadFailed = files.manuscriptUploadFailed;
+      if (files.coverUploadFailed !== undefined)
+        all[idx]!.coverUploadFailed = files.coverUploadFailed;
       writeStore(all);
     }
     return { success: true, data: null };
@@ -310,7 +331,7 @@ export async function updateSubmissionFiles(
 
 export async function updateEpisodeFile(
   episodeId: string,
-  updates: { upload_failed: boolean; drive_url: string }
+  updates: { upload_failed: boolean; drive_url: string },
 ): Promise<ApiResult<null>> {
   if (!isSupabaseConfigured) {
     return { success: true, data: null };
@@ -337,7 +358,7 @@ export async function uploadEpisodeFile(
   submissionCode: string,
   episodeNumber: number,
   file: File,
-  signal?: AbortSignal
+  signal?: AbortSignal,
 ): Promise<UploadFileResponse> {
   return uploadFileToScript(submissionCode, "episode", file, signal, episodeNumber);
 }
@@ -350,7 +371,7 @@ export async function saveEpisodeRecord(
   driveUrl: string | null,
   driveFileId: string | null,
   fileName: string | null,
-  uploadFailed: boolean
+  uploadFailed: boolean,
 ): Promise<ApiResult<null>> {
   if (!isSupabaseConfigured) {
     // Demo mode: skip local store update for now (or could add logic here)
@@ -384,14 +405,14 @@ export async function addEpisodesToSubmission(
     driveFileId: string | null;
     fileName: string | null;
     uploadFailed: boolean;
-  }>
+  }>,
 ): Promise<ApiResult<null>> {
   if (!isSupabaseConfigured) {
     // Demo mode fallback
     await new Promise((r) => setTimeout(r, 600));
     return { success: true, data: null };
   }
-  
+
   try {
     // Process each file sequentially
     for (const file of episodeFiles) {
@@ -418,7 +439,7 @@ export async function addEpisodesToSubmission(
 
 export async function publishEpisodes(
   submissionId: string,
-  episodeNumbers: number[]
+  episodeNumbers: number[],
 ): Promise<ApiResult<null>> {
   if (!isSupabaseConfigured) {
     // Demo mode fallback
@@ -460,8 +481,16 @@ export interface EmailPayload {
 }
 
 export async function sendNotificationEmail(
-  emailType: "received" | "action_required" | "rejected" | "published" | "episodes_added" | "episodes_published" | "publish_scheduled" | "episode_scheduled",
-  payload: EmailPayload
+  emailType:
+    | "received"
+    | "action_required"
+    | "rejected"
+    | "published"
+    | "episodes_added"
+    | "episodes_published"
+    | "publish_scheduled"
+    | "episode_scheduled",
+  payload: EmailPayload,
 ): Promise<ApiResult<null>> {
   const scriptUrl = import.meta.env["VITE_PORTAL_API_URL"] as string | undefined;
   if (!scriptUrl) {
@@ -545,7 +574,7 @@ export async function submitNovel(input: SubmissionInput): Promise<ApiResult<Sub
       p_novel_title: input.novelTitle,
       p_genre: input.genre || null,
       p_novel_status: input.novelStatus,
-      p_language: input.language ?? 'Urdu',
+      p_language: input.language ?? "Urdu",
       p_description: input.synopsis || null,
       p_manuscript_drive_url: null,
       p_manuscript_drive_file_id: null,
@@ -687,12 +716,15 @@ export async function trackSubmission(
 
 // ── Public: deleteSubmission ──────────────────────────────────────────────────
 
-export async function deleteSubmission(submissionId: string, submissionCode: string): Promise<ApiResult<null>> {
+export async function deleteSubmission(
+  submissionId: string,
+  submissionCode: string,
+): Promise<ApiResult<null>> {
   if (!isSupabaseConfigured) {
     // Demo mode: update local store
     await new Promise((r) => setTimeout(r, 600));
     const all = readStore();
-    writeStore(all.filter(s => s.submissionId !== submissionCode));
+    writeStore(all.filter((s) => s.submissionId !== submissionCode));
     return { success: true, data: null };
   }
 
@@ -709,14 +741,14 @@ export async function deleteSubmission(submissionId: string, submissionCode: str
             submissionCode,
           }),
         });
-        
+
         if (!res.ok) {
-           console.warn(`Drive folder deletion returned status ${res.status}`);
+          console.warn(`Drive folder deletion returned status ${res.status}`);
         } else {
-           const data = await res.json();
-           if (!data.success) {
-             console.warn("Drive folder deletion failed:", data.error);
-           }
+          const data = await res.json();
+          if (!data.success) {
+            console.warn("Drive folder deletion failed:", data.error);
+          }
         }
       } catch (err: any) {
         console.warn("Error calling Apps Script to delete folder:", err?.message);
@@ -729,7 +761,7 @@ export async function deleteSubmission(submissionId: string, submissionCode: str
       p_submission_id: submissionId,
     });
     if (error) {
-       return { success: false, error: "Database deletion failed: " + error.message };
+      return { success: false, error: "Database deletion failed: " + error.message };
     }
 
     return { success: true, data: null };
@@ -816,7 +848,7 @@ export async function getSubmissionsByEmail(
     if (error) {
       return { success: false, error: error.message };
     }
-    
+
     // Explicitly cast the returned array to WriterSubmissionSummary[]
     // Since get_submissions_by_email doesn't currently return the missing fields from the DB view,
     // they will just be undefined. The UI will just not show the Drive missing warnings for email lookups.
@@ -959,14 +991,10 @@ export async function getSiteSettings(): Promise<ApiResult<SiteSettingsRow>> {
   }
 
   try {
-    const { data, error } = await supabase
-      .from("site_settings")
-      .select("*")
-      .eq("id", 1)
-      .single();
+    const { data, error } = await supabase.from("site_settings").select("*").eq("id", 1).single();
 
     if (error) {
-      if (error.code === 'PGRST116') {
+      if (error.code === "PGRST116") {
         return { success: true, data: defaultSiteSettings };
       }
       return { success: false, error: error.message };
@@ -977,7 +1005,7 @@ export async function getSiteSettings(): Promise<ApiResult<SiteSettingsRow>> {
       data: {
         ...defaultSiteSettings,
         ...data,
-      } as SiteSettingsRow
+      } as SiteSettingsRow,
     };
   } catch (err: any) {
     return { success: false, error: err?.message || "Failed to load site settings." };
@@ -985,7 +1013,7 @@ export async function getSiteSettings(): Promise<ApiResult<SiteSettingsRow>> {
 }
 
 export async function updateContactAndWidgetSettings(
-  settings: ContactAndWidgetSettings
+  settings: ContactAndWidgetSettings,
 ): Promise<ApiResult<null>> {
   if (!isSupabaseConfigured) {
     await new Promise((r) => setTimeout(r, 400));
@@ -1001,8 +1029,12 @@ export async function updateContactAndWidgetSettings(
         instagram_handle: settings.instagram_handle.trim(),
         instagram_url: settings.instagram_url.trim(),
         show_floating_widget: settings.show_floating_widget,
-        ...(settings.trustpilot_url !== undefined ? { trustpilot_url: settings.trustpilot_url.trim() } : {}),
-        ...(settings.show_trustpilot !== undefined ? { show_trustpilot: settings.show_trustpilot } : {}),
+        ...(settings.trustpilot_url !== undefined
+          ? { trustpilot_url: settings.trustpilot_url.trim() }
+          : {}),
+        ...(settings.show_trustpilot !== undefined
+          ? { show_trustpilot: settings.show_trustpilot }
+          : {}),
       })
       .eq("id", 1);
 
@@ -1015,7 +1047,10 @@ export async function updateContactAndWidgetSettings(
 
 export async function getSubmissionSettings(): Promise<ApiResult<SiteSettings>> {
   if (!isSupabaseConfigured) {
-    return { success: true, data: { submissions_paused: false, pause_message: null, preferred_publish_site: "unb" } };
+    return {
+      success: true,
+      data: { submissions_paused: false, pause_message: null, preferred_publish_site: "unb" },
+    };
   }
 
   try {
@@ -1026,9 +1061,12 @@ export async function getSubmissionSettings(): Promise<ApiResult<SiteSettings>> 
       .single();
 
     if (error) {
-      if (error.code === 'PGRST116') {
+      if (error.code === "PGRST116") {
         // No row found, default to false
-        return { success: true, data: { submissions_paused: false, pause_message: null, preferred_publish_site: "unb" } };
+        return {
+          success: true,
+          data: { submissions_paused: false, pause_message: null, preferred_publish_site: "unb" },
+        };
       }
       return { success: false, error: error.message };
     }
@@ -1042,7 +1080,7 @@ export async function getSubmissionSettings(): Promise<ApiResult<SiteSettings>> 
 export async function updateSubmissionSettings(
   paused: boolean,
   message: string,
-  preferredPublishSite: "unb" | "ufb"
+  preferredPublishSite: "unb" | "ufb",
 ): Promise<ApiResult<null>> {
   if (!isSupabaseConfigured) {
     await new Promise((r) => setTimeout(r, 400));
@@ -1052,7 +1090,11 @@ export async function updateSubmissionSettings(
   try {
     const { error } = await supabase
       .from("site_settings")
-      .update({ submissions_paused: paused, pause_message: message || null, preferred_publish_site: preferredPublishSite })
+      .update({
+        submissions_paused: paused,
+        pause_message: message || null,
+        preferred_publish_site: preferredPublishSite,
+      })
       .eq("id", 1);
 
     if (error) return { success: false, error: error.message };
@@ -1064,19 +1106,41 @@ export async function updateSubmissionSettings(
 
 export async function getNotificationSettings(): Promise<ApiResult<NotificationSettings>> {
   if (!isSupabaseConfigured) {
-    return { success: true, data: { notification_enabled: false, notification_message: null, notification_link_url: null, notification_link_text: null, notification_version: 1, custom_head_code: null } };
+    return {
+      success: true,
+      data: {
+        notification_enabled: false,
+        notification_message: null,
+        notification_link_url: null,
+        notification_link_text: null,
+        notification_version: 1,
+        custom_head_code: null,
+      },
+    };
   }
 
   try {
     const { data, error } = await supabase
       .from("site_settings")
-      .select("notification_enabled, notification_message, notification_link_url, notification_link_text, notification_version, custom_head_code")
+      .select(
+        "notification_enabled, notification_message, notification_link_url, notification_link_text, notification_version, custom_head_code",
+      )
       .eq("id", 1)
       .single();
 
     if (error) {
-      if (error.code === 'PGRST116') {
-        return { success: true, data: { notification_enabled: false, notification_message: null, notification_link_url: null, notification_link_text: null, notification_version: 1, custom_head_code: null } };
+      if (error.code === "PGRST116") {
+        return {
+          success: true,
+          data: {
+            notification_enabled: false,
+            notification_message: null,
+            notification_link_url: null,
+            notification_link_text: null,
+            notification_version: 1,
+            custom_head_code: null,
+          },
+        };
       }
       return { success: false, error: error.message };
     }
@@ -1091,7 +1155,7 @@ export async function updateNotificationSettings(
   enabled: boolean,
   message: string,
   linkUrl: string,
-  linkText: string
+  linkText: string,
 ): Promise<ApiResult<null>> {
   if (!isSupabaseConfigured) {
     await new Promise((r) => setTimeout(r, 400));
@@ -1101,25 +1165,27 @@ export async function updateNotificationSettings(
   try {
     const current = await getNotificationSettings();
     let newVersion = 1;
-    
+
     if (current.success) {
       const c = current.data;
       newVersion = c.notification_version || 1;
-      if (c.notification_message !== (message || null) || 
-          c.notification_link_url !== (linkUrl || null) || 
-          c.notification_link_text !== (linkText || null)) {
+      if (
+        c.notification_message !== (message || null) ||
+        c.notification_link_url !== (linkUrl || null) ||
+        c.notification_link_text !== (linkText || null)
+      ) {
         newVersion += 1;
       }
     }
 
     const { error } = await supabase
       .from("site_settings")
-      .update({ 
-        notification_enabled: enabled, 
+      .update({
+        notification_enabled: enabled,
         notification_message: message || null,
         notification_link_url: linkUrl || null,
         notification_link_text: linkText || null,
-        notification_version: newVersion
+        notification_version: newVersion,
       })
       .eq("id", 1);
 
@@ -1130,9 +1196,7 @@ export async function updateNotificationSettings(
   }
 }
 
-export async function updateCustomHeadCode(
-  customHeadCode: string
-): Promise<ApiResult<null>> {
+export async function updateCustomHeadCode(customHeadCode: string): Promise<ApiResult<null>> {
   if (!isSupabaseConfigured) {
     await new Promise((r) => setTimeout(r, 400));
     return { success: true, data: null };
@@ -1141,7 +1205,7 @@ export async function updateCustomHeadCode(
   try {
     const { error } = await supabase
       .from("site_settings")
-      .update({ 
+      .update({
         custom_head_code: customHeadCode || null,
       })
       .eq("id", 1);
@@ -1213,7 +1277,7 @@ export async function setFeaturedWriter(
   isFeatured: boolean,
   featuredBio: string,
   featuredSlug: string,
-  lookerStudioEmbedUrl: string
+  lookerStudioEmbedUrl: string,
 ): Promise<ApiResult<null>> {
   try {
     const { error } = await supabase.rpc("admin_set_featured_writer", {
@@ -1243,20 +1307,25 @@ export async function setFeaturedWriter(
 import type { PostRow } from "@/lib/supabase.types";
 
 export async function getPublishedPosts(): Promise<ApiResult<PostRow[]>> {
-  if (!isSupabaseConfigured) return { 
-    success: true, 
-    data: [{
-      id: "demo-id",
-      title: 'سوشل میڈیا لنک — کیوں ضروری ہے؟',
-      slug: 'social-media-link-importance',
-      content: 'السلام علیکم پیارے لکھاریو! 🌸\n\nآپ نے دیکھا ہوگا کہ سبمیشن فارم میں ہم نے ایک نیا اختیاری خانہ شامل کیا ہے — سوشل میڈیا لنک۔ سوچا آپ کو بتا دیں کہ یہ کیوں رکھا گیا ہے۔ 🤍',
-      published: true,
-      meta_title: 'سوشل میڈیا لنک — کیوں ضروری ہے؟ | Umera Ahmed Novel Bank',
-      meta_description: 'جانیے کہ عمیرہ احمد ناول بینک (UNB) پر اپنا سوشل میڈیا لنک دینا کیوں ضروری ہے۔ یہ آپ کے قارئین سے جڑنے اور اپنی پہچان بنانے کا ایک بہترین ذریعہ ہے۔',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    }] 
-  };
+  if (!isSupabaseConfigured)
+    return {
+      success: true,
+      data: [
+        {
+          id: "demo-id",
+          title: "سوشل میڈیا لنک — کیوں ضروری ہے؟",
+          slug: "social-media-link-importance",
+          content:
+            "السلام علیکم پیارے لکھاریو! 🌸\n\nآپ نے دیکھا ہوگا کہ سبمیشن فارم میں ہم نے ایک نیا اختیاری خانہ شامل کیا ہے — سوشل میڈیا لنک۔ سوچا آپ کو بتا دیں کہ یہ کیوں رکھا گیا ہے۔ 🤍",
+          published: true,
+          meta_title: "سوشل میڈیا لنک — کیوں ضروری ہے؟ | Umera Ahmed Novel Bank",
+          meta_description:
+            "جانیے کہ عمیرہ احمد ناول بینک (UNB) پر اپنا سوشل میڈیا لنک دینا کیوں ضروری ہے۔ یہ آپ کے قارئین سے جڑنے اور اپنی پہچان بنانے کا ایک بہترین ذریعہ ہے۔",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+      ],
+    };
   try {
     const { data, error } = await supabase
       .from("posts")
@@ -1271,20 +1340,23 @@ export async function getPublishedPosts(): Promise<ApiResult<PostRow[]>> {
 }
 
 export async function getPostBySlug(slug: string): Promise<ApiResult<PostRow | null>> {
-  if (!isSupabaseConfigured) return { 
-    success: true, 
-    data: {
-      id: "demo-id",
-      title: 'سوشل میڈیا لنک — کیوں ضروری ہے؟',
-      slug: 'social-media-link-importance',
-      content: 'السلام علیکم پیارے لکھاریو! 🌸\n\nآپ نے دیکھا ہوگا کہ سبمیشن فارم میں ہم نے ایک نیا اختیاری خانہ شامل کیا ہے — سوشل میڈیا لنک۔ سوچا آپ کو بتا دیں کہ یہ کیوں رکھا گیا ہے۔ 🤍',
-      published: true,
-      meta_title: 'سوشل میڈیا لنک — کیوں ضروری ہے؟ | Umera Ahmed Novel Bank',
-      meta_description: 'جانیے کہ عمیرہ احمد ناول بینک (UNB) پر اپنا سوشل میڈیا لنک دینا کیوں ضروری ہے۔ یہ آپ کے قارئین سے جڑنے اور اپنی پہچان بنانے کا ایک بہترین ذریعہ ہے۔',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    } 
-  };
+  if (!isSupabaseConfigured)
+    return {
+      success: true,
+      data: {
+        id: "demo-id",
+        title: "سوشل میڈیا لنک — کیوں ضروری ہے؟",
+        slug: "social-media-link-importance",
+        content:
+          "السلام علیکم پیارے لکھاریو! 🌸\n\nآپ نے دیکھا ہوگا کہ سبمیشن فارم میں ہم نے ایک نیا اختیاری خانہ شامل کیا ہے — سوشل میڈیا لنک۔ سوچا آپ کو بتا دیں کہ یہ کیوں رکھا گیا ہے۔ 🤍",
+        published: true,
+        meta_title: "سوشل میڈیا لنک — کیوں ضروری ہے؟ | Umera Ahmed Novel Bank",
+        meta_description:
+          "جانیے کہ عمیرہ احمد ناول بینک (UNB) پر اپنا سوشل میڈیا لنک دینا کیوں ضروری ہے۔ یہ آپ کے قارئین سے جڑنے اور اپنی پہچان بنانے کا ایک بہترین ذریعہ ہے۔",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+    };
   try {
     const { data, error } = await supabase
       .from("posts")
@@ -1318,11 +1390,7 @@ export async function getAllPosts(): Promise<ApiResult<PostRow[]>> {
 export async function getAdminPostById(id: string): Promise<ApiResult<PostRow | null>> {
   if (!isSupabaseConfigured) return { success: true, data: null };
   try {
-    const { data, error } = await supabase
-      .from("posts")
-      .select("*")
-      .eq("id", id)
-      .maybeSingle();
+    const { data, error } = await supabase.from("posts").select("*").eq("id", id).maybeSingle();
     if (error) throw error;
     return { success: true, data: data as PostRow | null };
   } catch (err: any) {
@@ -1333,11 +1401,7 @@ export async function getAdminPostById(id: string): Promise<ApiResult<PostRow | 
 export async function createPost(post: Partial<PostRow>): Promise<ApiResult<PostRow>> {
   if (!isSupabaseConfigured) return { success: false, error: "Demo mode" };
   try {
-    const { data, error } = await supabase
-      .from("posts")
-      .insert(post)
-      .select()
-      .single();
+    const { data, error } = await supabase.from("posts").insert(post).select().single();
     if (error) throw error;
     return { success: true, data: data as PostRow };
   } catch (err: any) {
@@ -1362,10 +1426,7 @@ export async function updatePost(id: string, updates: Partial<PostRow>): Promise
 export async function deletePost(id: string): Promise<ApiResult<null>> {
   if (!isSupabaseConfigured) return { success: false, error: "Demo mode" };
   try {
-    const { error } = await supabase
-      .from("posts")
-      .delete()
-      .eq("id", id);
+    const { error } = await supabase.from("posts").delete().eq("id", id);
     if (error) throw error;
     return { success: true, data: null };
   } catch (err: any) {
@@ -1408,14 +1469,17 @@ export async function getEpisodeMinimumExceptions(): Promise<ApiResult<EpisodeMi
   }
 }
 
-export async function addEpisodeMinimumException(email: string, note?: string): Promise<ApiResult<null>> {
+export async function addEpisodeMinimumException(
+  email: string,
+  note?: string,
+): Promise<ApiResult<null>> {
   if (!isSupabaseConfigured) return { success: false, error: "Demo mode" };
   try {
     const { error } = await supabase
       .from("episode_minimum_exceptions")
       .insert({ email: email.trim().toLowerCase(), note: note || null });
     if (error) {
-      if (error.code === '23505') {
+      if (error.code === "23505") {
         return { success: false, error: "This email is already in the exceptions list." };
       }
       throw error;
@@ -1429,10 +1493,7 @@ export async function addEpisodeMinimumException(email: string, note?: string): 
 export async function removeEpisodeMinimumException(id: string): Promise<ApiResult<null>> {
   if (!isSupabaseConfigured) return { success: false, error: "Demo mode" };
   try {
-    const { error } = await supabase
-      .from("episode_minimum_exceptions")
-      .delete()
-      .eq("id", id);
+    const { error } = await supabase.from("episode_minimum_exceptions").delete().eq("id", id);
     if (error) throw error;
     return { success: true, data: null };
   } catch (err: any) {
@@ -1454,14 +1515,11 @@ export async function removeEpisodeMinimumException(id: string): Promise<ApiResu
  * logged or exposed.
  */
 export async function getWriterDashboardByToken(
-  token: string
+  token: string,
 ): Promise<ApiResult<WriterDashboardData | null>> {
   if (!isSupabaseConfigured) return { success: true, data: null };
   try {
-    const { data, error } = await supabase.rpc(
-      "get_writer_dashboard_by_token",
-      { p_token: token }
-    );
+    const { data, error } = await supabase.rpc("get_writer_dashboard_by_token", { p_token: token });
     if (error) throw error;
     const rows = (data ?? []) as WriterDashboardData[];
     return { success: true, data: rows[0] ?? null };
@@ -1483,7 +1541,7 @@ export async function getWriterDashboardByToken(
  */
 
 export async function getFeaturedWriterBySlug(
-  slug: string
+  slug: string,
 ): Promise<ApiResult<FeaturedWriterPublic | null>> {
   if (!isSupabaseConfigured) return { success: true, data: null };
   try {
@@ -1515,7 +1573,7 @@ export async function getAdminSpotlights(): Promise<ApiResult<AdminSpotlight[]>>
       .select("*, writers(id, full_name, pen_name, email)")
       .order("created_at", { ascending: false });
     if (error) throw error;
-    return { success: true, data: (data as any) as AdminSpotlight[] };
+    return { success: true, data: data as any as AdminSpotlight[] };
   } catch (err: any) {
     return { success: false, error: err?.message || "Could not load spotlights." };
   }
@@ -1530,7 +1588,7 @@ export async function getAdminSpotlightById(id: string): Promise<ApiResult<Admin
       .eq("id", id)
       .single();
     if (error) throw error;
-    return { success: true, data: (data as any) as AdminSpotlight };
+    return { success: true, data: data as any as AdminSpotlight };
   } catch (err: any) {
     return { success: false, error: err?.message || "Could not load spotlight." };
   }
@@ -1547,7 +1605,10 @@ export async function createSpotlight(data: Partial<WriterSpotlightRow>): Promis
   }
 }
 
-export async function updateSpotlight(id: string, data: Partial<WriterSpotlightRow>): Promise<ApiResult<null>> {
+export async function updateSpotlight(
+  id: string,
+  data: Partial<WriterSpotlightRow>,
+): Promise<ApiResult<null>> {
   if (!isSupabaseConfigured) return { success: false, error: "Demo mode" };
   try {
     const { error } = await supabase.from("writer_spotlights").update(data).eq("id", id);
@@ -1592,6 +1653,257 @@ export async function getSpotlightBySlug(slug: string) {
     return { success: true, data: data && data.length > 0 ? data[0] : null };
   } catch (err: any) {
     return { success: false, error: err?.message || "Could not load spotlight." };
+  }
+}
+
+// ── Public: Broadcast Emails & Quota Meter ──────────────────────────────────
+
+export interface BroadcastEmailPayload {
+  writerEmail: string;
+  writerName?: string;
+  subject: string;
+  headingEn?: string;
+  headingUr?: string;
+  bodyEn?: string;
+  bodyUr?: string;
+  duaUr?: string;
+  ctaText?: string;
+  ctaUrl?: string;
+}
+
+export async function checkEmailQuota(): Promise<{
+  remainingQuota: number | null;
+  error?: string;
+}> {
+  const scriptUrl = import.meta.env["VITE_PORTAL_API_URL"] as string | undefined;
+  if (!scriptUrl) {
+    return {
+      remainingQuota: null,
+      error: "Google Apps Script API URL (VITE_PORTAL_API_URL) is not configured.",
+    };
+  }
+
+  try {
+    const res = await fetch(scriptUrl, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "checkQuota" }),
+    });
+
+    if (!res.ok) {
+      return { remainingQuota: null, error: `Server responded with status ${res.status}` };
+    }
+
+    const data = await res.json();
+    if (!data || !data.success) {
+      return { remainingQuota: null, error: data?.error || "Failed to retrieve quota." };
+    }
+
+    return {
+      remainingQuota: typeof data.remainingQuota === "number" ? data.remainingQuota : null,
+    };
+  } catch (err: unknown) {
+    return {
+      remainingQuota: null,
+      error: (err as Error)?.message || "Failed to communicate with email service.",
+    };
+  }
+}
+
+export async function sendBroadcastEmailToRecipient(
+  payload: BroadcastEmailPayload,
+): Promise<{ success: boolean; remainingQuota?: number; error?: string }> {
+  const scriptUrl = import.meta.env["VITE_PORTAL_API_URL"] as string | undefined;
+  if (!scriptUrl) {
+    return {
+      success: false,
+      error: "Google Apps Script API URL (VITE_PORTAL_API_URL) is not configured.",
+    };
+  }
+
+  try {
+    const res = await fetch(scriptUrl, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        action: "broadcastEmail",
+        ...payload,
+      }),
+    });
+
+    if (!res.ok) {
+      return { success: false, error: `Server responded with status ${res.status}` };
+    }
+
+    const data = await res.json();
+    if (!data?.success) {
+      return {
+        success: false,
+        remainingQuota: typeof data?.remainingQuota === "number" ? data.remainingQuota : undefined,
+        error: data?.error || "Failed to send broadcast email.",
+      };
+    }
+
+    return {
+      success: true,
+      remainingQuota: typeof data.remainingQuota === "number" ? data.remainingQuota : undefined,
+    };
+  } catch (err: unknown) {
+    return {
+      success: false,
+      error: (err as Error)?.message || "Failed to communicate with email service.",
+    };
+  }
+}
+
+export interface BroadcastRecipient {
+  writerId: string;
+  email: string;
+  displayName: string;
+  fullName: string;
+  penName: string | null;
+  latestNovelTitle: string;
+  statuses: string[];
+  hasActiveOngoing: boolean;
+  hasCompleted: boolean;
+  submissionCount: number;
+}
+
+export async function getBroadcastRecipients(): Promise<ApiResult<BroadcastRecipient[]>> {
+  if (!isSupabaseConfigured) {
+    return { success: true, data: [] };
+  }
+
+  try {
+    const { data: writersData, error: wErr } = await supabase
+      .from("writers")
+      .select(
+        `
+        id,
+        email,
+        full_name,
+        pen_name,
+        submissions (
+          id,
+          submission_code,
+          novel_title,
+          novel_status,
+          is_completed,
+          current_status,
+          submission_date
+        )
+      `,
+      )
+      .order("registration_date", { ascending: false });
+
+    if (wErr) throw wErr;
+
+    const emailMap = new Map<string, BroadcastRecipient>();
+
+    for (const w of writersData || []) {
+      const email = (w.email || "").trim().toLowerCase();
+      if (!email || !email.includes("@")) continue;
+
+      const submissions = (w.submissions || []) as Array<{
+        id: string;
+        submission_code: string;
+        novel_title: string;
+        novel_status: string | null;
+        is_completed: boolean;
+        current_status: string;
+        submission_date: string;
+      }>;
+
+      // Sort submissions descending by date to find latest
+      submissions.sort(
+        (a, b) => new Date(b.submission_date).getTime() - new Date(a.submission_date).getTime(),
+      );
+
+      const latestTitle = submissions[0]?.novel_title || "your novel";
+      const statuses = Array.from(
+        new Set(submissions.map((s) => s.current_status).filter(Boolean)),
+      );
+      const hasActiveOngoing = submissions.some(
+        (s) => s.novel_status === "Ongoing" && !s.is_completed,
+      );
+      const hasCompleted = submissions.some((s) => s.novel_status === "Complete" || s.is_completed);
+
+      if (!emailMap.has(email)) {
+        emailMap.set(email, {
+          writerId: w.id,
+          email: (w.email || "").trim(),
+          displayName: (w.pen_name || w.full_name || "Writer").trim(),
+          fullName: (w.full_name || "").trim(),
+          penName: w.pen_name ? w.pen_name.trim() : null,
+          latestNovelTitle: latestTitle,
+          statuses,
+          hasActiveOngoing,
+          hasCompleted,
+          submissionCount: submissions.length,
+        });
+      } else {
+        const existing = emailMap.get(email)!;
+        existing.submissionCount += submissions.length;
+        existing.statuses = Array.from(new Set([...existing.statuses, ...statuses]));
+        if (hasActiveOngoing) existing.hasActiveOngoing = true;
+        if (hasCompleted) existing.hasCompleted = true;
+      }
+    }
+
+    return { success: true, data: Array.from(emailMap.values()) };
+  } catch (err: unknown) {
+    return {
+      success: false,
+      error: (err as Error)?.message || "Failed to load broadcast recipients.",
+    };
+  }
+}
+
+export async function getBroadcastLogs(): Promise<ApiResult<EmailBroadcastLogRow[]>> {
+  if (!isSupabaseConfigured) {
+    return { success: true, data: [] };
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("email_broadcast_logs")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(25);
+
+    if (error) {
+      console.warn("Could not load email_broadcast_logs:", error.message);
+      return { success: true, data: [] };
+    }
+
+    return { success: true, data: data || [] };
+  } catch {
+    return { success: true, data: [] };
+  }
+}
+
+export async function createBroadcastLog(
+  log: EmailBroadcastLogInsert,
+): Promise<ApiResult<EmailBroadcastLogRow | null>> {
+  if (!isSupabaseConfigured) {
+    return { success: true, data: null };
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("email_broadcast_logs")
+      .insert(log)
+      .select()
+      .single();
+
+    if (error) {
+      console.warn("Could not insert email_broadcast_logs:", error.message);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data };
+  } catch (err: unknown) {
+    return { success: false, error: (err as Error)?.message || "Failed to save broadcast log." };
   }
 }
 

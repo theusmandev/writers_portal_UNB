@@ -34,6 +34,7 @@ const AdminSubmissions = React.lazy(() => import("./routes/admin/submissions"));
 const AdminSubmissionDetail = React.lazy(() => import("./routes/admin/submission-detail"));
 const AdminWriters = React.lazy(() => import("./routes/admin/writers"));
 const AdminWriterDetail = React.lazy(() => import("./routes/admin/writer-detail"));
+const AdminBroadcast = React.lazy(() => import("./routes/admin/broadcast"));
 const AdminPosts = React.lazy(() => import("./routes/admin/posts"));
 const AdminPostEdit = React.lazy(() => import("./routes/admin/post-edit"));
 const AdminSpotlights = React.lazy(() => import("./routes/admin/spotlights"));
@@ -72,56 +73,57 @@ export default function App() {
       <BackToTop />
       <Suspense fallback={<PageLoader />}>
         <Routes>
-        {/* ── Admin login (no auth guard, no public layout) ── */}
-        <Route path="/admin/login" element={<AdminLoginPage />} />
+          {/* ── Admin login (no auth guard, no public layout) ── */}
+          <Route path="/admin/login" element={<AdminLoginPage />} />
 
-        {/* ── Writer analytics dashboard (bare, token-gated, noindex) ── */}
-        <Route path="/writer-stats/:token" element={<WriterStatsPage />} />
+          {/* ── Writer analytics dashboard (bare, token-gated, noindex) ── */}
+          <Route path="/writer-stats/:token" element={<WriterStatsPage />} />
 
-        {/* ── Protected admin routes (require session, own layout) ── */}
-        <Route
-          path="/admin"
-          element={
-            <AdminGuard>
-              <AdminLayout />
-            </AdminGuard>
-          }
-        >
-          <Route index element={<AdminDashboard />} />
-          <Route path="submissions" element={<AdminSubmissions />} />
-          <Route path="submissions/:id" element={<AdminSubmissionDetail />} />
-          <Route path="writers" element={<AdminWriters />} />
-          <Route path="writers/:id" element={<AdminWriterDetail />} />
-          <Route path="posts" element={<AdminPosts />} />
-          <Route path="posts/new" element={<AdminPostEdit />} />
-          <Route path="posts/:id/edit" element={<AdminPostEdit />} />
-          <Route path="spotlights" element={<AdminSpotlights />} />
-          <Route path="spotlights/new" element={<AdminSpotlightEdit />} />
-          <Route path="spotlights/:id/edit" element={<AdminSpotlightEdit />} />
-          <Route path="settings" element={<AdminSettings />} />
-          <Route path="*" element={<NotFound />} />
-        </Route>
+          {/* ── Protected admin routes (require session, own layout) ── */}
+          <Route
+            path="/admin"
+            element={
+              <AdminGuard>
+                <AdminLayout />
+              </AdminGuard>
+            }
+          >
+            <Route index element={<AdminDashboard />} />
+            <Route path="submissions" element={<AdminSubmissions />} />
+            <Route path="submissions/:id" element={<AdminSubmissionDetail />} />
+            <Route path="writers" element={<AdminWriters />} />
+            <Route path="writers/:id" element={<AdminWriterDetail />} />
+            <Route path="broadcast" element={<AdminBroadcast />} />
+            <Route path="posts" element={<AdminPosts />} />
+            <Route path="posts/new" element={<AdminPostEdit />} />
+            <Route path="posts/:id/edit" element={<AdminPostEdit />} />
+            <Route path="spotlights" element={<AdminSpotlights />} />
+            <Route path="spotlights/new" element={<AdminSpotlightEdit />} />
+            <Route path="spotlights/:id/edit" element={<AdminSpotlightEdit />} />
+            <Route path="settings" element={<AdminSettings />} />
+            <Route path="*" element={<NotFound />} />
+          </Route>
 
-        {/* ── Public routes (with site header + footer) ── */}
-        <Route element={<PublicLayout />}>
-          <Route path="/" element={<Index />} />
-          <Route path="/process" element={<Process />} />
-          <Route path="/guidelines" element={<Guidelines />} />
-          <Route path="/policy" element={<Policy />} />
-          <Route path="/timeline" element={<Timeline />} />
-          <Route path="/faq" element={<Faq />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/submit" element={<SubmitPage />} />
-          <Route path="/track" element={<TrackPage />} />
-          <Route path="/writers" element={<WritersPage />} />
-          <Route path="/writers/featured" element={<FeaturedWritersList />} />
-          <Route path="/writers/featured/:slug" element={<FeaturedWriterPage />} />
-          <Route path="/updates" element={<PostsPage />} />
-          <Route path="/updates/:slug" element={<PostDetailPage />} />
-          <Route path="/spotlights" element={<SpotlightsPage />} />
-          <Route path="/spotlights/:slug" element={<SpotlightPage />} />
-          <Route path="*" element={<NotFound />} />
-        </Route>
+          {/* ── Public routes (with site header + footer) ── */}
+          <Route element={<PublicLayout />}>
+            <Route path="/" element={<Index />} />
+            <Route path="/process" element={<Process />} />
+            <Route path="/guidelines" element={<Guidelines />} />
+            <Route path="/policy" element={<Policy />} />
+            <Route path="/timeline" element={<Timeline />} />
+            <Route path="/faq" element={<Faq />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/submit" element={<SubmitPage />} />
+            <Route path="/track" element={<TrackPage />} />
+            <Route path="/writers" element={<WritersPage />} />
+            <Route path="/writers/featured" element={<FeaturedWritersList />} />
+            <Route path="/writers/featured/:slug" element={<FeaturedWriterPage />} />
+            <Route path="/updates" element={<PostsPage />} />
+            <Route path="/updates/:slug" element={<PostDetailPage />} />
+            <Route path="/spotlights" element={<SpotlightsPage />} />
+            <Route path="/spotlights/:slug" element={<SpotlightPage />} />
+            <Route path="*" element={<NotFound />} />
+          </Route>
         </Routes>
       </Suspense>
     </BrowserRouter>

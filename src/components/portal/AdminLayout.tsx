@@ -11,6 +11,7 @@ import {
   Menu,
   Star,
   ExternalLink,
+  Mail,
 } from "lucide-react";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { SEO } from "@/components/SEO";
@@ -20,6 +21,7 @@ const navItems = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
   { to: "/admin/submissions", label: "Submissions", icon: FileText, end: false },
   { to: "/admin/writers", label: "Writers", icon: Users, end: false },
+  { to: "/admin/broadcast", label: "Broadcast", icon: Mail, end: false },
   { to: "/admin/posts", label: "Posts", icon: Newspaper, end: false },
   { to: "/admin/spotlights", label: "Spotlights", icon: Star, end: false },
   { to: "/admin/settings", label: "Settings", icon: Settings, end: false },

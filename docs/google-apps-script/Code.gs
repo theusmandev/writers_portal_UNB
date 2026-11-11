@@ -73,6 +73,9 @@ function getRandomDua(pool) {
 
 // ── ENTRY POINTS ──────────────────────────────────────────────
 function doGet(e) {
+  if (e && e.parameter && e.parameter.action === 'checkQuota') {
+    return jsonResponse(handleCheckQuota());
+  }
   return jsonResponse({ success: true, message: 'UNB Portal Backend is running.' });
 }
 
@@ -86,6 +89,10 @@ function doPost(e) {
         return jsonResponse(handleFileUpload(body));
       case 'sendEmail':
         return jsonResponse(handleSendEmail(body));
+      case 'checkQuota':
+        return jsonResponse(handleCheckQuota());
+      case 'broadcastEmail':
+        return jsonResponse(handleBroadcastEmail(body));
       case 'renamePostFolder':
         return jsonResponse(handleRenamePostFolder(body));
       case 'deleteSubmissionFolder':
@@ -566,7 +573,18 @@ function handleSendEmail(body) {
     name: CONFIG.SENDER_NAME
   });
 
-  return { success: true, message: 'Email sent to ' + writerEmail };
+  var remaining = 0;
+  try {
+    remaining = MailApp.getRemainingDailyQuota();
+  } catch (qErr) {
+    remaining = 0;
+  }
+
+  return {
+    success: true,
+    message: 'Email sent to ' + writerEmail,
+    remainingQuota: remaining
+  };
 }
 
 function escapeHtml(str) {
@@ -616,18 +634,24 @@ function buildEmailTemplate({ heading, headingUrdu, body, bodyUrdu, duaUrdu, cta
 
     <!-- Body -->
     <div class="unb-padded" style="padding:30px 32px;">
-      <h1 class="unb-heading" style="font-size:22px; color:${CONFIG.TEXT_PRIMARY}; margin:0 0 6px 0; line-height:1.3;">${heading}</h1>
+      ${heading ? `<h1 class="unb-heading" style="font-size:22px; color:${CONFIG.TEXT_PRIMARY}; margin:0 0 6px 0; line-height:1.3;">${heading}</h1>` : ''}
+      ${headingUrdu ? `
       <div dir="rtl" style="font-size:16px; color:${CONFIG.BRAND_PRIMARY}; margin:0 0 20px 0; font-family: 'Noto Nastaliq Urdu', serif; line-height:1.9;">
         ${headingUrdu}
       </div>
+      ` : ''}
 
+      ${body ? `
       <div style="font-size:15px; line-height:1.75; color:${CONFIG.TEXT_PRIMARY};">
         ${body}
       </div>
+      ` : ''}
 
+      ${bodyUrdu ? `
       <div dir="rtl" style="font-size:14px; color:#6B5842; margin-top:14px; font-family: 'Noto Nastaliq Urdu', serif; line-height:1.9;">
         ${bodyUrdu}
       </div>
+      ` : ''}
 
       <!-- Dua -->
       ${duaUrdu ? `
@@ -636,12 +660,14 @@ function buildEmailTemplate({ heading, headingUrdu, body, bodyUrdu, duaUrdu, cta
       </div>
       ` : ''}
 
+      ${ctaText && ctaLink ? `
       <!-- CTA Button -->
       <div style="text-align:center; margin-top:28px;">
         <a href="${ctaLink}" class="unb-cta" style="background:${CONFIG.BRAND_PRIMARY}; color:#fff; text-decoration:none; padding:14px 36px; border-radius:8px; font-size:15px; font-weight:bold; display:inline-block; letter-spacing:0.3px; box-shadow:0 2px 6px rgba(159,84,5,0.35);">
           ${ctaText} →
         </a>
       </div>
+      ` : ''}
 
       <!-- Instagram quick-question line -->
       <div style="text-align:center; margin-top:26px; padding-top:20px; border-top:1px solid #E8D9BE;">
@@ -676,6 +702,109 @@ function buildEmailTemplate({ heading, headingUrdu, body, bodyUrdu, duaUrdu, cta
 </body>
 </html>
   `;
+}
+
+// ── PART 2B: BROADCAST EMAILS & QUOTA TRACKING ────────────────
+function handleCheckQuota() {
+  try {
+    var quota = MailApp.getRemainingDailyQuota();
+    return {
+      success: true,
+      remainingQuota: quota
+    };
+  } catch (err) {
+    return {
+      success: false,
+      error: 'Failed to retrieve email quota: ' + err.message
+    };
+  }
+}
+
+function formatEmailParagraphs(text, isUrdu) {
+  if (!text) return '';
+  var cleanText = String(text).replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
+  if (!cleanText) return '';
+
+  var paragraphs = cleanText.split(/\n\s*\n/);
+  return paragraphs.map(function(para) {
+    var trimmed = para.trim();
+    if (!trimmed) return '';
+    var content = escapeHtml(trimmed).replace(/\n/g, '<br>');
+    var dirAttr = isUrdu ? ' dir="rtl"' : '';
+    var styleAttr = isUrdu
+      ? 'margin:0 0 14px 0; line-height:1.9; font-family:\'Noto Nastaliq Urdu\', serif;'
+      : 'margin:0 0 14px 0; line-height:1.75;';
+    return '<p' + dirAttr + ' style="' + styleAttr + '">' + content + '</p>';
+  }).filter(Boolean).join('');
+}
+
+function handleBroadcastEmail(body) {
+  try {
+    var writerEmail = body.writerEmail ? String(body.writerEmail).trim() : '';
+    var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!writerEmail || !emailRegex.test(writerEmail)) {
+      return { success: false, error: 'A valid writerEmail is required.' };
+    }
+
+    var subject = body.subject ? String(body.subject).trim() : '';
+    if (!subject) {
+      return { success: false, error: 'Email subject is required.' };
+    }
+
+    var rawBodyEn = body.bodyEn ? String(body.bodyEn).trim() : '';
+    var rawBodyUr = body.bodyUr ? String(body.bodyUr).trim() : '';
+    if (!rawBodyEn && !rawBodyUr) {
+      return { success: false, error: 'At least one of bodyEn or bodyUr must be provided.' };
+    }
+
+    var writerName = body.writerName ? String(body.writerName).trim() : 'Writer';
+    var headingEn = body.headingEn ? String(body.headingEn).trim() : subject;
+    var headingUr = body.headingUr ? String(body.headingUr).trim() : '';
+    var duaUr = body.duaUr ? String(body.duaUr).trim() : '';
+
+    var ctaText = body.ctaText ? String(body.ctaText).trim() : '';
+    var ctaUrl = body.ctaUrl ? String(body.ctaUrl).trim() : '';
+    if (ctaText && !ctaUrl) {
+      ctaUrl = CONFIG.SITE_URL;
+    } else if (ctaUrl && !ctaText) {
+      ctaText = 'Visit Writer Portal';
+    }
+
+    var formattedBodyEn = formatEmailParagraphs(rawBodyEn, false);
+    var formattedBodyUr = formatEmailParagraphs(rawBodyUr, true);
+
+    var html = buildEmailTemplate({
+      heading: escapeHtml(headingEn),
+      headingUrdu: escapeHtml(headingUr),
+      body: formattedBodyEn,
+      bodyUrdu: formattedBodyUr,
+      duaUrdu: escapeHtml(duaUr),
+      ctaText: escapeHtml(ctaText),
+      ctaLink: ctaUrl
+    });
+
+    MailApp.sendEmail({
+      to: writerEmail,
+      subject: subject,
+      htmlBody: html,
+      name: CONFIG.SENDER_NAME
+    });
+
+    var remaining = 0;
+    try {
+      remaining = MailApp.getRemainingDailyQuota();
+    } catch (qErr) {
+      remaining = 0;
+    }
+
+    return {
+      success: true,
+      message: 'Broadcast email sent to ' + writerEmail,
+      remainingQuota: remaining
+    };
+  } catch (err) {
+    return { success: false, error: 'Broadcast email failed: ' + err.message };
+  }
 }
 
 // ── PART 3: AUTO-PUBLISH CHECKER ──────────────────────────────
