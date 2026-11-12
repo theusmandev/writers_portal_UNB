@@ -109,6 +109,11 @@ export default function AdminBroadcastPage() {
   const [previewRecipientEmail, setPreviewRecipientEmail] = useState<string>("");
   const [testEmail, setTestEmail] = useState("");
   const [sendingTest, setSendingTest] = useState(false);
+  const [testEmailStatus, setTestEmailStatus] = useState<{
+    type: "sending" | "success" | "warning" | "error";
+    message: string;
+  } | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   // ── Batch Dispatcher State ───────────────────────────────────
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
@@ -370,19 +375,36 @@ export default function AdminBroadcastPage() {
   // ── Send Test Email ───────────────────────────────────────────
   async function handleSendTest() {
     if (!testEmail.trim() || !testEmail.includes("@")) {
-      toast.error("Please enter a valid test recipient email.");
+      const msg = "Please enter a valid test recipient email address.";
+      setTestEmailStatus({ type: "error", message: msg });
+      toast.error(msg);
+      return;
+    }
+    if (!subject.trim() && !bodyEn.trim() && !bodyUr.trim()) {
+      const msg = "Please enter an Email Subject and Body before sending a test email.";
+      setTestEmailStatus({ type: "error", message: msg });
+      toast.error(msg);
       return;
     }
     if (!subject.trim()) {
-      toast.error("Please enter an email subject.");
+      const msg = "Please enter an email subject before sending a test email.";
+      setTestEmailStatus({ type: "error", message: msg });
+      toast.error(msg);
       return;
     }
     if (!bodyEn.trim() && !bodyUr.trim()) {
-      toast.error("Please enter at least an English body or an Urdu body.");
+      const msg = "Please enter at least an English or Urdu body before sending a test email.";
+      setTestEmailStatus({ type: "error", message: msg });
+      toast.error(msg);
       return;
     }
 
     setSendingTest(true);
+    setTestEmailStatus({
+      type: "sending",
+      message: `Sending test email to ${testEmail.trim()}...`,
+    });
+
     const resolvedSubject = replaceTags(subject, currentPreviewRecipient);
     const resolvedHeadingEn = headingEn.trim()
       ? replaceTags(headingEn, currentPreviewRecipient)
@@ -411,31 +433,57 @@ export default function AdminBroadcastPage() {
       if (attachments.length > 0) {
         if (typeof res.attachedCount === "number") {
           if (res.attachedCount > 0) {
-            toast.success(
-              `Test email sent successfully to ${testEmail} (with ${res.attachedCount} attachment${res.attachedCount > 1 ? "s" : ""})!`,
-            );
+            const successMsg = `Test email sent successfully to ${testEmail} (with ${res.attachedCount} attachment${res.attachedCount > 1 ? "s" : ""})!`;
+            setTestEmailStatus({ type: "success", message: successMsg });
+            toast.success(successMsg);
           } else {
-            toast.warning(
-              `Test email was sent, but 0 attachments were received by the server. Please redeploy Code.gs as a New Version in Google Apps Script!`,
-              { duration: 8000 },
-            );
+            const warnMsg = `Test email was sent, but 0 attachments were received by the server. Please redeploy Code.gs as a New Version in Google Apps Script!`;
+            setTestEmailStatus({ type: "warning", message: warnMsg });
+            toast.warning(warnMsg, { duration: 8000 });
           }
         } else {
-          toast.warning(
-            `Test email was sent, but 0 attachments were processed. Your Google Apps Script deployment is running an older version — please copy Code.gs and redeploy as a "New Version" in Google Apps Script!`,
-            { duration: 10000 },
-          );
+          const warnMsg = `Test email was sent, but 0 attachments were processed. Your Google Apps Script deployment is running an older version — please copy Code.gs and redeploy as a "New Version" in Google Apps Script!`;
+          setTestEmailStatus({ type: "warning", message: warnMsg });
+          toast.warning(warnMsg, { duration: 10000 });
         }
       } else {
-        toast.success(`Test email sent successfully to ${testEmail}!`);
+        const successMsg = `Test email sent successfully to ${testEmail}!`;
+        setTestEmailStatus({ type: "success", message: successMsg });
+        toast.success(successMsg);
       }
 
       if (typeof res.remainingQuota === "number") {
         setQuota(res.remainingQuota);
       }
     } else {
-      toast.error(res.error || "Failed to send test email.");
+      const errMsg = res.error || "Failed to send test email.";
+      setTestEmailStatus({ type: "error", message: errMsg });
+      toast.error(errMsg);
     }
+  }
+
+  function handleInitiateBroadcast() {
+    if (selectedRecipients.length === 0) {
+      const msg = "No recipients selected. Please adjust your audience filter on the left.";
+      setValidationError(msg);
+      toast.error(msg);
+      return;
+    }
+    if (!subject.trim()) {
+      const msg = "Email subject is required before sending the broadcast.";
+      setValidationError(msg);
+      toast.error(msg);
+      return;
+    }
+    if (!bodyEn.trim() && !bodyUr.trim()) {
+      const msg =
+        "Email body is required. Please write an English or Urdu message before dispatching.";
+      setValidationError(msg);
+      toast.error(msg);
+      return;
+    }
+    setValidationError(null);
+    setConfirmModalOpen(true);
   }
 
   // ── Batch Dispatcher ─────────────────────────────────────────
@@ -852,20 +900,23 @@ export default function AdminBroadcastPage() {
               Always test your email layout, Urdu Nastaliq styling, and personalization tags before
               sending to the whole list.
             </p>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Input
                 type="email"
                 placeholder="test@example.com"
                 value={testEmail}
-                onChange={(e) => setTestEmail(e.target.value)}
-                className="text-xs h-9"
+                onChange={(e) => {
+                  setTestEmail(e.target.value);
+                  if (testEmailStatus?.type === "error") setTestEmailStatus(null);
+                }}
+                className="text-xs h-9 w-full sm:flex-1"
               />
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => void handleSendTest()}
-                disabled={sendingTest || !testEmail}
-                className="shrink-0 text-xs gap-1.5"
+                disabled={sendingTest}
+                className="w-full sm:w-auto shrink-0 text-xs gap-1.5 font-medium"
               >
                 {sendingTest ? (
                   <RefreshCw className="h-3.5 w-3.5 animate-spin" />
@@ -875,6 +926,49 @@ export default function AdminBroadcastPage() {
                 Send Test
               </Button>
             </div>
+
+            {/* Test Email Inline Feedback Banner */}
+            {testEmailStatus && (
+              <div
+                className={`p-3 rounded-lg text-xs flex items-start justify-between gap-2 border transition-all animate-in fade-in-50 ${
+                  testEmailStatus.type === "sending"
+                    ? "bg-primary/10 border-primary/20 text-primary"
+                    : testEmailStatus.type === "success"
+                      ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300"
+                      : testEmailStatus.type === "warning"
+                        ? "bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-300"
+                        : "bg-destructive/10 border-destructive/30 text-destructive"
+                }`}
+              >
+                <div className="flex items-start gap-2 min-w-0">
+                  {testEmailStatus.type === "sending" && (
+                    <RefreshCw className="h-4 w-4 animate-spin shrink-0 mt-0.5" />
+                  )}
+                  {testEmailStatus.type === "success" && (
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                  )}
+                  {testEmailStatus.type === "warning" && (
+                    <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                  )}
+                  {testEmailStatus.type === "error" && (
+                    <XCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                  )}
+                  <span className="font-medium leading-relaxed break-words">
+                    {testEmailStatus.message}
+                  </span>
+                </div>
+                {testEmailStatus.type !== "sending" && (
+                  <button
+                    type="button"
+                    onClick={() => setTestEmailStatus(null)}
+                    className="p-0.5 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors shrink-0 ml-1 text-muted-foreground hover:text-foreground"
+                    aria-label="Dismiss message"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -944,7 +1038,10 @@ export default function AdminBroadcastPage() {
               <Input
                 placeholder="Important Announcement regarding your novel {{novel_title}}"
                 value={subject}
-                onChange={(e) => setSubject(e.target.value)}
+                onChange={(e) => {
+                  setSubject(e.target.value);
+                  if (validationError) setValidationError(null);
+                }}
                 className="text-sm font-medium"
               />
             </div>
@@ -973,7 +1070,10 @@ export default function AdminBroadcastPage() {
                   rows={4}
                   placeholder={`Dear {{writer_name}},\n\nWe are pleased to inform you about our new editorial schedule for {{novel_title}}.\n\nWarm regards,\nUrdu Novel Bank Team`}
                   value={bodyEn}
-                  onChange={(e) => setBodyEn(e.target.value)}
+                  onChange={(e) => {
+                    setBodyEn(e.target.value);
+                    if (validationError) setValidationError(null);
+                  }}
                   className="text-xs leading-relaxed"
                 />
               </div>
@@ -1004,7 +1104,10 @@ export default function AdminBroadcastPage() {
                   rows={4}
                   placeholder={`محترم {{writer_name}}،\n\nامید ہے آپ خیریت سے ہوں گے۔ آپ کے ناول "{{novel_title}}" کے حوالے سے یہ اپڈیٹ فراہم کی جا رہی ہے۔\n\nشکریہ،\nاردو ناول بینک ٹیم`}
                   value={bodyUr}
-                  onChange={(e) => setBodyUr(e.target.value)}
+                  onChange={(e) => {
+                    setBodyUr(e.target.value);
+                    if (validationError) setValidationError(null);
+                  }}
                   className="text-sm urdu leading-loose"
                 />
               </div>
@@ -1087,14 +1190,12 @@ export default function AdminBroadcastPage() {
                 )}
               </div>
 
-              {/* Upload from Device + Google Drive Link inputs */}
-              <div className="flex flex-col sm:flex-row gap-2">
+              {/* Responsive Attachment Controls */}
+              <div className="flex flex-col sm:flex-row gap-2.5">
                 {/* Device Upload */}
-                <label className="flex items-center justify-center gap-2 px-3 py-2 rounded-md border border-dashed border-border hover:border-primary/50 bg-background text-xs cursor-pointer transition-colors shrink-0">
-                  <UploadCloud className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium text-foreground">
-                    {isReadingFiles ? "Reading files…" : "Upload from Device"}
-                  </span>
+                <label className="flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-lg border border-dashed border-primary/40 hover:border-primary bg-primary/5 hover:bg-primary/10 text-xs cursor-pointer transition-colors w-full sm:w-auto shrink-0 shadow-2xs font-semibold text-primary">
+                  <UploadCloud className="h-4 w-4 shrink-0 text-primary" />
+                  <span>{isReadingFiles ? "Reading files…" : "Upload from Device"}</span>
                   <input
                     type="file"
                     multiple
@@ -1105,12 +1206,12 @@ export default function AdminBroadcastPage() {
                   />
                 </label>
 
-                {/* Google Drive Link input */}
-                <div className="flex flex-1 gap-1.5">
-                  <div className="relative flex-1">
+                {/* Google Drive Link input + Button */}
+                <div className="flex flex-1 gap-2 min-w-0">
+                  <div className="relative flex-1 min-w-0">
                     <Input
                       type="text"
-                      placeholder="Or paste Google Drive link / file ID"
+                      placeholder="Or paste Google Drive link / file ID…"
                       value={driveInput}
                       onChange={(e) => setDriveInput(e.target.value)}
                       onKeyDown={(e) => {
@@ -1119,9 +1220,9 @@ export default function AdminBroadcastPage() {
                           handleAddDriveFile();
                         }
                       }}
-                      className="text-xs h-9 pl-7"
+                      className="text-xs h-9 pl-7 pr-2 w-full bg-background"
                     />
-                    <HardDrive className="h-3.5 w-3.5 text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2" />
+                    <HardDrive className="h-3.5 w-3.5 text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                   </div>
                   <Button
                     type="button"
@@ -1129,42 +1230,43 @@ export default function AdminBroadcastPage() {
                     size="sm"
                     onClick={handleAddDriveFile}
                     disabled={!driveInput.trim()}
-                    className="text-xs shrink-0 h-9 px-3"
+                    className="text-xs shrink-0 h-9 px-3 font-medium"
                   >
-                    <Plus className="h-3.5 w-3.5 mr-1" /> Attach Drive
+                    <Plus className="h-3.5 w-3.5 mr-1 text-primary" /> Attach Drive
                   </Button>
                 </div>
               </div>
 
               {/* Attached File Chips */}
               {attachments.length > 0 && (
-                <div className="flex flex-wrap gap-2 pt-1">
+                <div className="flex flex-wrap gap-2 pt-1.5">
                   {attachments.map((att, idx) => (
                     <div
                       key={`${att.fileName}-${idx}`}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs bg-secondary/80 text-foreground border border-border shadow-2xs"
+                      className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs bg-[#FAF5EC] text-[#2E1F0F] border border-[#D8C7AE] shadow-xs"
                     >
                       {att.driveFileId ? (
-                        <HardDrive className="h-3 w-3 text-amber-600 shrink-0" />
+                        <HardDrive className="h-4 w-4 text-[#9F5405] shrink-0" />
                       ) : (
-                        <FileText className="h-3 w-3 text-primary shrink-0" />
+                        <FileText className="h-4 w-4 text-[#9F5405] shrink-0" />
                       )}
                       <span
-                        className="font-medium max-w-[180px] sm:max-w-[220px] truncate"
+                        className="font-semibold text-[#2E1F0F] max-w-[160px] sm:max-w-[240px] truncate"
                         title={att.fileName}
                       >
                         {att.fileName}
                       </span>
-                      <span className="text-[10px] text-muted-foreground">
-                        {att.driveFileId ? "(Google Drive)" : `(${formatFileSize(att.sizeBytes)})`}
+                      <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-[#EDE2D0] text-[#5C4028] shrink-0">
+                        {att.driveFileId ? "Google Drive" : formatFileSize(att.sizeBytes)}
                       </span>
                       <button
                         type="button"
                         onClick={() => handleRemoveAttachment(idx)}
-                        className="ml-1 p-0.5 rounded hover:bg-muted text-muted-foreground hover:text-destructive transition-colors"
+                        className="ml-1 p-1 rounded-full bg-red-100 text-red-700 hover:bg-red-200 transition-colors shrink-0 shadow-2xs"
                         title="Remove attachment"
+                        aria-label={`Remove ${att.fileName}`}
                       >
-                        <X className="h-3 w-3" />
+                        <X className="h-3.5 w-3.5" />
                       </button>
                     </div>
                   ))}
@@ -1173,25 +1275,47 @@ export default function AdminBroadcastPage() {
             </div>
 
             {/* PRIMARY BROADCAST DISPATCH BUTTON */}
-            <div className="pt-3 border-t border-border flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">
-                Targeting:{" "}
-                <strong className="text-foreground">{selectedRecipients.length} writers</strong>
-              </span>
+            <div className="pt-3 border-t border-border space-y-2.5">
+              {validationError && (
+                <div className="flex items-center justify-between gap-2 p-3 rounded-lg bg-destructive/15 border border-destructive/30 text-destructive text-xs animate-in fade-in-50">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 shrink-0 text-destructive" />
+                    <span className="font-medium">{validationError}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setValidationError(null)}
+                    className="p-1 rounded hover:bg-destructive/20 text-destructive transition-colors shrink-0"
+                    aria-label="Dismiss error"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              )}
 
-              <Button
-                size="lg"
-                onClick={() => setConfirmModalOpen(true)}
-                disabled={
-                  selectedRecipients.length === 0 ||
-                  !subject.trim() ||
-                  (!bodyEn.trim() && !bodyUr.trim())
-                }
-                className="gap-2 font-semibold shadow-md"
-              >
-                <Send className="h-4 w-4" />
-                Send Broadcast to {selectedRecipients.length} Writers
-              </Button>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span>Targeting:</span>
+                  <strong className="text-foreground font-semibold">
+                    {selectedRecipients.length}{" "}
+                    {selectedRecipients.length === 1 ? "writer" : "writers"}
+                  </strong>
+                  {attachments.length > 0 && (
+                    <span className="text-[11px] text-muted-foreground">
+                      • {attachments.length} {attachments.length === 1 ? "file" : "files"}
+                    </span>
+                  )}
+                </div>
+
+                <Button
+                  size="lg"
+                  onClick={handleInitiateBroadcast}
+                  className="w-full sm:w-auto justify-center px-5 py-3 text-sm sm:text-base whitespace-normal text-center gap-2 font-semibold shadow-md"
+                >
+                  <Send className="h-4 w-4 shrink-0" />
+                  <span>Send Broadcast to {selectedRecipients.length} Writers</span>
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -1292,7 +1416,7 @@ export default function AdminBroadcastPage() {
 
               {/* Attachments Section in Preview */}
               {attachments.length > 0 && (
-                <div className="my-4 p-3 rounded-lg bg-[#F5ECDC] border border-[#E8D9BE] font-sans">
+                <div className="my-4 p-3 rounded-lg bg-[#FAF5EC] border border-[#D8C7AE] font-sans">
                   <div className="text-[11px] font-semibold text-[#6B5842] uppercase tracking-wider mb-2 flex items-center gap-1.5">
                     <Paperclip className="h-3.5 w-3.5 text-[#9F5405]" /> Attachments (
                     {attachments.length})
@@ -1301,21 +1425,19 @@ export default function AdminBroadcastPage() {
                     {attachments.map((att, idx) => (
                       <div
                         key={idx}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#FFF7EC] border border-[#D9C4A1] text-xs text-[#2E1F0F]"
+                        className="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-white border border-[#D8C7AE] text-xs text-[#2E1F0F] shadow-2xs"
                       >
                         {att.driveFileId ? (
-                          <HardDrive className="h-3 w-3 text-[#9F5405]" />
+                          <HardDrive className="h-3.5 w-3.5 text-[#9F5405] shrink-0" />
                         ) : (
-                          <FileText className="h-3 w-3 text-[#9F5405]" />
+                          <FileText className="h-3.5 w-3.5 text-[#9F5405] shrink-0" />
                         )}
-                        <span className="max-w-[180px] truncate">{att.fileName}</span>
-                        {att.sizeBytes ? (
-                          <span className="text-[10px] text-[#8C7359]">
-                            {formatFileSize(att.sizeBytes)}
-                          </span>
-                        ) : att.driveFileId ? (
-                          <span className="text-[10px] text-[#8C7359]">Drive</span>
-                        ) : null}
+                        <span className="font-semibold max-w-[180px] truncate text-[#2E1F0F]">
+                          {att.fileName}
+                        </span>
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#EDE2D0] text-[#5C4028]">
+                          {att.driveFileId ? "Drive" : formatFileSize(att.sizeBytes)}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -1336,52 +1458,63 @@ export default function AdminBroadcastPage() {
 
       {/* ── CONFIRMATION MODAL ── */}
       {confirmModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-xs">
-          <div className="rounded-xl border border-border bg-card p-6 shadow-xl max-w-md w-full space-y-4 animate-in fade-in-50 zoom-in-95">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="rounded-xl border border-border bg-card p-6 shadow-xl max-w-lg w-full space-y-4 animate-in fade-in-50 zoom-in-95">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-full bg-primary/10 text-primary">
+              <div className="p-2.5 rounded-full bg-primary/10 text-primary shrink-0">
                 <Send className="h-6 w-6" />
               </div>
               <div>
-                <h3 className="font-semibold text-lg text-foreground">
-                  Confirm Broadcast Dispatch
+                <h3 className="font-semibold text-lg text-foreground font-display">
+                  Confirm Email Broadcast
                 </h3>
                 <p className="text-xs text-muted-foreground">
-                  Please review before sending to writers
+                  Review the broadcast details carefully before dispatching to writers.
                 </p>
               </div>
             </div>
 
             <div className="space-y-2.5 p-3.5 rounded-lg bg-muted/40 border border-border/60 text-xs">
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center py-0.5 border-b border-border/40 pb-1.5">
                 <span className="text-muted-foreground">Recipients:</span>
-                <strong className="text-foreground">{selectedRecipients.length} writers</strong>
+                <strong className="text-foreground text-sm font-bold">
+                  {selectedRecipients.length}{" "}
+                  {selectedRecipients.length === 1 ? "writer" : "writers"}
+                </strong>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center py-0.5 border-b border-border/40 pb-1.5">
                 <span className="text-muted-foreground">Audience Filter:</span>
-                <span className="capitalize text-foreground font-medium">{activeFilter}</span>
+                <span className="capitalize text-foreground font-semibold px-2 py-0.5 rounded bg-background border border-border/60">
+                  {activeFilter}
+                </span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex flex-col gap-1 py-0.5 border-b border-border/40 pb-1.5">
+                <span className="text-muted-foreground">Subject Line:</span>
+                <span className="text-foreground font-medium break-words bg-background/80 p-2 rounded border border-border/60">
+                  {subject || "(No subject)"}
+                </span>
+              </div>
+              <div className="flex justify-between items-center py-0.5 border-b border-border/40 pb-1.5">
+                <span className="text-muted-foreground">Attachments:</span>
+                <span className="font-medium text-foreground">
+                  {attachments.length > 0
+                    ? `${attachments.length} file${attachments.length > 1 ? "s" : ""}`
+                    : "None"}
+                </span>
+              </div>
+              <div className="flex justify-between items-center py-0.5">
                 <span className="text-muted-foreground">Remaining Quota:</span>
                 <span className="font-medium text-foreground">
                   {quota !== null ? `${quota} emails` : "Unknown"}
                 </span>
               </div>
-              {attachments.length > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Attachments:</span>
-                  <span className="font-medium text-foreground">
-                    {attachments.length} file{attachments.length > 1 ? "s" : ""}
-                  </span>
-                </div>
-              )}
             </div>
 
             {/* Quota Warnings */}
             {quota !== null && selectedRecipients.length > quota ? (
               <div className="p-3 rounded-lg bg-destructive/15 border border-destructive/30 text-destructive text-xs space-y-1">
                 <div className="flex items-center gap-1.5 font-bold">
-                  <ShieldAlert className="h-4 w-4" /> Quota Exceeded
+                  <ShieldAlert className="h-4 w-4 shrink-0" /> Quota Exceeded
                 </div>
                 <p>
                   You are targeting {selectedRecipients.length} writers, but only {quota} emails
@@ -1391,7 +1524,7 @@ export default function AdminBroadcastPage() {
             ) : quota !== null && quota - selectedRecipients.length < 15 ? (
               <div className="p-3 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-400 text-xs space-y-1">
                 <div className="flex items-center gap-1.5 font-bold">
-                  <AlertTriangle className="h-4 w-4" /> Low Quota Warning
+                  <AlertTriangle className="h-4 w-4 shrink-0" /> Low Quota Warning
                 </div>
                 <p>
                   Sending this broadcast will leave less than 15 emails reserved for automated novel
@@ -1400,17 +1533,23 @@ export default function AdminBroadcastPage() {
               </div>
             ) : null}
 
-            <div className="flex justify-end gap-2 pt-2">
-              <Button variant="outline" size="sm" onClick={() => setConfirmModalOpen(false)}>
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setConfirmModalOpen(false)}
+                className="w-full sm:w-auto"
+              >
                 Cancel
               </Button>
               <Button
                 size="sm"
                 onClick={() => void startBatchSending(selectedRecipients)}
                 disabled={quota !== null && selectedRecipients.length > quota}
-                className="gap-1.5"
+                className="w-full sm:w-auto gap-1.5 font-semibold"
               >
-                <Send className="h-4 w-4" /> Confirm &amp; Send
+                <Send className="h-4 w-4" />
+                Yes, Send Broadcast to {selectedRecipients.length} Writers
               </Button>
             </div>
           </div>
